@@ -74,7 +74,7 @@ OMP stripped, returning to a pure matrix-element-squared kernel (`CollisionKerne
 ### `OMP`
 Originally for OMP-only experiments; currently at the same state as `main`.
 
-**Current work:** The `MatrixSquared` branch is being validated against TALYS output. Approximately 90% of transition rates agree within <1%; the remaining discrepancies (n=1 initial state ~16.7%, select high-exciton configurations ~13%) are understood as inherent to the simplified `|M|²` parameterization vs. TALYS' transmission-coefficient-based approach.
+**Current work:** The `MatrixSquared` branch has been validated against TALYS output. 81/84 transition rate values agree within <1% relative error. The n=1 discrepancy (originally ~16.7%) was traced to a missing `result /= 1.20` divider dropped during OMP stripping and has been fixed (`transition_rates.cpp:646-649`). Row 0 (n=1) now agrees within 0.014%. The only significant remaining outlier is row 20 (5,5,1,0) lambdanuplus at ~13.4%, understood as a limitation of the simplified `|M|²` formula for extreme exciton partitions.
 
 ## Code architecture
 
@@ -248,11 +248,11 @@ The following summarizes key validation runs comparing code output against TALYS
 | 2026-06-16 | Matrix element, analytical, midpoint | ~90% | FAIL | `lambda_comparison_report_analytical.txt` |
 | 2026-06-16 | Matrix element, numerical, Clenshaw-Curtis | ~90% | FAIL | `lambda_comparison_report_numerical_clenshaw.txt` |
 | 2026-06-22 | Matrix element, numerical, guarded, midBins=50 | 16.6% | Most <1%; 70/84 > 1e-4 abs | `MatrixSquared/Comparison/reverted_to_matrixelems.txt` |
-| — | Fix: `result /= 1.20` for n=1 numerical | <1% (expected) | — | Pending rebuild |
+| 2026-06-22 | Fix: `result /= 1.20` for n=1 numerical | **0.014%** | **81/84 < 1%; 3/84 > 1%** | `MatrixSquared/Comparison/reverted_to_matrixelems.txt` |
 
-The dominant remaining error (n=1, ~16.7%) was traced to the `result /= 1.20` divider being accidently dropped during OMP stripping (commit `854f5ed`). Restored at `transition_rates.cpp:646-649`.
+The n=1 discrepancy (~16.7%) was traced to the `result /= 1.20` divider being accidentally dropped during OMP stripping (commit `854f5ed`). Restored at `transition_rates.cpp:646-649`. After fix, row 0 relative error dropped to 0.014%.
 
-The row 20 (5,5,1,0) lambdanuplus ~13.4% error is understood as a limitation of the simplified `|M|²` formula for extreme exciton partitions where TALYS' transmission-coefficient approach differs most.
+The remaining outliers are: row 20 (5,5,1,0) lambdanuplus ~13.4% — understood as a limitation of the simplified `|M|²` formula for extreme exciton partitions where TALYS' transmission-coefficient approach differs most; and rows 1 and 2 at ~1.7-2.0% — believed to be secondary effects from the same formula difference, not yet investigated in detail.
 
 ## Key decisions
 
