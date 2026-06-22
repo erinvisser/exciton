@@ -1,0 +1,66 @@
+MARLEY=/Users/erinvisser/Downloads/opencode/marley-private ./executables/lambda --no-guards --kernel optical-model
+# OUR_OMP Z=18 A=40 e=-8 pdg=2212 Wv=5.27935e-05 Wd=0.00275628 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=0.00133806
+# OUR_OMP Z=18 A=40 e=-8 pdg=2112 Wv=0.0107876 Wd=0.494157 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=0.240147
+# OUR_OMP Z=18 A=40 e=0 pdg=2212 Wv=0.156162 Wd=4.71871 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=2.32847
+# OUR_OMP Z=18 A=40 e=0 pdg=2112 Wv=0.22435 Wd=5.08645 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=2.53687
+# OUR_OMP Z=18 A=40 e=2 pdg=2212 Wv=0.244337 Wd=6.01214 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=2.99273
+# OUR_OMP Z=18 A=40 e=2 pdg=2112 Wv=0.318335 Wd=5.85157 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=2.95303
+# OUR_OMP Z=18 A=40 e=5 pdg=2212 Wv=0.411032 Wd=7.38716 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=3.74076
+# OUR_OMP Z=18 A=40 e=5 pdg=2112 Wv=0.487131 Wd=6.57862 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=3.39407
+# OUR_OMP Z=18 A=40 e=10 pdg=2212 Wv=0.773297 Wd=8.42855 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=4.44265
+# OUR_OMP Z=18 A=40 e=10 pdg=2112 Wv=0.835481 Wd=7.00162 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=3.79415
+# OUR_OMP Z=18 A=40 e=15 pdg=2212 Wv=1.22676 Wd=8.53284 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=4.75223
+# OUR_OMP Z=18 A=40 e=15 pdg=2112 Wv=1.25442 Wd=6.87887 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=3.97632
+# OUR_OMP Z=18 A=40 e=20 pdg=2212 Wv=1.75285 Wd=8.19237 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=4.89244
+# OUR_OMP Z=18 A=40 e=20 pdg=2112 Wv=1.72763 Wd=6.50838 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=4.07233
+# header: 
+#   title: Ar40(n,x) two-component exciton model
+#   source: exciton (C++), numerical mode, clenshaw-curtis integration, optical-model kernel
+#   user: Erin Visser
+#   date: 2026-06-16
+#   format: YANDF-0.4
+# target: 
+#   Z: 18
+#   A: 40
+#   nuclide: Ar40
+# parameters: 
+#   E-incident [MeV]:  2.000000E+01
+#   E-compound [MeV]:  25.6016
+#   Fermi well depth [MeV]:  38
+#   OMP constant C_omp:  0.55
+#   M2 constant (C1):    1
+#   Rpinu:               1
+#   Wompfac(same-type):  0.183333
+#   Wompfac(cross-type): 0.366667
+#   Wompfac(conversion): 0.275
+#   quantity: 
+#     type: internal transition rate
+#   datablock: 
+#     columns: 8
+#     entries: 21
+##     p(p)           h(p)           p(n)           h(n)       lambdapiplus   lambdanuplus    lambdapinu     lambdanupi
+##      []             []             []             []          [sec^-1]       [sec^-1]       [sec^-1]       [sec^-1]
+             0             0             1             0   1.579149E+21   1.627991E+21   0.000000E+00   0.000000E+00
+Loading particle and atomic masses from /Users/erinvisser/Downloads/opencode/marley-private/data/mass_table.js
+state=0,0,2,1 term=2,1,0,0 e=0 e_kin=-11.6845 sep_p=11.6845 sep_n=9.86902 Wv=0.0373738 Wd=1.90854 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=0.926986 wompfac=0.183333
+CONV state=0,0,2,1 term=0,0,1,1 e=-0.833333 e_kin=-12.5178 sep_p=11.6845 sep_n=9.86902 Wv=0.0553499 Wd=2.74939 Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=1.33625 wompfac=0.275
+             0             0             2             1   6.469578E+21   3.180828E+21   0.000000E+00   5.350352E+20
+             1             1             1             0   3.547472E+21   3.911716E+21   2.712199E+20   0.000000E+00
+             0             0             3             2   6.884762E+21   2.996510E+21   0.000000E+00   2.305084E+21
+             1             1             2             1   4.540617E+21   2.883804E+21   2.011226E+20   6.753922E+20
+             2             2             1             0   2.132739E+21   2.784426E+21   9.563707E+20   0.000000E+00
+             0             0             4             3   7.398478E+21   2.104329E+21   0.000000E+00   6.270467E+21
+             1             1             3             2   5.043918E+21   2.238156E+21   1.406078E+20   2.597186E+21
+             2             2             2             1   2.921554E+21   2.106873E+21   7.468769E+20   7.283082E+20
+             3             3             1             0   1.074324E+21   2.569822E+21   1.856101E+21   0.000000E+00
+             0             0             5             4   8.623330E+21   8.334993E+20   0.000000E+00   1.519946E+22
+             1             1             4             3   5.458255E+21   1.410090E+21   1.249194E+20   7.032438E+21
+             2             2             3             2   3.282894E+21   1.555323E+21   7.065960E+20   2.844322E+21
+             3             3             2             1   1.580593E+21   1.834137E+21   1.566331E+21   7.564378E+20
+             4             4             1             0   3.997627E+20   3.573234E+21   2.730261E+21   0.000000E+00
+             0             0             6             5   0.000000E+00   0.000000E+00   0.000000E+00   0.000000E+00
+             1             1             5             4   5.603697E+21   4.592481E+20   1.384916E+20   1.723942E+22
+             2             2             4             3   3.201411E+21   8.399956E+20   8.561003E+20   7.914293E+21
+             3             3             3             2   1.604416E+21   1.107797E+21   1.557150E+21   3.130034E+21
+             4             4             2             1   5.482014E+20   1.947946E+21   2.140411E+21   7.795649E+20
+             5             5             1             0   4.020853E+18   4.978608E+21   3.770574E+21   0.000000E+00
