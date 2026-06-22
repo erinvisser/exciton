@@ -135,6 +135,11 @@ exciton/
   - `KoningDelarocheOpticalModel` — OMP implementation
   - `Integrator` — Clenshaw-Curtis numerical integration
   - `MassTable` — separation energies for OMP path
+  - **Version requirement:** Must be at tag `v1.2.1-exciton` (branch `v121_kd`).
+    The `main` branch of MARLEY uses "KDUQ Federal" OMP parameters
+    (arXiv:2211.07741) that differ from the original KD03 values used by TALYS 1.6.
+    Using the wrong MARLEY version will silently change OMP-weighted transition
+    rates and break TALYS agreement on the `main` exciton branch.
 - **GSL** (GNU Scientific Library) — linked but currently unused directly
 - **ROOT** — for `Math::Integrator` (legacy) and `TGraph` comparison tools
 
