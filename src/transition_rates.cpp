@@ -14,7 +14,7 @@ double M2(int A_p, int A, double E_tot, int n, double C1, double C2, double C3, 
     double denom = 10.7 * C3 + E_tot / (n * A_p);
     double inside = 7.48 * C2 + 4.62e5 / std::pow(denom, 3);
     double result = prefactor * inside;
-    if (mode == PreeqMode::Analytical)
+    if (mode == PreeqMode::Analytical || n == 1)
     {
         return 1.20 * result;
     }
