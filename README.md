@@ -39,7 +39,7 @@ Two formulations are implemented on different branches:
 
 | Approach | Formula | Branch |
 |----------|---------|--------|
-| **Matrix element** (simple) | `|M|² ∝ A_p/A³ · (7.48 + 4.62e5/(10.7 + E_tot/(n·A_p))³)` | `main`, `MatrixSquared` |
+| **Matrix element** (simple) | `\|M\|² ∝ A_p/A³ · (7.48 + 4.62e5/(10.7 + E_tot/(n·A_p))³)` | `main`, `MatrixSquared` |
 | **Optical model** (OMP) | Above + transmission-coefficient weighting via Koning-Delaroche OMP | `main` |
 
 The `M²` formula includes a tunable 1.20× factor applied only for `PreeqMode::Analytical` (matching TALYS `preeqmode=1`). When n=1 forces analytical mode in numerical mode, this factor is divided back out (`transition_rates.cpp:646-649`).
