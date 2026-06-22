@@ -35,10 +35,9 @@ int main(int argc, char *argv[])
     }
 
     int Z = 18;
-    int N = 22;
+    int N = 23;     // compound N (target is 22, projectile adds 1)
     int A_p = 1;
-    int A_target = Z + N;
-    int A_compound = A_target + A_p;
+    int A_target = 40; // target mass number for pairing energy (Ar40)
     int chi = 1;
     double E_comp = 25.60156;
     double V = 38.0;
