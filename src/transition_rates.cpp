@@ -470,5 +470,10 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
         break;
     }
 
+    // TALYS matrix.f90 applies 1.20 M^2 factor only for preeqmode==1.
+    // When n==1 forces analytical formula in numerical mode, cancel the factor.
+    if (n == 1 && mode == PreeqMode::Numerical)
+        result /= 1.20;
+
     return result;
 }
