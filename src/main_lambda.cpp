@@ -94,8 +94,8 @@ int main(int argc, char *argv[])
 
     std::ostringstream rates_name;
     rates_name << rates_dir << "/lambda_Ar40_n_" << mode_str << "_" << method_str
-               << guard_str << "_" << kernel_str << "_" << ts << ".txt";
-    std::string kd03_name = kd03_dir + "/kd03_Ar40_n_" + ts + ".txt";
+               << guard_str << "_" << kernel_str << "_" << ts << ".log";
+    std::string kd03_name = kd03_dir + "/kd03_Ar40_n_" + ts + ".log";
 
     std::ofstream rates_file(rates_name.str());
     std::ofstream kd03_file(kd03_name);
@@ -194,13 +194,9 @@ int main(int argc, char *argv[])
             kd03_file << "#\n";
         }
 
-        // Energy-dependent OMP values
-        kd03_file << "# --- Energy-dependent OMP values ---\n";
+        // Energy-dependent OMP values (TALYS flagomponly format)
+        kd03_file << "# --- Energy-dependent OMP values (TALYS flagomponly format) ---\n";
         kd03_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
-        kd03_file << "# Columns: E(MeV) k Vv(MeV) Wv(MeV) Wd(MeV)";
-        kd03_file << " av(fm) ad(fm) Rd(fm) rv(fm) rd(fm) wvol(MeV)\n";
-        kd03_file << std::scientific << std::uppercase;
-        kd03_file.precision(6);
         for (int nen = -80; nen <= 200; ++nen)
         {
             double e = 0.1 * nen;
@@ -212,6 +208,7 @@ int main(int argc, char *argv[])
                 int pdg = (k == 2) ? 2212 : 2112;
                 double e_safe = std::max(e, 0.0);
                 kd.setIncidentEnergyAndFragment(e_safe, pdg);
+
                 double Vv = kd.getVv();
                 double Wv = kd.getWv();
                 double Wd = kd.getWd();
@@ -221,14 +218,55 @@ int main(int argc, char *argv[])
                 double ad = kd.getad();
                 double rv = Rv / A13;
                 double rd = Rd / A13;
-                double wvol = wvolRadialIntegral(Wv, Wd, Rv, av, Rd, ad);
-                kd03_file << std::setw(10) << e << std::setw(4) << k
-                          << std::setw(14) << Vv << std::setw(14) << Wv
-                          << std::setw(14) << Wd
-                          << std::setw(10) << av << std::setw(10) << ad
-                          << std::setw(10) << Rd
-                          << std::setw(10) << rv << std::setw(10) << rd
-                          << std::setw(15) << wvol << "\n";
+
+                std::string frag_type = (k == 2) ? "proton" : "neutron";
+                double Ef = (k == 2) ? kd.getEfp() : kd.getEfn();
+
+                double v1 = (k == 2) ? kd.getV1p() : kd.getV1n();
+                double v2 = (k == 2) ? kd.getV2p() : kd.getV2n();
+                double v3 = (k == 2) ? kd.getV3p() : kd.getV3n();
+                double v4 = (k == 2) ? kd.getV4p() : kd.getV4n();
+                double Vcoul = (k == 2) ? kd.getVcbar_p() : 0.0;
+                double w1 = (k == 2) ? kd.getW1p() : kd.getW1n();
+                double w2 = (k == 2) ? kd.getW2p() : kd.getW2n();
+                double d1 = (k == 2) ? kd.getD1p() : kd.getD1n();
+                double d2 = (k == 2) ? kd.getD2p() : kd.getD2n();
+                double d3 = (k == 2) ? kd.getD3p() : kd.getD3n();
+                double vso1 = (k == 2) ? kd.getVso1p() : kd.getVso1n();
+                double vso2 = (k == 2) ? kd.getVso2p() : kd.getVso2n();
+                double wso1 = (k == 2) ? kd.getWso1p() : kd.getWso1n();
+                double wso2 = (k == 2) ? kd.getWso2p() : kd.getWso2n();
+
+                double rvso = (k == 2) ? kd.getRso_p() / A13 : kd.getRso_n() / A13;
+                double avso = (k == 2) ? kd.getaso_p() : kd.getaso_n();
+
+                kd03_file << "KD03 OMP parameters for " << frag_type
+                          << "  E:" << std::setw(11) << std::fixed << std::setprecision(5) << e
+                          << " Ef:   " << std::setw(9) << std::fixed << std::setprecision(5) << Ef << "\n";
+                kd03_file << "   rv:" << std::setw(10) << std::fixed << std::setprecision(5) << rv
+                          << "   av:" << std::setw(10) << std::fixed << std::setprecision(5) << av
+                          << "   v1:" << std::setw(10) << std::fixed << std::setprecision(5) << v1
+                          << "   v2:" << std::setw(10) << std::fixed << std::setprecision(5) << v2
+                          << "   v3:" << std::scientific << std::setprecision(5) << std::setw(12) << v3
+                          << "   v4:" << std::scientific << std::setprecision(5) << std::setw(12) << v4
+                          << " Vcoul:" << std::fixed << std::setprecision(5) << std::setw(10) << Vcoul << "\n";
+                kd03_file << "   rw:" << std::setw(10) << std::fixed << std::setprecision(5) << rv
+                          << "   aw:" << std::setw(10) << std::fixed << std::setprecision(5) << av
+                          << "   w1:" << std::setw(10) << std::fixed << std::setprecision(5) << w1
+                          << "   w2:" << std::setw(10) << std::fixed << std::setprecision(5) << w2 << "\n";
+                kd03_file << "  rwd:" << std::setw(9) << std::fixed << std::setprecision(5) << rd
+                          << "  awd:" << std::setw(8) << std::fixed << std::setprecision(5) << ad
+                          << "   d1:" << std::setw(10) << std::fixed << std::setprecision(5) << d1
+                          << "   d2:" << std::setw(10) << std::fixed << std::setprecision(5) << d2
+                          << "   d3:" << std::setw(10) << std::fixed << std::setprecision(5) << d3 << "\n";
+                kd03_file << " rvso:" << std::setw(9) << std::fixed << std::setprecision(5) << rvso
+                          << " avso:" << std::setw(8) << std::fixed << std::setprecision(5) << avso
+                          << " vso1:" << std::setw(10) << std::fixed << std::setprecision(5) << vso1
+                          << " vso2:" << std::setw(10) << std::fixed << std::setprecision(5) << vso2 << "\n";
+                kd03_file << " rwso:" << std::setw(9) << std::fixed << std::setprecision(5) << rvso
+                          << " awso:" << std::setw(8) << std::fixed << std::setprecision(5) << avso
+                          << " wso1:" << std::setw(10) << std::fixed << std::setprecision(5) << wso1
+                          << " wso2:" << std::setw(10) << std::fixed << std::setprecision(5) << wso2 << "\n";
             }
         }
     }
