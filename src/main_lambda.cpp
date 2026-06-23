@@ -306,15 +306,13 @@ int main(int argc, char *argv[])
     if (vmode == ValidationMode::WellDepths)
     {
         marley::KoningDelarocheOpticalModel kd(18, 40);
-        double A_t = 40.0;
-        double A13 = std::pow(A_t, 1.0 / 3.0);
 
         wd_file << "# Well depths from MARLEY KoningDelarocheOpticalModel\n";
         wd_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
         wd_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
         wd_file << "#\n";
-        wd_file << "# --- Table 1: Energy-dependent potential depths ---\n";
-        wd_file << "# Columns: E(MeV)  k  Vv(MeV)  Wv(MeV)  Wd(MeV)  Vso(MeV)  Wso(MeV)\n";
+        wd_file << "# Columns: E(MeV)  k  Vv(MeV)  Wv(MeV)  Wd(MeV)  Vso(MeV)  Wso(MeV)";
+        wd_file << "  Rv(fm)  av(fm)  Rd(fm)  ad(fm)  Rso(fm)  aso(fm)\n";
 
         for (int nen = -80; nen <= 200; ++nen)
         {
@@ -326,40 +324,13 @@ int main(int argc, char *argv[])
             {
                 int pdg = (k == 2) ? 2212 : 2112;
                 double e_safe = std::max(e, 0.0);
-                kd.setIncidentEnergyAndFragment(e_safe, pdg);
+                kd.updateWellDepths(e_safe, pdg);
 
                 double Vv = kd.getVv();
                 double Wv = kd.getWv();
                 double Wd = kd.getWd();
                 double Vso = kd.getVso();
                 double Wso = kd.getWso();
-
-                wd_file << std::setw(10) << std::fixed << std::setprecision(5) << e
-                        << std::setw(4) << k
-                        << std::setw(14) << std::scientific << std::setprecision(6) << Vv
-                        << std::setw(14) << Wv
-                        << std::setw(14) << Wd
-                        << std::setw(14) << Vso
-                        << std::setw(14) << Wso << "\n";
-            }
-        }
-
-        wd_file << "#\n";
-        wd_file << "# --- Table 2: Folded geometries ---\n";
-        wd_file << "# Columns: E(MeV)  k  Rv(fm)  av(fm)  Rd(fm)  ad(fm)  Rso(fm)  aso(fm)\n";
-
-        for (int nen = -80; nen <= 200; ++nen)
-        {
-            double e = 0.1 * nen;
-            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
-                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
-            if (!print) continue;
-            for (int k = 1; k <= 2; ++k)
-            {
-                int pdg = (k == 2) ? 2212 : 2112;
-                double e_safe = std::max(e, 0.0);
-                kd.setIncidentEnergyAndFragment(e_safe, pdg);
-
                 double Rv = kd.getRv();
                 double av = kd.getav();
                 double Rd = kd.getRd();
@@ -369,6 +340,11 @@ int main(int argc, char *argv[])
 
                 wd_file << std::setw(10) << std::fixed << std::setprecision(5) << e
                         << std::setw(4) << k
+                        << std::setw(14) << std::scientific << std::setprecision(6) << Vv
+                        << std::setw(14) << Wv
+                        << std::setw(14) << Wd
+                        << std::setw(14) << Vso
+                        << std::setw(14) << Wso
                         << std::setw(14) << std::fixed << std::setprecision(6) << Rv
                         << std::setw(14) << av
                         << std::setw(14) << Rd
