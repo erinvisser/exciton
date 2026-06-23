@@ -2,13 +2,17 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <cstring>
+#include <ctime>
 
 #include "preeq_common.hh"
 #include "transition_rates.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
+#include "marley/MassTable.hh"
 
 int main(int argc, char *argv[])
 {
@@ -17,6 +21,7 @@ int main(int argc, char *argv[])
     int midBins = 50;
     bool guardBounds = true;
     CollisionKernel kernel = CollisionKernel::MatrixElement;
+    bool quiet = false;
 
     for (int i = 1; i < argc; ++i)
     {
@@ -24,6 +29,8 @@ int main(int argc, char *argv[])
             mode = PreeqMode::Analytical;
         else if (std::strcmp(argv[i], "--no-guards") == 0)
             guardBounds = false;
+        else if (std::strcmp(argv[i], "--quiet") == 0)
+            quiet = true;
         else if (std::strcmp(argv[i], "--method") == 0 && i + 1 < argc)
         {
             ++i;
@@ -50,39 +57,6 @@ int main(int argc, char *argv[])
         mode = PreeqMode::Numerical;
     }
 
-    // Diagnostic: OMP parameters matching TALYS bonetti.f90 energy grid
-    {
-        marley::KoningDelarocheOpticalModel kd_target(18, 40);
-        auto print_omp = [&](double e, int k)
-        {
-            int pdg = (k == 2) ? 2212 : 2112;
-            double e_safe = std::max(e, 0.0);
-            kd_target.setIncidentEnergyAndFragment(e_safe, pdg);
-            double wv = kd_target.getWv();
-            double wd = kd_target.getWd();
-            double rv = kd_target.getRv();
-            double av = kd_target.getav();
-            double rd = kd_target.getRd();
-            double ad = kd_target.getad();
-            double wvol = wvolRadialIntegral(wv, wd, rv, av, rd, ad);
-            std::cout << "# OUR_OMP k=" << k << " e=" << e
-                      << " w=" << wv << " wd=" << wd
-                      << " rw=" << rv << " aw=" << av
-                      << " rwd=" << rd << " awd=" << ad
-                      << " wvol=" << wvol << "\n";
-        };
-        for (int nen = -80; nen <= 200; ++nen)
-        {
-            double e = 0.1 * nen;
-            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0 || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
-            if (print)
-            {
-                print_omp(e, 1);
-                print_omp(e, 2);
-            }
-        }
-    }
-
     int Z = 18;
     int N = 22;
     int A_p = 1;
@@ -104,105 +78,261 @@ int main(int argc, char *argv[])
     double delta = pairingEnergyDelta(A_target, chi);
     double ncrit = nCrit(Z, N, delta);
 
-    std::cout << "# header: \n";
-    std::cout << "#   title: Ar40(n,x) two-component exciton model\n";
-    std::cout << "#   source: exciton (C++), "
-              << (mode == PreeqMode::Analytical ? "analytical" : "numerical")
-              << " mode, "
-              << (method == IntegrationMethod::Midpoint ? "midpoint" : "clenshaw-curtis")
-              << (method == IntegrationMethod::ClenshawCurtis && guardBounds ? ", guarded" : "")
-              << " integration, "
-              << (kernel == CollisionKernel::OpticalModel ? "optical-model" : "matrix-element")
-              << " kernel\n";
-    std::cout << "#   user: Erin Visser\n";
-    std::cout << "#   date: 2026-06-16\n";
-    std::cout << "#   format: YANDF-0.4\n";
-    std::cout << "# target: \n";
-    std::cout << "#   Z: " << Z << "\n";
-    std::cout << "#   A: 40\n";
-    std::cout << "#   nuclide: Ar40\n";
-    std::cout << "# parameters: \n";
-    std::cout << "#   E-incident [MeV]:  2.000000E+01\n";
-    std::cout << "#   E-compound [MeV]:  " << E_comp << "\n";
-    std::cout << "#   Fermi well depth [MeV]:  " << V << "\n";
-    if (kernel == CollisionKernel::MatrixElement)
-    {
-        std::cout << "#   Constant for matrix element:  1.000000E+00\n";
-        std::cout << "#   p-p ratio for matrix element:  1.000000E+00\n";
-        std::cout << "#   n-n ratio for matrix element:  1.500000E+00\n";
-        std::cout << "#   p-n ratio for matrix element:  1.000000E+00\n";
-        std::cout << "#   n-p ratio for matrix element:  1.000000E+00\n";
-    }
-    else
-    {
-        double Rpinu = R_pi_nu / R_pi_pi;
-        double denom = 1.0 + 2.0 * Rpinu;
-        double ws = M2c * 0.55 / denom;
-        double wc = M2c * 0.55 * 2.0 * Rpinu / denom;
-        double w0 = 0.5 * (ws + wc);
-        std::cout << "#   OMP constant C_omp:  0.55\n";
-        std::cout << "#   M2 constant (C1):    " << C1 << "\n";
-        std::cout << "#   Rpinu:               " << Rpinu << "\n";
-        std::cout << "#   Wompfac(same-type):  " << ws << "\n";
-        std::cout << "#   Wompfac(cross-type): " << wc << "\n";
-        std::cout << "#   Wompfac(conversion): " << w0 << "\n";
-    }
-    std::cout << "#   quantity: \n";
-    std::cout << "#     type: internal transition rate\n";
-    std::cout << "#   datablock: \n";
-    std::cout << "#     columns: 8\n";
+    // Output file setup
+    std::string outdir = "lambda_printouts/OMP";
+    std::string kd03_dir = outdir + "/KD03_Output";
+    std::string rates_dir = outdir + "/Rates_Output";
 
-    std::vector<ExcitonState> states;
+    std::time_t now = std::time(nullptr);
+    char ts[32];
+    std::strftime(ts, sizeof(ts), "%Y%m%d_%H%M%S", std::localtime(&now));
 
-    for (int k = 0; k <= 5; ++k)
+    std::string mode_str = (mode == PreeqMode::Analytical) ? "analytical" : "numerical";
+    std::string method_str = (method == IntegrationMethod::Midpoint) ? "midpoint" : "clenshaw-curtis";
+    std::string guard_str = guardBounds ? "_guarded" : "";
+    std::string kernel_str = (kernel == CollisionKernel::OpticalModel) ? "optical-model" : "matrix-element";
+
+    std::ostringstream rates_name;
+    rates_name << rates_dir << "/lambda_Ar40_n_" << mode_str << "_" << method_str
+               << guard_str << "_" << kernel_str << "_" << ts << ".txt";
+    std::string kd03_name = kd03_dir + "/kd03_Ar40_n_" + ts + ".txt";
+
+    std::ofstream rates_file(rates_name.str());
+    std::ofstream kd03_file(kd03_name);
+
+    if (!rates_file.is_open())
     {
-        for (int i = 0; i <= k; ++i)
+        std::cerr << "Error: could not open " << rates_name.str() << "\n";
+        return 1;
+    }
+    if (!kd03_file.is_open())
+    {
+        std::cerr << "Error: could not open " << kd03_name << "\n";
+        return 1;
+    }
+
+    if (!quiet)
+    {
+        std::cout << "# wrote rates to " << rates_name.str() << "\n";
+        std::cout << "# wrote KD03 diagnostics to " << kd03_name << "\n";
+    }
+
+    // KD03 diagnostic block
+    {
+        marley::KoningDelarocheOpticalModel kd(18, 40);
+        double A_t = 40.0;
+        double A13 = std::pow(A_t, 1.0 / 3.0);
+
+        kd03_file << "# KD03 optical model parameters\n";
+        kd03_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
+        kd03_file << "# Projectile: n\n";
+        kd03_file << "# MARLEY KoningDelarocheOpticalModel\n";
+        kd03_file << "#\n";
+
+        // Neutron coefficients
+        kd03_file << "# --- Neutron (k=1) coefficients ---\n";
+        kd03_file << "# Real volume:  v1n=" << kd.getV1n() << "  v2n=" << kd.getV2n()
+                  << "  v3n=" << kd.getV3n() << "  v4n=" << kd.getV4n() << "\n";
+        kd03_file << "# Imag volume:  w1n=" << kd.getW1n() << "  w2n=" << kd.getW2n() << "\n";
+        kd03_file << "# Imag surf:    d1n=" << kd.getD1n() << "  d2n=" << kd.getD2n()
+                  << "  d3n=" << kd.getD3n() << "\n";
+        kd03_file << "# Spin-orbit:   vso1n=" << kd.getVso1n() << "  vso2n=" << kd.getVso2n()
+                  << "  wso1n=" << kd.getWso1n() << "  wso2n=" << kd.getWso2n() << "\n";
+        kd03_file << "# Fermi energy: Efn=" << kd.getEfn() << "\n";
+        kd03_file << "# Geometry:\n";
+        kd03_file << "#   Rvn=" << kd.getRvn() << "  avn=" << kd.getavn() << "\n";
+        kd03_file << "#   Rdn=" << kd.getRdn() << "  adn=" << kd.getadn() << "\n";
+        kd03_file << "#   Rso_n=" << kd.getRso_n() << "  aso_n=" << kd.getaso_n() << "\n";
+        kd03_file << "# Reduced radii:  rv=" << (kd.getRvn() / A13)
+                  << "  rd=" << (kd.getRdn() / A13)
+                  << "  rso=" << (kd.getRso_n() / A13) << "\n";
+        kd03_file << "#\n";
+
+        // Proton coefficients
+        kd03_file << "# --- Proton (k=2) coefficients ---\n";
+        kd03_file << "# Real volume:  v1p=" << kd.getV1p() << "  v2p=" << kd.getV2p()
+                  << "  v3p=" << kd.getV3p() << "  v4p=" << kd.getV4p() << "\n";
+        kd03_file << "# Imag volume:  w1p=" << kd.getW1p() << "  w2p=" << kd.getW2p() << "\n";
+        kd03_file << "# Imag surf:    d1p=" << kd.getD1p() << "  d2p=" << kd.getD2p()
+                  << "  d3p=" << kd.getD3p() << "\n";
+        kd03_file << "# Spin-orbit:   vso1p=" << kd.getVso1p() << "  vso2p=" << kd.getVso2p()
+                  << "  wso1p=" << kd.getWso1p() << "  wso2p=" << kd.getWso2p() << "\n";
+        kd03_file << "# Fermi energy: Efp=" << kd.getEfp() << "\n";
+        kd03_file << "# Coulomb:      Vcbar_p=" << kd.getVcbar_p() << "  Rc=" << kd.getRc() << "\n";
+        kd03_file << "# Geometry:\n";
+        kd03_file << "#   Rvp=" << kd.getRvp() << "  avp=" << kd.getavp() << "\n";
+        kd03_file << "#   Rdp=" << kd.getRdp() << "  adp=" << kd.getadp() << "\n";
+        kd03_file << "#   Rso_p=" << kd.getRso_p() << "  aso_p=" << kd.getaso_p() << "\n";
+        kd03_file << "#\n";
+
+        // Q-values from MARLEY MassTable
         {
-            states.push_back({i, i, k + 1 - i, k - i});
+            auto& mt = marley::MassTable::Instance();
+            double micro_amu = 0.000931494061;
+            double ME_n = mt.get_particle_mass(marley_utils::NEUTRON) - micro_amu;
+            double ME_Ar40 = mt.get_mass_excess(18, 40);
+            double ME_Ar41 = mt.get_mass_excess(18, 41);
+            double ME_K40  = mt.get_mass_excess(19, 40);
+            double ME_Cl39 = mt.get_mass_excess(17, 39);
+            double ME_Cl38 = mt.get_mass_excess(17, 38);
+            double ME_S38  = mt.get_mass_excess(16, 38);
+            double ME_S37  = mt.get_mass_excess(16, 37);
+            double ME_H1   = mt.get_mass_excess(1, 1);
+            double ME_d    = mt.get_mass_excess(1, 2);
+            double ME_t    = mt.get_mass_excess(1, 3);
+            double ME_h    = mt.get_mass_excess(2, 3);
+            double ME_a    = mt.get_mass_excess(2, 4);
+
+            kd03_file << "# --- Q-values [MeV] from MARLEY MassTable ---\n";
+            kd03_file << "# (n,gamma):   " << (ME_Ar40 + ME_n - ME_Ar41) << "\n";
+            kd03_file << "# (n,n):       0.0\n";
+            kd03_file << "# (n,p):       " << (ME_Ar40 + ME_n - ME_H1 - ME_K40) << "\n";
+            kd03_file << "# (n,d):       " << (ME_Ar40 + ME_n - ME_d - ME_Cl39) << "\n";
+            kd03_file << "# (n,t):       " << (ME_Ar40 + ME_n - ME_t - ME_Cl38) << "\n";
+            kd03_file << "# (n,3He):     " << (ME_Ar40 + ME_n - ME_h - ME_S38) << "\n";
+            kd03_file << "# (n,alpha):   " << (ME_Ar40 + ME_n - ME_a - ME_S37) << "\n";
+            kd03_file << "#\n";
+        }
+
+        // Energy-dependent OMP values
+        kd03_file << "# --- Energy-dependent OMP values ---\n";
+        kd03_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
+        kd03_file << "# Columns: E(MeV) k Vv(MeV) Wv(MeV) Wd(MeV)";
+        kd03_file << " av(fm) ad(fm) Rd(fm) rv(fm) rd(fm) wvol(MeV)\n";
+        kd03_file << std::scientific << std::uppercase;
+        kd03_file.precision(6);
+        for (int nen = -80; nen <= 200; ++nen)
+        {
+            double e = 0.1 * nen;
+            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
+                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
+            if (!print) continue;
+            for (int k = 1; k <= 2; ++k)
+            {
+                int pdg = (k == 2) ? 2212 : 2112;
+                double e_safe = std::max(e, 0.0);
+                kd.setIncidentEnergyAndFragment(e_safe, pdg);
+                double Vv = kd.getVv();
+                double Wv = kd.getWv();
+                double Wd = kd.getWd();
+                double Rv = kd.getRv();
+                double av = kd.getav();
+                double Rd = kd.getRd();
+                double ad = kd.getad();
+                double rv = Rv / A13;
+                double rd = Rd / A13;
+                double wvol = wvolRadialIntegral(Wv, Wd, Rv, av, Rd, ad);
+                kd03_file << std::setw(10) << e << std::setw(4) << k
+                          << std::setw(14) << Vv << std::setw(14) << Wv
+                          << std::setw(14) << Wd
+                          << std::setw(10) << av << std::setw(10) << ad
+                          << std::setw(10) << Rd
+                          << std::setw(10) << rv << std::setw(10) << rd
+                          << std::setw(15) << wvol << "\n";
+            }
         }
     }
 
-    std::cout << "#     entries: " << states.size() << "\n";
-    std::cout << "##     p(p)           h(p)           p(n)           h(n)";
-    std::cout << "       lambdapiplus   lambdanuplus    lambdapinu     lambdanupi\n";
-    std::cout << "##      []             []             []             []";
-    std::cout << "          [sec^-1]       [sec^-1]       [sec^-1]       [sec^-1]\n";
-
-    std::cout << std::scientific << std::uppercase;
-    std::cout.precision(6);
-
-    for (auto &s : states)
+    // Rates computation
     {
-        int n = s.p_pi + s.h_pi + s.p_nu + s.h_nu;
-        double P_ph = fuPairingCorrection(delta, E_comp, n, ncrit);
-        double U = availableExcitationEnergy(E_comp, P_ph);
+        rates_file << "# header: \n";
+        rates_file << "#   title: Ar40(n,x) two-component exciton model\n";
+        rates_file << "#   source: exciton (C++), "
+                  << mode_str << " mode, "
+                  << method_str
+                  << (method == IntegrationMethod::ClenshawCurtis && guardBounds ? ", guarded" : "")
+                  << " integration, "
+                  << kernel_str << " kernel\n";
+        rates_file << "#   user: Erin Visser\n";
+        rates_file << "#   date: 2026-06-23\n";
+        rates_file << "#   format: YANDF-0.4\n";
+        rates_file << "# target: \n";
+        rates_file << "#   Z: " << Z << "\n";
+        rates_file << "#   A: 40\n";
+        rates_file << "#   nuclide: Ar40\n";
+        rates_file << "# parameters: \n";
+        rates_file << "#   E-incident [MeV]:  2.000000E+01\n";
+        rates_file << "#   E-compound [MeV]:  " << E_comp << "\n";
+        rates_file << "#   Fermi well depth [MeV]:  " << V << "\n";
+        if (kernel == CollisionKernel::MatrixElement)
+        {
+            rates_file << "#   Constant for matrix element:  1.000000E+00\n";
+            rates_file << "#   p-p ratio for matrix element:  1.000000E+00\n";
+            rates_file << "#   n-n ratio for matrix element:  1.500000E+00\n";
+            rates_file << "#   p-n ratio for matrix element:  1.000000E+00\n";
+            rates_file << "#   n-p ratio for matrix element:  1.000000E+00\n";
+        }
+        else
+        {
+            double Rpinu = R_pi_nu / R_pi_pi;
+            double denom = 1.0 + 2.0 * Rpinu;
+            double ws = M2c * 0.55 / denom;
+            double wc = M2c * 0.55 * 2.0 * Rpinu / denom;
+            double w0 = 0.5 * (ws + wc);
+            rates_file << "#   OMP constant C_omp:  0.55\n";
+            rates_file << "#   M2 constant (C1):    " << C1 << "\n";
+            rates_file << "#   Rpinu:               " << Rpinu << "\n";
+            rates_file << "#   Wompfac(same-type):  " << ws << "\n";
+            rates_file << "#   Wompfac(cross-type): " << wc << "\n";
+            rates_file << "#   Wompfac(conversion): " << w0 << "\n";
+        }
+        rates_file << "#   quantity: \n";
+        rates_file << "#     type: internal transition rate\n";
+        rates_file << "#   datablock: \n";
+        rates_file << "#     columns: 8\n";
 
-        double lam_pi_plus = lambdaRate(LambdaType::ProtonPairCreation,
-                                        mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
-                                        R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
-                                        method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
-        double lam_nu_plus = lambdaRate(LambdaType::NeutronPairCreation,
-                                        mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
-                                        R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
-                                        method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
-        double lam_pi_nu = lambdaRate(LambdaType::ProtonToNeutronConversion,
-                                      mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
-                                      R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
-                                      method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
-        double lam_nu_pi = lambdaRate(LambdaType::NeutronToProtonConversion,
-                                      mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
-                                      R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
-                                      method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
+        std::vector<ExcitonState> states;
 
-        std::cout << std::setw(14) << s.p_pi
-                  << std::setw(14) << s.h_pi
-                  << std::setw(14) << s.p_nu
-                  << std::setw(14) << s.h_nu
-                  << std::setw(15) << lam_pi_plus
-                  << std::setw(15) << lam_nu_plus
-                  << std::setw(15) << lam_pi_nu
-                  << std::setw(15) << lam_nu_pi
-                  << "\n";
+        for (int k = 0; k <= 5; ++k)
+        {
+            for (int i = 0; i <= k; ++i)
+            {
+                states.push_back({i, i, k + 1 - i, k - i});
+            }
+        }
+
+        rates_file << "#     entries: " << states.size() << "\n";
+        rates_file << "##     p(p)           h(p)           p(n)           h(n)";
+        rates_file << "       lambdapiplus   lambdanuplus    lambdapinu     lambdanupi\n";
+        rates_file << "##      []             []             []             []";
+        rates_file << "          [sec^-1]       [sec^-1]       [sec^-1]       [sec^-1]\n";
+
+        rates_file << std::scientific << std::uppercase;
+        rates_file.precision(6);
+
+        for (auto &s : states)
+        {
+            int n = s.p_pi + s.h_pi + s.p_nu + s.h_nu;
+            double P_ph = fuPairingCorrection(delta, E_comp, n, ncrit);
+            double U = availableExcitationEnergy(E_comp, P_ph);
+
+            double lam_pi_plus = lambdaRate(LambdaType::ProtonPairCreation,
+                                            mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                            R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
+                                            method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
+            double lam_nu_plus = lambdaRate(LambdaType::NeutronPairCreation,
+                                            mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                            R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
+                                            method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
+            double lam_pi_nu = lambdaRate(LambdaType::ProtonToNeutronConversion,
+                                          mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                          R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
+                                          method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
+            double lam_nu_pi = lambdaRate(LambdaType::NeutronToProtonConversion,
+                                          mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                          R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
+                                          method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
+
+            rates_file << std::setw(14) << s.p_pi
+                      << std::setw(14) << s.h_pi
+                      << std::setw(14) << s.p_nu
+                      << std::setw(14) << s.h_nu
+                      << std::setw(15) << lam_pi_plus
+                      << std::setw(15) << lam_nu_plus
+                      << std::setw(15) << lam_pi_nu
+                      << std::setw(15) << lam_nu_pi
+                      << "\n";
+        }
     }
 
     return 0;
