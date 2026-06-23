@@ -168,8 +168,8 @@ int main(int argc, char *argv[])
         // Q-values from MARLEY MassTable
         {
             auto& mt = marley::MassTable::Instance();
-            double micro_amu = 0.000931494061;
-            double ME_n = mt.get_particle_mass(marley_utils::NEUTRON) - micro_amu;
+            double u = 931.494061; // atomic mass unit (MeV)
+            double ME_n = mt.get_particle_mass(marley_utils::NEUTRON) - u;
             double ME_Ar40 = mt.get_mass_excess(18, 40);
             double ME_Ar41 = mt.get_mass_excess(18, 41);
             double ME_K40  = mt.get_mass_excess(19, 40);
