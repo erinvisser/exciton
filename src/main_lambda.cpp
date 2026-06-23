@@ -14,6 +14,8 @@
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/MassTable.hh"
 
+enum class ValidationMode { KD03, WellDepths };
+
 int main(int argc, char *argv[])
 {
     PreeqMode mode = PreeqMode::Numerical;
@@ -22,6 +24,7 @@ int main(int argc, char *argv[])
     bool guardBounds = true;
     CollisionKernel kernel = CollisionKernel::MatrixElement;
     bool quiet = false;
+    ValidationMode vmode = ValidationMode::KD03;
 
     for (int i = 1; i < argc; ++i)
     {
@@ -48,6 +51,14 @@ int main(int argc, char *argv[])
                 kernel = CollisionKernel::OpticalModel;
             else if (std::strcmp(argv[i], "matrix-element") == 0)
                 kernel = CollisionKernel::MatrixElement;
+        }
+        else if (std::strcmp(argv[i], "--mode") == 0 && i + 1 < argc)
+        {
+            ++i;
+            if (std::strcmp(argv[i], "well_depths") == 0)
+                vmode = ValidationMode::WellDepths;
+            else if (std::strcmp(argv[i], "kd03") == 0)
+                vmode = ValidationMode::KD03;
         }
     }
 
@@ -82,6 +93,7 @@ int main(int argc, char *argv[])
     std::string outdir = "lambda_printouts/OMP";
     std::string kd03_dir = outdir + "/KD03_Output";
     std::string rates_dir = outdir + "/Rates_Output";
+    std::string wd_dir = outdir + "/Well_Depths_Output";
 
     std::time_t now = std::time(nullptr);
     char ts[32];
@@ -92,32 +104,51 @@ int main(int argc, char *argv[])
     std::string guard_str = guardBounds ? "_guarded" : "";
     std::string kernel_str = (kernel == CollisionKernel::OpticalModel) ? "optical-model" : "matrix-element";
 
+    std::string kd03_name = kd03_dir + "/kd03_Ar40_n_" + ts + ".log";
+    std::string wd_name = wd_dir + "/well_depths_Ar40_n_" + ts + ".log";
+
     std::ostringstream rates_name;
     rates_name << rates_dir << "/lambda_Ar40_n_" << mode_str << "_" << method_str
                << guard_str << "_" << kernel_str << "_" << ts << ".log";
-    std::string kd03_name = kd03_dir + "/kd03_Ar40_n_" + ts + ".log";
 
-    std::ofstream rates_file(rates_name.str());
-    std::ofstream kd03_file(kd03_name);
+    std::ofstream kd03_file;
+    std::ofstream rates_file;
+    std::ofstream wd_file;
 
-    if (!rates_file.is_open())
+    if (vmode == ValidationMode::KD03)
     {
-        std::cerr << "Error: could not open " << rates_name.str() << "\n";
-        return 1;
+        kd03_file.open(kd03_name);
+        rates_file.open(rates_name.str());
+        if (!kd03_file.is_open())
+        {
+            std::cerr << "Error: could not open " << kd03_name << "\n";
+            return 1;
+        }
+        if (!rates_file.is_open())
+        {
+            std::cerr << "Error: could not open " << rates_name.str() << "\n";
+            return 1;
+        }
+        if (!quiet)
+        {
+            std::cout << "# wrote KD03 diagnostics to " << kd03_name << "\n";
+            std::cout << "# wrote rates to " << rates_name.str() << "\n";
+        }
     }
-    if (!kd03_file.is_open())
+    else if (vmode == ValidationMode::WellDepths)
     {
-        std::cerr << "Error: could not open " << kd03_name << "\n";
-        return 1;
-    }
-
-    if (!quiet)
-    {
-        std::cout << "# wrote rates to " << rates_name.str() << "\n";
-        std::cout << "# wrote KD03 diagnostics to " << kd03_name << "\n";
+        wd_file.open(wd_name);
+        if (!wd_file.is_open())
+        {
+            std::cerr << "Error: could not open " << wd_name << "\n";
+            return 1;
+        }
+        if (!quiet)
+            std::cout << "# wrote well depths to " << wd_name << "\n";
     }
 
     // KD03 diagnostic block
+    if (vmode == ValidationMode::KD03)
     {
         marley::KoningDelarocheOpticalModel kd(18, 40);
         double A_t = 40.0;
@@ -271,7 +302,85 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Well-depths diagnostic block
+    if (vmode == ValidationMode::WellDepths)
+    {
+        marley::KoningDelarocheOpticalModel kd(18, 40);
+        double A_t = 40.0;
+        double A13 = std::pow(A_t, 1.0 / 3.0);
+
+        wd_file << "# Well depths from MARLEY KoningDelarocheOpticalModel\n";
+        wd_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
+        wd_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
+        wd_file << "#\n";
+        wd_file << "# --- Table 1: Energy-dependent potential depths ---\n";
+        wd_file << "# Columns: E(MeV)  k  Vv(MeV)  Wv(MeV)  Wd(MeV)  Vso(MeV)  Wso(MeV)\n";
+
+        for (int nen = -80; nen <= 200; ++nen)
+        {
+            double e = 0.1 * nen;
+            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
+                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
+            if (!print) continue;
+            for (int k = 1; k <= 2; ++k)
+            {
+                int pdg = (k == 2) ? 2212 : 2112;
+                double e_safe = std::max(e, 0.0);
+                kd.setIncidentEnergyAndFragment(e_safe, pdg);
+
+                double Vv = kd.getVv();
+                double Wv = kd.getWv();
+                double Wd = kd.getWd();
+                double Vso = kd.getVso();
+                double Wso = kd.getWso();
+
+                wd_file << std::setw(10) << std::fixed << std::setprecision(5) << e
+                        << std::setw(4) << k
+                        << std::setw(14) << std::scientific << std::setprecision(6) << Vv
+                        << std::setw(14) << Wv
+                        << std::setw(14) << Wd
+                        << std::setw(14) << Vso
+                        << std::setw(14) << Wso << "\n";
+            }
+        }
+
+        wd_file << "#\n";
+        wd_file << "# --- Table 2: Folded geometries ---\n";
+        wd_file << "# Columns: E(MeV)  k  Rv(fm)  av(fm)  Rd(fm)  ad(fm)  Rso(fm)  aso(fm)\n";
+
+        for (int nen = -80; nen <= 200; ++nen)
+        {
+            double e = 0.1 * nen;
+            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
+                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
+            if (!print) continue;
+            for (int k = 1; k <= 2; ++k)
+            {
+                int pdg = (k == 2) ? 2212 : 2112;
+                double e_safe = std::max(e, 0.0);
+                kd.setIncidentEnergyAndFragment(e_safe, pdg);
+
+                double Rv = kd.getRv();
+                double av = kd.getav();
+                double Rd = kd.getRd();
+                double ad = kd.getad();
+                double Rso = (k == 2) ? kd.getRso_p() : kd.getRso_n();
+                double aso = (k == 2) ? kd.getaso_p() : kd.getaso_n();
+
+                wd_file << std::setw(10) << std::fixed << std::setprecision(5) << e
+                        << std::setw(4) << k
+                        << std::setw(14) << std::fixed << std::setprecision(6) << Rv
+                        << std::setw(14) << av
+                        << std::setw(14) << Rd
+                        << std::setw(14) << ad
+                        << std::setw(14) << Rso
+                        << std::setw(14) << aso << "\n";
+            }
+        }
+    }
+
     // Rates computation
+    if (vmode == ValidationMode::KD03)
     {
         rates_file << "# header: \n";
         rates_file << "#   title: Ar40(n,x) two-component exciton model\n";
