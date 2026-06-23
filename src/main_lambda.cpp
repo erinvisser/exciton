@@ -14,7 +14,7 @@
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/MassTable.hh"
 
-enum class ValidationMode { KD03, WellDepths };
+enum class ValidationMode { KD03, WellDepths, RadialPotential };
 
 int main(int argc, char *argv[])
 {
@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
             ++i;
             if (std::strcmp(argv[i], "well_depths") == 0)
                 vmode = ValidationMode::WellDepths;
+            else if (std::strcmp(argv[i], "radial_potential") == 0)
+                vmode = ValidationMode::RadialPotential;
             else if (std::strcmp(argv[i], "kd03") == 0)
                 vmode = ValidationMode::KD03;
         }
@@ -94,6 +96,7 @@ int main(int argc, char *argv[])
     std::string kd03_dir = outdir + "/KD03_Output";
     std::string rates_dir = outdir + "/Rates_Output";
     std::string wd_dir = outdir + "/Well_Depths_Output";
+    std::string rp_dir = outdir + "/Radial_Potential_Output";
 
     std::time_t now = std::time(nullptr);
     char ts[32];
@@ -106,6 +109,7 @@ int main(int argc, char *argv[])
 
     std::string kd03_name = kd03_dir + "/kd03_Ar40_n_" + ts + ".log";
     std::string wd_name = wd_dir + "/well_depths_Ar40_n_" + ts + ".log";
+    std::string rp_name = rp_dir + "/radpot_Ar40_n_" + ts + ".log";
 
     std::ostringstream rates_name;
     rates_name << rates_dir << "/lambda_Ar40_n_" << mode_str << "_" << method_str
@@ -114,6 +118,7 @@ int main(int argc, char *argv[])
     std::ofstream kd03_file;
     std::ofstream rates_file;
     std::ofstream wd_file;
+    std::ofstream rp_file;
 
     if (vmode == ValidationMode::KD03)
     {
@@ -145,6 +150,17 @@ int main(int argc, char *argv[])
         }
         if (!quiet)
             std::cout << "# wrote well depths to " << wd_name << "\n";
+    }
+    else if (vmode == ValidationMode::RadialPotential)
+    {
+        rp_file.open(rp_name);
+        if (!rp_file.is_open())
+        {
+            std::cerr << "Error: could not open " << rp_name << "\n";
+            return 1;
+        }
+        if (!quiet)
+            std::cout << "# wrote radial potential to " << rp_name << "\n";
     }
 
     // KD03 diagnostic block
@@ -351,6 +367,44 @@ int main(int argc, char *argv[])
                         << std::setw(14) << ad
                         << std::setw(14) << Rso
                         << std::setw(14) << aso << "\n";
+            }
+        }
+    }
+
+    // Radial potential diagnostic block
+    if (vmode == ValidationMode::RadialPotential)
+    {
+        marley::KoningDelarocheOpticalModel kd(18, 40);
+
+        rp_file << "# Radial optical model potential from MARLEY KoningDelarocheOpticalModel\n";
+        rp_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
+        rp_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
+        rp_file << "# Radial grid: 0.1 to 15.0 fm, 0.1 fm step\n";
+        rp_file << "#\n";
+        rp_file << "# Columns: E(MeV)  k  r(fm)  V(MeV)  W(MeV)\n";
+
+        for (int nen = -80; nen <= 200; ++nen)
+        {
+            double e = 0.1 * nen;
+            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
+                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
+            if (!print) continue;
+            for (int k = 1; k <= 2; ++k)
+            {
+                int pdg = (k == 2) ? 2212 : 2112;
+                double e_safe = std::max(e, 0.0);
+                kd.updateWellDepths(e_safe, pdg);
+
+                for (int nr = 1; nr <= 150; ++nr)
+                {
+                    double r = 0.1 * nr;
+                    std::complex<double> U = kd.evalOMP(r);
+                    rp_file << std::setw(10) << std::fixed << std::setprecision(5) << e
+                            << std::setw(4) << k
+                            << std::setw(12) << std::fixed << std::setprecision(6) << r
+                            << std::setw(16) << std::scientific << std::setprecision(6) << U.real()
+                            << std::setw(16) << U.imag() << "\n";
+                }
             }
         }
     }
