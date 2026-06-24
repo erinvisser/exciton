@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMP Implementation — exciton explanation</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html" style="color:#fff;font-weight:600;">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Explanation / <span>OMP Implementation</span></div>
+  <span class="tag exp">Explanation</span>
+  <h1>Optical Model Potential Implementation</h1>
+  <p>A detailed walk-through of how the Koning-Delaroche optical model replaces the constant matrix element for pre-equilibrium internal transition rates.</p>
+
+  <h2>Why Replace M² with an OMP?</h2>
+  <p>
+    In the standard exciton model, the internal transition rate for pair creation
+    is proportional to a constant matrix element \(M^2\) (Kalbach-Cline
+    parametrization). While computationally simple, this approach ignores the
+    energy and isospin dependence of the nucleon-nucleon interaction inside the
+    nuclear medium. The optical model potential (OMP) provides a more
+    physically motivated collision probability derived from the imaginary part
+    of the nucleon-nucleus interaction.
+  </p>
+
+  <div class="box ok">
+    <strong>Key insight:</strong> The imaginary part of the optical potential
+    \(W(r)\) describes the absorption of flux from the elastic channel into
+    more complex configurations — exactly the physics needed for
+    pre-equilibrium internal transitions.
+  </div>
+
+  <h2>The Koning-Delaroche Global Optical Model</h2>
+  <p>
+    The KD03 potential <sup>[<a href="#ref-kd">1</a>]</sup> is the current
+    standard global phenomenological optical potential, fitted to a large
+    database of elastic scattering observables. The full potential has the form:
+  </p>
+  <div class="eq-block">
+    \[
+    U(r) = V(r) + iW(r) + V_{so}(r)(\mathbf{l}\cdot\mathbf{s}) + iW_{so}(r)(\mathbf{l}\cdot\mathbf{s}) + V_C(r)
+    \]
+  </div>
+  <p>
+    For the exciton model, we need only the <strong>central imaginary potential</strong>
+    \(W(r) = W_v(r) + W_d(r)\). The spin-orbit contribution averages to zero over
+    the Fermi sphere and is not needed for absorption-strength calculations.
+  </p>
+
+  <h3>Energy Dependence of the Imaginary Potential</h3>
+  <p>
+    The volume and surface imaginary strengths depend on the fragment kinetic
+    energy E (per nucleon):
+  </p>
+  <div class="eq-block">
+    \[
+    W_v(E) = n \cdot W_1^n \frac{(E_{\text{eff}} - E_f^n)^2}
+                                  {(E_{\text{eff}} - E_f^n)^2 + (W_2^n)^2}
+           + z \cdot W_1^p \frac{(E_{\text{eff}} - E_f^p)^2}
+                                  {(E_{\text{eff}} - E_f^p)^2 + (W_2^p)^2}
+    \]
+  </div>
+  <div class="eq-block">
+    \[
+    W_d(E) = n \cdot D_1^n \frac{(E_{\text{eff}} - E_f^n)^2 e^{-D_2^n (E_{\text{eff}} - E_f^n)}}
+                                  {(E_{\text{eff}} - E_f^n)^2 + (D_3^n)^2}
+           + z \cdot D_1^p \frac{(E_{\text{eff}} - E_f^p)^2 e^{-D_2^p (E_{\text{eff}} - E_f^p)}}
+                                  {(E_{\text{eff}} - E_f^p)^2 + (D_3^p)^2}
+    \]
+  </div>
+  <p>
+    where \(n\) and \(z\) are the neutron and proton numbers of the
+    fragment, and \(E_{\text{eff}} = E/a\) for fragment mass \(a\).
+  </p>
+
+  <h3>Well Depth Averaging</h3>
+  <p>
+    The radius and diffuseness parameters are averaged over the fragment
+    composition:
+  </p>
+  <div class="eq-block">
+    \[
+    R_v = \frac{n R_v^n + z R_v^p}{a},\quad
+    a_v = \frac{n a_v^n + z a_v^p}{a},\quad
+    R_d = \frac{n R_d^n + z R_d^p}{a},\quad
+    a_d = \frac{n a_d^n + z a_d^p}{a}
+    \]
+  </div>
+
+  <h2>The Volume-Averaged Imaginary Potential</h2>
+  <p>
+    The radial form of the imaginary potential at radius \(r\) is:
+  </p>
+  <div class="eq-block">
+    \[
+    W(r) = W_v f_v(r) - 4 a_d W_d \frac{df_s}{dr}
+    \]
+  </div>
+  <p>
+    where \(f_v\) and \(f_s\) are Woods-Saxon form factors. The
+    <strong>volume average</strong> is:
+  </p>
+  <div class="eq-block">
+    \[
+    \langle W \rangle = \frac{\int_0^\infty W(r) f_v(r) r^2 dr}
+                             {\int_0^\infty f_v(r) r^2 dr}
+    \]
+  </div>
+  <p>
+    Following TALYS <code>bonetti.f90</code>, this is evaluated with a
+    50-bin midpoint rule at dr = 0.4 fm.
+  </p>
+
+  <h2>The Wompfac: Bridging M² and the OMP</h2>
+  <p>
+    To maintain consistency with existing TALYS parameterizations while
+    replacing the absolute scale, the code uses a <strong>weighting factor</strong>
+    (wompfac) that preserves the relative channel strengths from M²:
+  </p>
+
+  <div class="eq-block">
+    \[
+    \begin{aligned}
+    \text{wompfac}_{\text{same}} &= \frac{M^2_c \cdot 0.55}{1 + 2R_{\pi\nu}/R_{\pi\pi}} \\[4pt]
+    \text{wompfac}_{\text{cross}} &= \frac{M^2_c \cdot 0.55 \cdot 2R_{\pi\nu}/R_{\pi\pi}}{1 + 2R_{\pi\nu}/R_{\pi\pi}} \\[4pt]
+    \text{wompfac}_{\text{conv}} &= \frac{\text{wompfac}_{\text{same}} + \text{wompfac}_{\text{cross}}}{2}
+    \end{aligned}
+    \]
+  </div>
+
+  <p>
+    The constant \(C_{\text{OMP}} = 0.55\) comes from TALYS's
+    <code>matrix.f90</code>. The collision rate in the integrand becomes:
+  </p>
+  <div class="eq-block">
+    \[
+    \lambda_{\text{collision}} = \frac{2}{\hbar} \cdot \text{wompfac} \cdot \langle W \rangle
+    \]
+  </div>
+
+  <h2>Data Flow</h2>
+  <figure>
+    <svg viewBox="0 0 800 350" width="100%" style="max-width:800px">
+      <defs>
+        <marker id="arrow2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#0f4c81"/>
+        </marker>
+        <style>
+          .bx { fill: #e8f0fe; stroke: #0f4c81; stroke-width:1.5; rx:6; ry:6; }
+          .bx2 { fill: #f3e8ff; stroke: #5a189a; stroke-width:1.5; rx:6; ry:6; }
+          .bx3 { fill: #e8faf0; stroke: #2d6a4f; stroke-width:1.5; rx:6; ry:6; }
+          .lb { font-size:12px; fill:#1a1a2e; }
+          .lb2 { font-size:11px; fill:#555; }
+        </style>
+      </defs>
+      <rect x="20" y="20" width="200" height="50" class="bx"/>
+      <text x="120" y="50" text-anchor="middle" class="lb">--kernel optical-model</text>
+
+      <polygon points="250,45 270,35 270,55" fill="#0f4c81"/>
+      <rect x="290" y="15" width="220" height="60" class="bx3"/>
+      <text x="400" y="38" text-anchor="middle" class="lb2">lambdaRate &rarr; Numerical</text>
+      <text x="400" y="55" text-anchor="middle" class="lb2">Z_comp = Z + Z_proj</text>
+
+      <polygon points="540,45 560,35 560,55" fill="#0f4c81"/>
+      <rect x="580" y="20" width="200" height="50" class="bx2"/>
+      <text x="680" y="50" text-anchor="middle" class="lb">KoningDelaroche</text>
+      <text x="680" y="65" text-anchor="middle" class="lb2" style="font-size:10px;">OpticalModel</text>
+
+      <line x1="220" y1="70" x2="220" y2="110" stroke="#0f4c81" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+      <rect x="100" y="120" width="260" height="50" class="bx2"/>
+      <text x="230" y="145" text-anchor="middle" class="lb2">setIncidentEnergyAndFragment</text>
+      <text x="230" y="160" text-anchor="middle" class="lb2">(e_kin, pdg) with two_s=0</text>
+
+      <line x1="360" y1="145" x2="430" y2="145" stroke="#5a189a" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+      <rect x="450" y="120" width="280" height="50" class="bx3"/>
+      <text x="590" y="145" text-anchor="middle" class="lb2">getWv(), getWd(), getRv(), getav(),</text>
+      <text x="590" y="160" text-anchor="middle" class="lb2">getRd(), getad()</text>
+
+      <line x1="590" y1="170" x2="590" y2="210" stroke="#2d6a4f" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+      <rect x="450" y="220" width="280" height="50" class="bx"/>
+      <text x="590" y="245" text-anchor="middle" class="lb2">wvolRadialIntegral(Wv, Wd, Rv, av, Rd, ad)</text>
+      <text x="590" y="260" text-anchor="middle" class="lb2">50 bins, dr=0.4 fm, Eqs. 13.29-30</text>
+
+      <line x1="590" y1="270" x2="590" y2="290" stroke="#0f4c81" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+      <rect x="350" y="295" width="380" height="40" class="bx3"/>
+      <text x="540" y="318" text-anchor="middle" class="lb">&lambda; = (2/&#8463;) &middot; wompfac &middot; &lt;W&gt; &times; &omega; &times; g</text>
+    </svg>
+    <figcaption>
+      Data flow for OMP-based collision rates. The KD model is constructed
+      once per integration call, then queried at each energy bin.
+    </figcaption>
+  </figure>
+
+  <h2>Kinematics: From Integration Variable to Kinetic Energy</h2>
+  <p>
+    Inside the numerical integrand, the integration variable \(e\) is the
+    energy of the created particle-hole pair. The kinetic energy of the
+    colliding nucleon is:
+  </p>
+  <div class="eq-block">
+    \[
+    e_{\text{kin}} = e - S_{p/n}(Z_{\text{comp}}, N_{\text{comp}})
+    \]
+  </div>
+  <p>
+    where \(S_p\) and \(S_n\) are the proton and neutron separation energies
+    from the MARLEY MassTable. The kinetic energy is clamped to &ge; -20 MeV
+    to avoid singularities in the KD model at very negative energies.
+  </p>
+
+  <h2>Hole-Channel Ratio</h2>
+  <p>
+    In the OMP integrand, the hole-channel ratio
+    \(\omega_{\text{hole}}(e)/\omega_{\text{particle}}(e)\) is retained.
+    This purely statistical factor reflects the probability that the created
+    hole configuration is populated — it is independent of the collision
+    mechanism.
+  </p>
+
+  <h2>Key Approximations</h2>
+  <table>
+    <tr><th>Approximation</th><th>Justification</th></tr>
+    <tr>
+      <td>Spin-orbit contribution neglected (two_s=0)</td>
+      <td>Angle-averaged absorption; spin-orbit averages to zero over the Fermi sphere</td>
+    </tr>
+    <tr>
+      <td>Single KD model per config (compound nucleus)</td>
+      <td>Target and projectile form the compound nucleus; residual differences are small</td>
+    </tr>
+    <tr>
+      <td>Wompfac rescaling</td>
+      <td>Preserves M² relative channel strengths while replacing absolute scale with OMP</td>
+    </tr>
+    <tr>
+      <td>50-bin midpoint radial integral</td>
+      <td>Matches TALYS bonetti.f90 exactly; error &lt; 0.1% for smooth Woods-Saxon profiles</td>
+    </tr>
+  </table>
+
+  <h2>References</h2>
+  <ol>
+    <li id="ref-kd">A. J. Koning and J. P. Delaroche, <em>Local and global nucleon optical models from 1 keV to 200 MeV</em>, Nucl. Phys. A <strong>713</strong> (2003) 231&ndash;310. <a href="https://doi.org/10.1016/S0375-9474(02)01321-0">doi:10.1016/S0375-9474(02)01321-0</a></li>
+    <li>C. Kalbach, <em>Two-component exciton model: basic formalism and applications</em>, Phys. Rev. C <strong>33</strong> (1986) 818.</li>
+    <li>TALYS 1.96 manual, Section 13.4.4.</li>
+  </ol>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

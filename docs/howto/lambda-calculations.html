@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lambda Calculations — exciton how-to</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html" style="color:#fff;font-weight:600;">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html">How-to</a> / <span>Lambda Calculations</span></div>
+  <span class="tag how">How-to</span>
+  <h1>Lambda — Internal Transition Rate Calculations</h1>
+  <p>How to compute, interpret, and compare internal transition rates for the two-component exciton model.</p>
+
+  <h2>Basic Usage</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run</span>
+    <span class="comment">  # default: matrix-element kernel, kd03 mode</span>
+  </div>
+  <p>Or directly:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">MARLEY=../marley-private ./executables/lambda</span>
+  </div>
+
+  <h2>Matrix-Element Kernel (Kalbach-Cline M²)</h2>
+  <p>The default collision kernel uses the constant matrix element approximation (Eq. 13.24&ndash;13.26):</p>
+  <div class="eq-block">
+    \[
+    M^2 = C_1\,\frac{A_p}{A^3}\,
+    \left[7.48\,C_2 + \frac{4.62\times10^5}{\bigl(10.7\,C_3 + \frac{E_{\text{tot}}}{n A_p}\bigr)^3}\right]
+    \]
+  </div>
+  <p>Channel ratios scale M² for each channel type:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--kernel matrix-element"</span>
+  </div>
+  <p>The output header shows the channel ratios used:</p>
+  <div class="terminal">
+    <span class="comment">#   Constant for matrix element:  1.000000E+00</span><br>
+    <span class="comment">#   p-p ratio for matrix element:  1.000000E+00</span><br>
+    <span class="comment">#   n-n ratio for matrix element:  1.500000E+00</span><br>
+    <span class="comment">#   p-n ratio for matrix element:  1.000000E+00</span><br>
+    <span class="comment">#   n-p ratio for matrix element:  1.000000E+00</span>
+  </div>
+
+  <h3>Analytical Mode</h3>
+  <p>The analytical formulas (Eq. 13.27) provide closed-form transition rates:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--analytical"</span>
+  </div>
+  <div class="box ok">
+    <strong>Note:</strong> An analytical factor of 1.20 is applied to M² in analytical mode. For n=1 states in numerical mode, the 1.20 factor is cancelled to match TALYS <code>preeqmode=1</code>.
+  </div>
+
+  <h2>Optical Model Kernel (TALYS preeqmode=3)</h2>
+  <p>The OMP kernel replaces constant M² with a collision probability from the Koning-Delaroche optical model:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--kernel optical-model"</span>
+  </div>
+  <p>This uses three <strong>wompfac</strong> values to bridge M² and OMP normalizations:</p>
+  <div class="eq-block">
+    \[
+    \begin{aligned}
+    \text{wompfac}_{\text{same}} &= \frac{M^2_c \cdot 0.55}{1 + 2R_{\pi\nu}/R_{\pi\pi}} \\[4pt]
+    \text{wompfac}_{\text{cross}} &= \frac{M^2_c \cdot 0.55 \cdot 2R_{\pi\nu}/R_{\pi\pi}}{1 + 2R_{\pi\nu}/R_{\pi\pi}} \\[4pt]
+    \text{wompfac}_{\text{conv}} &= \tfrac12(\text{wompfac}_{\text{same}} + \text{wompfac}_{\text{cross}})
+    \end{aligned}
+    \]
+  </div>
+  <p>The OMP kernel automatically uses numerical integration (Clenshaw-Curtis via MARLEY's Integrator, or midpoint).</p>
+
+  <h2>Integration Method Options</h2>
+  <h3>Clenshaw-Curtis (default)</h3>
+  <p>Uses MARLEY's adaptive Clenshaw-Curtis quadrature with 50-point base grid:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--kernel optical-model --method clenshaw-curtis"</span>
+  </div>
+  <div class="box">
+    <strong>Guard bounds</strong> are applied by default to prevent the integration from sampling unphysical regions where the energy is below the Pauli blocking threshold. Disable with <code>--no-guards</code>.
+  </div>
+
+  <h3>Midpoint Rule</h3>
+  <p>Simple midpoint Riemann sum with configurable bin count:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--method midpoint --midbins 200"</span>
+  </div>
+
+  <h2>Understanding the Output</h2>
+  <p>The lambda executable outputs transition rates for 21 exciton states. For each state, four rates are computed:</p>
+
+  <table>
+    <tr><th>Rate</th><th>Process</th><th>Equation</th></tr>
+    <tr><td>\(\lambda_{\pi^+}\)</td><td>Proton pair creation: \(\pi + \nu \rightarrow \pi + \pi + \pi^{-1} + \nu\)</td><td>Eq. 13.17 (numerical) / Eq. 13.27 (analytical)</td></tr>
+    <tr><td>\(\lambda_{\nu^+}\)</td><td>Neutron pair creation: \(\pi + \nu \rightarrow \pi + \nu + \nu + \nu^{-1}\)</td><td>Eq. 13.18 (numerical) / Eq. 13.27 (analytical)</td></tr>
+    <tr><td>\(\lambda_{\pi\nu}\)</td><td>Proton-to-neutron conversion: \(\pi + \nu \rightarrow \nu + \nu + \pi^{-1}\)</td><td>Eq. 13.19 (numerical) / Eq. 13.27 (analytical)</td></tr>
+    <tr><td>\(\lambda_{\nu\pi}\)</td><td>Neutron-to-proton conversion: \(\pi + \nu \rightarrow \pi + \pi + \nu^{-1}\)</td><td>Eq. 13.19 (numerical) / Eq. 13.27 (analytical)</td></tr>
+  </table>
+
+  <h2>Comparing Lambda Outputs</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">python3 compare_lambda.py reference.txt new.txt report.txt</span><br>
+    <span class="prompt">$</span> <span class="output">python3 compare_lambda.py ref.txt new.txt report.txt 1e-6</span>
+  </div>
+
+  <h2>Typical Results for n + Ar-40</h2>
+  <p>With default parameters (E<sub>inc</sub> = 20.0 MeV, E<sub>comp</sub> = 25.60156 MeV, V = 38.0 MeV):</p>
+  <ul>
+    <li>Pair creation rates (\(\lambda^+\)) dominate for low exciton numbers (n &le; 4)</li>
+    <li>Conversion rates (\(\lambda^{\pi\nu}\), \(\lambda^{\nu\pi}\)) become competitive at higher n</li>
+    <li>OMP kernel generally produces lower rates than M² kernel for n+Ar-40 at 20 MeV</li>
+  </ul>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

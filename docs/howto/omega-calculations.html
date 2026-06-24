@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omega Calculations — exciton how-to</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html" style="color:#fff;font-weight:600;">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html">How-to</a> / <span>Omega Calculations</span></div>
+  <span class="tag how">How-to</span>
+  <h1>Omega — Particle-Hole State Density Calculations</h1>
+  <p>How to compute, interpret, and compare particle-hole state densities with the <code>omega</code> executable.</p>
+
+  <h2>Running the Omega Executable</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">cd /workspace/exciton</span><br>
+    <span class="prompt">$</span> <span class="output">make executables/omega</span><br>
+    <span class="prompt">$</span> <span class="output">./executables/omega > omega_Ar40.txt</span>
+  </div>
+  <p>The <code>omega</code> executable has <strong>no CLI arguments</strong>. The target system is hardcoded as n + Ar-40 (Z=18, N=23, A=41 residual).</p>
+
+  <h2>Understanding the Output</h2>
+  <h3>Block 1: State Densities (E<sub>x</sub> = 1&ndash;25 MeV)</h3>
+  <p>Columns:</p>
+  <table>
+    <tr><th>Column</th><th>Description</th><th>Units</th></tr>
+    <tr><td><code>Ex</code></td><td>Excitation energy</td><td>MeV</td></tr>
+    <tr><td><code>P(3)</code></td><td>Pairing correction energy \(\Delta\)</td><td>MeV</td></tr>
+    <tr><td><code>g(p)</code></td><td>Single-particle state density (proton)</td><td>MeV<sup>-1</sup></td></tr>
+    <tr><td><code>g(n)</code></td><td>Single-particle state density (neutron)</td><td>MeV<sup>-1</sup></td></tr>
+    <tr><td><code>1p1h0p0h</code> &hellip; <code>1p1h1p1h</code></td><td>State density \(\omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x)\) for 9 exciton configurations</td><td>MeV<sup>-1</sup></td></tr>
+  </table>
+  <p>The 9 exciton configurations computed are:</p>
+  <div class="eq-block">
+    \[
+    \begin{aligned}
+    \omega(1,1,0,0),\; \omega(0,0,1,1),\; \omega(1,1,1,0),\; \omega(1,0,1,1),\; \\
+    \omega(2,1,0,0),\; \omega(0,0,2,1),\; \omega(2,2,0,0),\; \omega(0,0,2,2),\; \omega(1,1,1,1)
+    \end{aligned}
+    \]
+  </div>
+
+  <h3>Block 2: Spin Distribution (n = 1&ndash;12)</h3>
+  <p>Columns: <code>n</code>, <code>J=0</code> through <code>J=8</code>, <code>Sum</code> (summed to J=30).</p>
+  <p>The spin distribution formula (<code>preeq_common.cpp:148</code>):</p>
+  <div class="eq-block">
+    \[
+    R_n(J) = \frac{2J+1}{\sqrt{\pi}\, k^{3/2}\, \sigma^3}
+    \exp\!\left[-\frac{(J+\tfrac12)^2}{k\,\sigma^2}\right],
+    \quad \sigma^2 = 0.24\, n\, A^{2/3}
+    \]
+  </div>
+  <p>where \(k=2\) in TALYS-compatibility mode. Parity is 50/50: \(\omega(p,h,E,J,\pi) = \omega(p,h,E) \times R_n(J) \times \tfrac12\).</p>
+
+  <h2>Comparing Omega Outputs</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">python3 compare_omega.py file1.txt file2.txt report.txt</span><br>
+    <span class="prompt">$</span> <span class="output">python3 compare_omega.py file1.txt file2.txt report.txt 1e-6</span>
+  </div>
+  <p>The script compares both data blocks and produces absolute differences and relative percentages. Default tolerance: 10<sup>-4</sup> absolute / 1% relative.</p>
+
+  <h2>Typical Results</h2>
+  <p>The omega calculation for Ar-40 shows:</p>
+  <ul>
+    <li>Single-particle state densities: \(g_p = 18/15 = 1.2\) MeV<sup>-1</sup>, \(g_n = 23/15 \approx 1.533\) MeV<sup>-1</sup></li>
+    <li>Pairing energy: \(\Delta = 1 \times 12/\sqrt{41} \approx 1.874\) MeV (odd-A target, chi = 1)</li>
+    <li>State densities grow rapidly with E<sub>x</sub> and exciton number n, typical of combinatorial phase space</li>
+  </ul>
+  <p>For validation against TALYS, the code uses a fixed well depth V = 38.0 MeV (not the energy-dependent formula from Eq. 13.11) to match the TALYS reference calculation.</p>
+
+  <h2>Troubleshooting</h2>
+  <div class="box warn">
+    <strong>Omega values are zero at low E<sub>x</sub>:</strong> This is expected when the excitation energy is below the Pauli blocking threshold for a given exciton configuration. The minimum energy required for configuration \((p_\pi, h_\pi, p_\nu, h_\nu)\) is \(\max(p_\pi, h_\pi)^2/g_p + \max(p_\nu, h_\nu)^2/g_n\).
+  </div>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

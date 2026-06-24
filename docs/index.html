@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>exciton — Two-Component Exciton Model Documentation</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="tutorials/getting-started.html">Getting Started</a>
+    <a href="tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="howto/omega-calculations.html">Omega</a>
+    <a href="howto/lambda-calculations.html">Lambda</a>
+    <a href="howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="reference/physics-formulas.html">Formulas</a>
+    <a href="reference/parameters.html">Parameters</a>
+    <a href="reference/api.html">API</a>
+    <a href="reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="explanation/exciton-model.html">Exciton Model</a>
+    <a href="explanation/omp-implementation.html">OMP</a>
+    <a href="explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+
+<main class="container">
+  <h1>exciton Documentation</h1>
+  <p>
+    A C++ implementation of the two-component exciton model for pre-equilibrium
+    nuclear reactions, validating against TALYS <code>preeqmode=3</code>.
+    Created by <strong>Erin Visser</strong>.
+  </p>
+
+  <div class="box">
+    <strong>Repository:</strong> <code>/workspace/exciton</code> &mdash;
+    <strong>Dependency:</strong> MARLEY library at <code>../marley-private/</code>
+  </div>
+
+  <p>
+    This documentation is organized around the
+    <a href="https://diataxis.fr/">Diataxis</a> framework:
+  </p>
+
+  <div class="card-grid">
+    <div class="card">
+      <a href="tutorials/getting-started.html">
+        <span class="tag tut">Tutorials</span>
+        <h3>Getting Started</h3>
+        <p>Learn the exciton model by doing — build the code, run your first calculation, and understand the output.</p>
+      </a>
+    </div>
+    <div class="card">
+      <a href="howto/omega-calculations.html">
+        <span class="tag how">How-to Guides</span>
+        <h3>How to Run Calculations</h3>
+        <p>Step-by-step recipes for omega state densities, lambda transition rates, and all validation modes.</p>
+      </a>
+    </div>
+    <div class="card">
+      <a href="reference/physics-formulas.html">
+        <span class="tag ref">Reference</span>
+        <h3>Physics &amp; API Reference</h3>
+        <p>Complete formulas, parameter tables, code API, and output format specifications.</p>
+      </a>
+    </div>
+    <div class="card">
+      <a href="explanation/exciton-model.html">
+        <span class="tag exp">Explanation</span>
+        <h3>Understanding the Physics</h3>
+        <p>Deep dives into the two-component exciton model, optical model potential implementation, and state density formalism.</p>
+      </a>
+    </div>
+  </div>
+
+  <h2>Quick Reference</h2>
+  <table>
+    <tr><th>What</th><th>Command</th><th>Output</th></tr>
+    <tr>
+      <td>Build everything</td>
+      <td><code>make</code></td>
+      <td>Executables <code>omega</code> and <code>lambda</code></td>
+    </tr>
+    <tr>
+      <td>Omega (state densities)</td>
+      <td><code>make run-omega</code></td>
+      <td>YANDF-0.4 state densities + spin distributions</td>
+    </tr>
+    <tr>
+      <td>Lambda (rates, matrix element)</td>
+      <td><code>make run ARGS="--kernel matrix-element"</code></td>
+      <td>YANDF-0.4 transition rates</td>
+    </tr>
+    <tr>
+      <td>Lambda (rates, OMP kernel)</td>
+      <td><code>make run ARGS="--kernel optical-model"</code></td>
+      <td>YANDF-0.4 transition rates + KD03 diagnostics</td>
+    </tr>
+    <tr>
+      <td>Validate KD03 parameters</td>
+      <td><code>make run ARGS="--mode kd03"</code></td>
+      <td>KD03 parameters log + Q-values + rates</td>
+    </tr>
+    <tr>
+      <td>Validate well depths</td>
+      <td><code>make run ARGS="--mode well_depths"</code></td>
+      <td>Well depths log</td>
+    </tr>
+    <tr>
+      <td>Validate radial potential</td>
+      <td><code>make run ARGS="--mode radial_potential"</code></td>
+      <td>Radial OMP log</td>
+    </tr>
+    <tr>
+      <td>Compare lambda outputs</td>
+      <td><code>python3 compare_lambda.py f1 f2 report [tol]</code></td>
+      <td>Absolute + relative error report</td>
+    </tr>
+    <tr>
+      <td>Compare omega outputs</td>
+      <td><code>python3 compare_omega.py f1 f2 report [tol]</code></td>
+      <td>Absolute + relative error report</td>
+    </tr>
+    <tr>
+      <td>TALYS OMP extraction</td>
+      <td><code>python3 talys_total_omp/talys_omp_total.py --energies 20.0</code></td>
+      <td>TALYS OMP radial profiles</td>
+    </tr>
+  </table>
+
+  <h2>Documentation Structure</h2>
+  <table>
+    <tr><th>Section</th><th>Pages</th><th>Audience</th></tr>
+    <tr>
+      <td><span class="tag tut">Tutorials</span></td>
+      <td>
+        <a href="tutorials/getting-started.html">Getting Started</a> &middot;
+        <a href="tutorials/running-calculations.html">Running Calculations</a>
+      </td>
+      <td>New users learning the code</td>
+    </tr>
+    <tr>
+      <td><span class="tag how">How-to</span></td>
+      <td>
+        <a href="howto/omega-calculations.html">Omega</a> &middot;
+        <a href="howto/lambda-calculations.html">Lambda</a> &middot;
+        <a href="howto/validations.html">Validations</a>
+      </td>
+      <td>Users who need to run specific tasks</td>
+    </tr>
+    <tr>
+      <td><span class="tag ref">Reference</span></td>
+      <td>
+        <a href="reference/physics-formulas.html">Formulas</a> &middot;
+        <a href="reference/parameters.html">Parameters</a> &middot;
+        <a href="reference/api.html">API</a> &middot;
+        <a href="reference/output-format.html">Output</a>
+      </td>
+      <td>Developers looking up specifics</td>
+    </tr>
+    <tr>
+      <td><span class="tag exp">Explanation</span></td>
+      <td>
+        <a href="explanation/exciton-model.html">Exciton Model</a> &middot;
+        <a href="explanation/omp-implementation.html">OMP</a> &middot;
+        <a href="explanation/state-densities.html">State Densities</a>
+      </td>
+      <td>Readers seeking deeper understanding</td>
+    </tr>
+  </table>
+
+  <h2>References</h2>
+  <ol>
+    <li id="ref-kd">A. J. Koning and J. P. Delaroche, <em>Local and global nucleon optical models from 1 keV to 200 MeV</em>, Nucl. Phys. A <strong>713</strong> (2003) 231&ndash;310. <a href="https://doi.org/10.1016/S0375-9474(02)01321-0">doi:10.1016/S0375-9474(02)01321-0</a></li>
+    <li>C. Kalbach, <em>Two-component exciton model: basic formalism and applications</em>, Phys. Rev. C <strong>33</strong> (1986) 818. <a href="https://doi.org/10.1103/PhysRevC.33.818">doi:10.1103/PhysRevC.33.818</a></li>
+    <li>TALYS 1.96 manual, Section 13.4.4: <em>Matrix element and pre-equilibrium cross sections</em>.</li>
+    <li>A. V. Ignatyuk et al., <em>Phenomenological description of the pre-equilibrium neutron emission</em>, Yad. Fiz. <strong>21</strong> (1975) 485.</li>
+    <li>A. J. Koning, S. Hilaire, and M. C. Duijvestijn, <em>Global and local level density models</em>, Nucl. Data Sheets <strong>113</strong> (2012) 1722. <a href="https://doi.org/10.1016/j.nds.2012.06.002">doi:10.1016/j.nds.2012.06.002</a></li>
+  </ol>
+</main>
+<footer>
+  <div class="container">
+    Generated from the <a href="https://github.com/anomalyco/opencode">opencode</a> project.
+  </div>
+</footer>
+</body>
+</html>

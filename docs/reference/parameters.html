@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parameters — exciton reference</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html" style="color:#fff;font-weight:600;">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Reference / <span>Parameters</span></div>
+  <span class="tag ref">Reference</span>
+  <h1>Parameter Reference</h1>
+  <p>Complete listing of configurable parameters in the exciton code.</p>
+
+  <h2>Hardcoded System Parameters</h2>
+  <table>
+    <tr><th>Parameter</th><th>Value</th><th>Location</th></tr>
+    <tr><td>Target Z</td><td>18</td><td><code>main_lambda.cpp:76</code>, <code>main_omega.cpp:12</code></td></tr>
+    <tr><td>Target N (lambda)</td><td>22</td><td><code>main_lambda.cpp:77</code></td></tr>
+    <tr><td>Target N (omega)</td><td>23</td><td><code>main_omega.cpp:13</code></td></tr>
+    <tr><td>Projectile mass A<sub>p</sub></td><td>1</td><td><code>main_lambda.cpp:78</code></td></tr>
+    <tr><td>Pairing factor \(\chi\)</td><td>1 (odd-A)</td><td><code>main_lambda.cpp:81</code>, <code>main_omega.cpp:15</code></td></tr>
+    <tr><td>Compound energy E<sub>comp</sub></td><td>25.60156 MeV</td><td><code>main_lambda.cpp:82</code></td></tr>
+    <tr><td>Default well depth V</td><td>38.0 MeV</td><td><code>main_lambda.cpp:83</code>, <code>main_omega.cpp:90</code></td></tr>
+    <tr><td>Incident energy E<sub>p</sub></td><td>20.0 MeV</td><td><code>main_omega.cpp:16</code></td></tr>
+  </table>
+
+  <h2>Matrix Element Parameters</h2>
+  <table>
+    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td>\(C_1\)</td><td>1.0</td><td>Overall M² scaling factor</td></tr>
+    <tr><td>\(C_2\)</td><td>1.0</td><td>B term scaling in Eq. 13.26</td></tr>
+    <tr><td>\(C_3\)</td><td>1.0</td><td>Denominator scaling in Eq. 13.26</td></tr>
+    <tr><td>\(R_{\nu\nu}\)</td><td>1.5</td><td>Neutron-neutron channel ratio</td></tr>
+    <tr><td>\(R_{\nu\pi}\)</td><td>1.0</td><td>Neutron-to-proton conversion ratio</td></tr>
+    <tr><td>\(R_{\pi\pi}\)</td><td>1.0</td><td>Proton-proton channel ratio</td></tr>
+    <tr><td>\(R_{\pi\nu}\)</td><td>1.0</td><td>Proton-to-neutron conversion ratio</td></tr>
+    <tr><td>\(M^2_c\)</td><td>1.0</td><td>M² constant (used in OMP wompfac)</td></tr>
+  </table>
+  <p>All defined in <code>main_lambda.cpp:85-92</code>.</p>
+
+  <h2>Optical Model Parameters</h2>
+  <p>The Koning-Delaroche (KD03) global optical model parameters for n + Ar-40 (Z=18, A=40). These come from the MARLEY <code>KoningDelarocheOpticalModel</code> constructor.</p>
+
+  <h3>Neutron Coefficients</h3>
+  <table>
+    <tr><th>Coefficient</th><th>Formula</th><th>Value (Ar-40)</th></tr>
+    <tr><td>v1<sup>n</sup></td><td>\(12.195 + 0.0167 A\)</td><td>12.863</td></tr>
+    <tr><td>v2<sup>n</sup></td><td>\(73.55 + 0.0795 A\)</td><td>76.73</td></tr>
+    <tr><td>v3<sup>n</sup></td><td>\(-73.55 - 0.0795 A\)</td><td>-76.73</td></tr>
+    <tr><td>v4<sup>n</sup></td><td>Constant</td><td>0.0</td></tr>
+    <tr><td>w1<sup>n</sup></td><td>\(12.195 + 0.0167 A\)</td><td>12.863</td></tr>
+    <tr><td>w2<sup>n</sup></td><td>\(73.55 + 0.0795 A\)</td><td>76.73</td></tr>
+    <tr><td>d1<sup>n</sup></td><td>\(16.0 - 16.0 (N-Z)/A\)</td><td>14.4</td></tr>
+    <tr><td>d2<sup>n</sup></td><td>\(0.0180 + 0.003802/(1 + e^{(A-156)/8})\)</td><td>0.0180</td></tr>
+    <tr><td>d3<sup>n</sup></td><td>11.5</td><td>11.5</td></tr>
+    <tr><td>vso1<sup>n</sup></td><td>5.922 + 0.0030 A</td><td>6.042</td></tr>
+    <tr><td>vso2<sup>n</sup></td><td>0.0040</td><td>0.0040</td></tr>
+    <tr><td>wso1<sup>n</sup></td><td>-3.1</td><td>-3.1</td></tr>
+    <tr><td>wso2<sup>n</sup></td><td>0.0</td><td>0.0</td></tr>
+    <tr><td>E<sub>f</sub><sup>n</sup></td><td>\(-11.2814 + 0.02646 A\)</td><td>-10.223</td></tr>
+  </table>
+
+  <h3>Proton Coefficients</h3>
+  <table>
+    <tr><th>Coefficient</th><th>Formula</th><th>Value (Ar-40)</th></tr>
+    <tr><td>v1<sup>p</sup></td><td>\(14.667 + 0.009629 A\)</td><td>15.052</td></tr>
+    <tr><td>v2<sup>p</sup></td><td>\(73.55 + 0.0795 A\)</td><td>76.73</td></tr>
+    <tr><td>v3<sup>p</sup></td><td>\(-73.55 - 0.0795 A\)</td><td>-76.73</td></tr>
+    <tr><td>v4<sup>p</sup></td><td>Constant</td><td>0.0</td></tr>
+    <tr><td>w1<sup>p</sup></td><td>\(14.667 + 0.009629 A\)</td><td>15.052</td></tr>
+    <tr><td>w2<sup>p</sup></td><td>\(73.55 + 0.0795 A\)</td><td>76.73</td></tr>
+    <tr><td>d1<sup>p</sup></td><td>\(16.0 + 16.0 (N-Z)/A\)</td><td>17.6</td></tr>
+    <tr><td>d2<sup>p</sup></td><td>\(0.0180 + 0.003802/(1 + e^{(A-156)/8})\)</td><td>0.0180</td></tr>
+    <tr><td>d3<sup>p</sup></td><td>11.5</td><td>11.5</td></tr>
+    <tr><td>vso1<sup>p</sup></td><td>5.922 + 0.0030 A</td><td>6.042</td></tr>
+    <tr><td>vso2<sup>p</sup></td><td>0.0040</td><td>0.0040</td></tr>
+    <tr><td>wso1<sup>p</sup></td><td>-3.1</td><td>-3.1</td></tr>
+    <tr><td>wso2<sup>p</sup></td><td>0.0</td><td>0.0</td></tr>
+    <tr><td>E<sub>f</sub><sup>p</sup></td><td>\(-8.4075 + 0.01378 A\)</td><td>-7.856</td></tr>
+  </table>
+
+  <h3>Geometry Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Formula</th><th>Value (Ar-40)</th></tr>
+    <tr><td>R<sub>v</sub><sup>n</sup></td><td>\(1.3039 A^{1/3} - 0.4054\) fm</td><td>4.073</td></tr>
+    <tr><td>a<sub>v</sub><sup>n</sup></td><td>\(0.6778 - 1.487\times10^{-4} A\) fm</td><td>0.672</td></tr>
+    <tr><td>R<sub>d</sub><sup>n</sup></td><td>\(1.3424 A^{1/3} - 0.01585 A^{2/3}\) fm</td><td>3.981</td></tr>
+    <tr><td>a<sub>d</sub><sup>n</sup></td><td>\(0.5446 - 1.656\times10^{-4} A\) fm</td><td>0.538</td></tr>
+    <tr><td>R<sub>so</sub><sup>n</sup></td><td>\(1.1854 A^{1/3} - 0.647\) fm</td><td>3.104</td></tr>
+    <tr><td>a<sub>so</sub><sup>n</sup></td><td>\(0.59\) fm</td><td>0.59</td></tr>
+  </table>
+
+  <h2>Numerical Parameters</h2>
+  <table>
+    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td>Integration method</td><td>Clenshaw-Curtis</td><td>Adaptive quadrature via MARLEY Integrator</td></tr>
+    <tr><td>Midpoint bins</td><td>50</td><td>Number of bins for midpoint rule</td></tr>
+    <tr><td>Radial integration bins</td><td>50</td><td>Bins for wvolRadialIntegral</td></tr>
+    <tr><td>Radial step dr</td><td>0.4 fm</td><td>Bin width for wvolRadialIntegral</td></tr>
+    <tr><td>Maximum radius</td><td>20.0 fm</td><td>Integration upper bound (50 &times; 0.4)</td></tr>
+    <tr><td>Guard bounds</td><td>Enabled</td><td>Prevent integration below Pauli threshold</td></tr>
+    <tr><td>C<sub>OMP</sub></td><td>0.55</td><td>OMP normalization constant (from TALYS matrix.f90)</td></tr>
+  </table>
+
+  <h2>Physical Constants</h2>
+  <table>
+    <tr><th>Constant</th><th>Value</th><th>Location</th></tr>
+    <tr><td>\(\hbar\)</td><td>\(6.582119569 \times 10^{-22}\) MeV&#8231;s</td><td><code>preeq_common.hh:5</code></td></tr>
+    <tr><td>\(\pi\)</td><td>3.14159265358979323846</td><td><code>preeq_common.hh:4</code></td></tr>
+    <tr><td>Atomic mass unit \(u\)</td><td>931.494061 MeV</td><td><code>main_lambda.cpp:221</code></td></tr>
+  </table>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

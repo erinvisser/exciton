@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Reference — exciton reference</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html" style="color:#fff;font-weight:600;">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Reference / <span>API</span></div>
+  <span class="tag ref">Reference</span>
+  <h1>Code API Reference</h1>
+  <p>Complete function and type reference for the exciton codebase.</p>
+
+  <h2>Enums</h2>
+  <table>
+    <tr><th>Enum</th><th>Values</th><th>Header</th></tr>
+    <tr><td><code>ProjectileType</code></td><td><code>Proton</code>, <code>Neutron</code>, <code>Neutrino</code></td><td><code>preeq_common.hh:12</code></td></tr>
+    <tr><td><code>ExcitonType</code></td><td><code>Proton</code>, <code>Neutron</code></td><td><code>transition_rates.hh:6</code></td></tr>
+    <tr><td><code>ConversionType</code></td><td><code>ProtonToNeutron</code>, <code>NeutronToProton</code></td><td><code>transition_rates.hh:12</code></td></tr>
+    <tr><td><code>MatrixElement</code></td><td><code>PiPi</code>, <code>NuNu</code>, <code>PiNu</code>, <code>NuPi</code></td><td><code>transition_rates.hh:18</code></td></tr>
+    <tr><td><code>PreeqMode</code></td><td><code>Analytical</code>, <code>Numerical</code></td><td><code>transition_rates.hh:26</code></td></tr>
+    <tr><td><code>IntegrationMethod</code></td><td><code>ClenshawCurtis</code>, <code>Midpoint</code></td><td><code>transition_rates.hh:32</code></td></tr>
+    <tr><td><code>CollisionKernel</code></td><td><code>MatrixElement</code>, <code>OpticalModel</code></td><td><code>transition_rates.hh:38</code></td></tr>
+    <tr><td><code>LambdaType</code></td><td><code>ProtonPairCreation</code>, <code>NeutronPairCreation</code>, <code>ProtonToNeutronConversion</code>, <code>NeutronToProtonConversion</code></td><td><code>transition_rates.hh:44</code></td></tr>
+  </table>
+
+  <h2>Structs</h2>
+  <table>
+    <tr><th>Struct</th><th>Members</th><th>Header</th></tr>
+    <tr><td><code>ExcitonState</code></td><td><code>int p_pi, h_pi, p_nu, h_nu</code></td><td><code>preeq_common.hh:7</code></td></tr>
+  </table>
+
+  <h2>Functions — <code>preeq_common.cpp</code></h2>
+  <table>
+    <tr><th>Signature</th><th>Description</th><th>Eq.</th></tr>
+    <tr><td><code>double spDensityProton(int Z)</code></td><td>\(g_p = Z/15\)</td><td>13.9</td></tr>
+    <tr><td><code>double spDensityNeutron(int N)</code></td><td>\(g_n = N/15\)</td><td>13.9</td></tr>
+    <tr><td><code>double binomial(int h, int i)</code></td><td>Binomial coefficient \(\binom{h}{i}\)</td><td>&mdash;</td></tr>
+    <tr><td><code>double potentialWellDepth(ProjectileType, int A, double E_p, int h)</code></td><td>Energy-dependent well depth</td><td>13.11</td></tr>
+    <tr><td><code>double pauliCorrection(int p_pi, int h_pi, int p_nu, int h_nu, double g_p, double g_n)</code></td><td>Pauli blocking correction \(A(p_\pi,h_\pi,p_\nu,h_\nu)\)</td><td>13.8</td></tr>
+    <tr><td><code>double finiteWell(int p, int h, double U, double V)</code></td><td>Finite well correction \(f_{\text{FW}}(p,h,U,V)\)</td><td>13.10</td></tr>
+    <tr><td><code>double fuPairingCorrection(double delta, double E_x, int n, double n_crit)</code></td><td>Pairing correction \(f_u(E_x/\Delta, n/n_{\text{crit}})\)</td><td>13.5</td></tr>
+    <tr><td><code>double pairingEnergyDelta(int A, int chi)</code></td><td>\(\Delta = \chi\cdot 12/\sqrt{A}\)</td><td>13.7</td></tr>
+    <tr><td><code>double nCrit(int Z, int N, double delta)</code></td><td>Critical exciton number \(n_{\text{crit}}\)</td><td>13.6</td></tr>
+    <tr><td><code>double availableExcitationEnergy(double E_x, double P_ph)</code></td><td>\(U = E_x - P_{ph}\)</td><td>&mdash;</td></tr>
+    <tr><td><code>double spinDistribution(double J, int A, int n, bool talysCompat = true)</code></td><td>Spin distribution \(R_n(J)\)</td><td>13.59, 13.61</td></tr>
+  </table>
+
+  <h2>Functions — <code>state_density.cpp</code></h2>
+  <table>
+    <tr><th>Signature</th><th>Description</th><th>Eq.</th></tr>
+    <tr><td><code>double factorial(int n)</code></td><td>\(n!\) via <code>std::tgamma</code></td><td>&mdash;</td></tr>
+    <tr><td><code>double theta(double x)</code></td><td>Heaviside step function</td><td>&mdash;</td></tr>
+    <tr><td><code>double particleHoleStateDensity(p_pi, h_pi, p_nu, h_nu, E_x, Z, N, chi, V, n_crit, applyPairing, parityFactor)</code></td><td>\(\omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x)\)</td><td>13.4</td></tr>
+  </table>
+
+  <h2>Functions — <code>transition_rates.cpp</code></h2>
+  <table>
+    <tr><th>Signature</th><th>Description</th><th>Eq.</th></tr>
+    <tr><td><code>double wvolRadialIntegral(Wv, Wd, Rv, av, Rd, ad)</code></td><td>Volume-averaged imaginary potential \(\langle W \rangle\)</td><td>13.29&ndash;13.30</td></tr>
+    <tr><td><code>double M2(A_p, A, E_tot, n, C1, C2, C3, mode)</code></td><td>Kalbach-Cline matrix element \(M^2\)</td><td>13.26</td></tr>
+    <tr><td><code>double M2_element(type, ...)</code></td><td>Channel-scaled \(M^2_{ab}\)</td><td>13.24</td></tr>
+    <tr><td><code>double lambdaNewPairAnalytical(particle, ...)</code></td><td>Analytical pair creation rate</td><td>13.27</td></tr>
+    <tr><td><code>double lambdaNewPairNumerical(particle, ...)</code></td><td>Numerical pair creation rate</td><td>13.17&ndash;13.18</td></tr>
+    <tr><td><code>double lambdaPairConversionAnalytical(conversion, ...)</code></td><td>Analytical conversion rate</td><td>13.27</td></tr>
+    <tr><td><code>double lambdaPairConversionNumerical(conversion, ...)</code></td><td>Numerical conversion rate</td><td>13.19</td></tr>
+    <tr><td><code>double lambdaRate(type, mode, ...)</code></td><td>Unified dispatcher for all 4 rate types</td><td>&mdash;</td></tr>
+  </table>
+
+  <h2>Main Executables</h2>
+  <table>
+    <tr><th>File</th><th>Function</th><th>Description</th></tr>
+    <tr><td><code>main_omega.cpp</code></td><td><code>int main()</code></td><td>Computes \(\omega(p,h,E_x)\) for 9 exciton configs, E<sub>x</sub>=1..25 MeV + spin distribution n=1..12</td></tr>
+    <tr><td><code>main_lambda.cpp</code></td><td><code>int main(int argc, char* argv[])</code></td><td>CLI driver for transition rates + 3 validation modes</td></tr>
+  </table>
+
+  <h2>Physics Constants</h2>
+  <table>
+    <tr><th>Symbol</th><th>Value</th><th>Location</th></tr>
+    <tr><td><code>PI</code></td><td>3.14159265358979323846</td><td><code>preeq_common.hh:4</code></td></tr>
+    <tr><td><code>HBAR</code></td><td>\(6.582119569 \times 10^{-22}\) MeV&#8231;s</td><td><code>preeq_common.hh:5</code></td></tr>
+  </table>
+
+  <h2>Python Validation Scripts</h2>
+  <table>
+    <tr><th>Script</th><th>Usage</th><th>Description</th></tr>
+    <tr><td><code>compare_lambda.py</code></td><td><code>python3 compare_lambda.py file1 file2 output [tol]</code></td><td>Compares lambda YANDF-0.4 outputs; absolute + relative error tables</td></tr>
+    <tr><td><code>compare_omega.py</code></td><td><code>python3 compare_omega.py file1 file2 output [tol]</code></td><td>Compares omega YANDF-0.4 outputs (state densities + spin distributions)</td></tr>
+    <tr><td><code>talys_omp_total.py</code></td><td><code>python3 talys_omp_total.py --energies E --ls l -o out</code></td><td>Runs TALYS and extracts radial OMP U(r) profiles</td></tr>
+  </table>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

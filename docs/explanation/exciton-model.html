@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Exciton Model — exciton explanation</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html" style="color:#fff;font-weight:600;">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Explanation / <span>The Exciton Model</span></div>
+  <span class="tag exp">Explanation</span>
+  <h1>The Two-Component Exciton Model</h1>
+
+  <p>
+    The exciton model is a semi-classical, statistical description of
+    pre-equilibrium nuclear reactions. It describes how a nuclear reaction
+    evolves from a simple initial configuration (typically a single particle
+    and hole) toward the fully equilibrated compound nucleus through a
+    sequence of <strong>internal transitions</strong> that create or annihilate
+    particle-hole pairs.
+  </p>
+
+  <h2>Key Idea</h2>
+  <p>
+    After the first stage of a nuclear reaction (direct reactions, which happen
+    on the timescale of the nuclear transit time &sim;10<sup>-22</sup> s),
+    the system is left in a state with a few "excitons" — particles excited
+    above the Fermi energy and holes below it. The exciton model tracks the
+    statistical population of these configurations using Fermi's Golden Rule.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 700 300" width="100%" style="max-width:700px">
+      <defs>
+        <marker id="arrow-grey" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#888"/>
+        </marker>
+        <style>
+          .fl { fill: #0f4c81; }
+          .fl2 { fill: #2d6a4f; }
+          .fl3 { fill: #5a189a; }
+          .axis2 { stroke: #555; stroke-width:1.5; }
+          .gr { fill: #cdd6f4; font-size:11px; }
+        </style>
+      </defs>
+      <!-- Fermi sea -->
+      <rect x="50" y="40" width="80" height="200" fill="#e8f0fe" stroke="#0f4c81" stroke-width="1.5" rx="4"/>
+      <rect x="160" y="40" width="80" height="200" fill="#e8faf0" stroke="#2d6a4f" stroke-width="1.5" rx="4"/>
+      <text x="90" y="255" text-anchor="middle" class="gr">Protons</text>
+      <text x="200" y="255" text-anchor="middle" class="gr">Neutrons</text>
+
+      <!-- Fermi level -->
+      <line x1="50" y1="140" x2="130" y2="140" class="axis2" stroke-dasharray="4,3"/>
+      <line x1="160" y1="140" x2="240" y2="140" class="axis2" stroke-dasharray="4,3"/>
+      <text x="135" y="137" class="gr">E<sub>F</sub></text>
+
+      <!-- Particles (circles) above Fermi level -->
+      <circle cx="90" cy="70" r="8" fill="none" stroke="#0f4c81" stroke-width="2"/>
+      <text x="90" y="74" text-anchor="middle" class="gr" fill="#0f4c81">p</text>
+      <circle cx="200" cy="90" r="8" fill="none" stroke="#2d6a4f" stroke-width="2"/>
+      <text x="200" y="94" text-anchor="middle" class="gr" fill="#2d6a4f">p</text>
+
+      <!-- Holes (circles) below Fermi level -->
+      <circle cx="90" cy="190" r="8" fill="none" stroke="#0f4c81" stroke-width="2" stroke-dasharray="3,2"/>
+      <text x="90" y="194" text-anchor="middle" class="gr" fill="#0f4c81">h</text>
+      <circle cx="200" cy="210" r="8" fill="none" stroke="#2d6a4f" stroke-width="2" stroke-dasharray="3,2"/>
+      <text x="200" y="214" text-anchor="middle" class="gr" fill="#2d6a4f">h</text>
+
+      <!-- Energy axis -->
+      <line x1="280" y1="40" x2="280" y2="240" class="axis2"/>
+      <polygon points="280,35 276,42 284,42" fill="#555"/>
+      <text x="290" y="135" class="gr">E</text>
+
+      <!-- Transition arrow -->
+      <path d="M340,100 Q400,60 460,80" fill="none" stroke="#5a189a" stroke-width="2" marker-end="url(#arrow-grey)" stroke-dasharray="5,3"/>
+      <text x="400" y="55" text-anchor="middle" class="gr" fill="#5a189a">internal transition</text>
+
+      <!-- Right: next exciton state -->
+      <rect x="490" y="40" width="80" height="200" fill="#f3e8ff" stroke="#5a189a" stroke-width="1.5" rx="4"/>
+      <rect x="600" y="40" width="80" height="200" fill="#f3e8ff" stroke="#5a189a" stroke-width="1.5" rx="4"/>
+      <text x="530" y="255" text-anchor="middle" class="gr">Protons</text>
+      <text x="640" y="255" text-anchor="middle" class="gr">Neutrons</text>
+
+      <line x1="490" y1="140" x2="570" y2="140" class="axis2" stroke-dasharray="4,3"/>
+      <line x1="600" y1="140" x2="680" y2="140" class="axis2" stroke-dasharray="4,3"/>
+
+      <!-- New config after transition -->
+      <circle cx="530" cy="60" r="8" fill="none" stroke="#5a189a" stroke-width="2"/>
+      <text x="530" y="64" text-anchor="middle" class="gr" fill="#5a189a">p</text>
+      <circle cx="530" cy="95" r="8" fill="none" stroke="#5a189a" stroke-width="2"/>
+      <text x="530" y="99" text-anchor="middle" class="gr" fill="#5a189a">p</text>
+      <circle cx="530" cy="180" r="8" fill="none" stroke="#5a189a" stroke-width="2" stroke-dasharray="3,2"/>
+      <text x="530" y="184" text-anchor="middle" class="gr" fill="#5a189a">h</text>
+
+      <circle cx="640" cy="80" r="8" fill="none" stroke="#5a189a" stroke-width="2"/>
+      <text x="640" y="84" text-anchor="middle" class="gr" fill="#5a189a">p</text>
+      <circle cx="640" cy="200" r="8" fill="none" stroke="#5a189a" stroke-width="2" stroke-dasharray="3,2"/>
+      <text x="640" y="204" text-anchor="middle" class="gr" fill="#5a189a">h</text>
+    </svg>
+    <figcaption>
+      Exciton configurations evolve through internal transitions. Left: an initial 1p-1h proton + 1p-1h neutron state.
+      Right: after a proton pair-creation transition, the proton exciton number grows by 1.
+    </figcaption>
+  </figure>
+
+  <h2>Two-Component Formalism</h2>
+  <p>
+    The <strong>two-component</strong> extension (Kalbach, 1986) separates protons
+    and neutrons explicitly. An exciton state is described by four integers:
+  </p>
+  <div class="eq-block">
+    \[
+    (p_\pi, h_\pi, p_\nu, h_\nu)
+    \]
+  </div>
+  <p>
+    where \(p\) = particle number, \(h\) = hole number, \(\pi\) = proton,
+    \(\nu\) = neutron. The total exciton number is:
+  </p>
+  <div class="eq-block">
+    \[
+    n = p_\pi + h_\pi + p_\nu + h_\nu
+    \]
+  </div>
+
+  <h2>Internal Transition Types</h2>
+  <p>There are four fundamental transition types in the two-component model:</p>
+
+  <table>
+    <tr><th>Type</th><th>Process</th><th>Effect</th></tr>
+    <tr>
+      <td>Proton pair creation</td>
+      <td>\(\pi + \nu \to \pi + \pi' + \pi^{-1} + \nu\)</td>
+      <td>\(p_\pi \to p_\pi+1,\; h_\pi \to h_\pi+1\)</td>
+    </tr>
+    <tr>
+      <td>Neutron pair creation</td>
+      <td>\(\pi + \nu \to \pi + \nu' + \nu^{-1} + \nu\)</td>
+      <td>\(p_\nu \to p_\nu+1,\; h_\nu \to h_\nu+1\)</td>
+    </tr>
+    <tr>
+      <td>Proton-to-neutron conversion</td>
+      <td>\(\pi + \nu \to \nu + \nu' + \pi^{-1}\)</td>
+      <td>\(p_\pi \to p_\pi-1,\; h_\pi \to h_\pi-1,\; p_\nu \to p_\nu+1,\; h_\nu \to h_\nu+1\)</td>
+    </tr>
+    <tr>
+      <td>Neutron-to-proton conversion</td>
+      <td>\(\pi + \nu \to \pi + \pi' + \nu^{-1}\)</td>
+      <td>\(p_\nu \to p_\nu-1,\; h_\nu \to h_\nu-1,\; p_\pi \to p_\pi+1,\; h_\pi \to h_\pi+1\)</td>
+    </tr>
+  </table>
+
+  <h2>The Master Equation</h2>
+  <p>
+    The time evolution of the exciton configuration population \(q(p_\pi, h_\pi, p_\nu, h_\nu, t)\) is governed by:
+  </p>
+  <div class="eq-block">
+    \[
+    \frac{dq}{dt} = \lambda^+ q_{n-2} + \lambda^- q_{n+2} + \lambda^{\text{conv}} q_{n}^{\text{conv}} - (\lambda^+ + \lambda^- + \lambda^{\text{conv}}) q
+    \]
+  </div>
+  <p>
+    The exciton code computes the <strong>internal transition rates</strong>
+    \(\lambda^+\) (pair creation), \(\lambda^-\) (pair annihilation), and
+    \(\lambda^{\text{conv}}\) (conversion) using either:
+  </p>
+  <ul>
+    <li><strong>Constant matrix element</strong> (M²) approximation (Kalbach-Cline parametrization, TALYS <code>preeqmode=1</code>)</li>
+    <li><strong>Optical model potential</strong> (OMP) collision rates (Koning-Delaroche KD03, TALYS <code>preeqmode=3</code>)</li>
+  </ul>
+
+  <h2>Relation to TALYS</h2>
+  <p>
+    This code is designed to reproduce TALYS pre-equilibrium calculations. The
+    key references are:
+  </p>
+  <ul>
+    <li>TALYS 1.96 manual, Section 13 &mdash; Two-component exciton model</li>
+    <li>Kalbach (1986), PRC 33, 818 &mdash; Original two-component formalism</li>
+    <li>Koning &amp; Delaroche (2003), NPA 713, 231 &mdash; Global optical model</li>
+    <li>Ignatyuk et al. (1975) &mdash; State density parameterization</li>
+  </ul>
+
+  <div class="box">
+    <strong>Limitations:</strong> The current code assumes a single compound
+    nucleus (Z=18, N=22, A=40 for lambda; Z=18, N=23, A=41 for omega) and
+    uses a fixed Fermi well depth V = 38 MeV. It does not yet compute
+    particle emission cross sections — only the internal transition rates
+    that are the input to the master equation.
+  </div>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validations — exciton how-to</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html" style="color:#fff;font-weight:600;">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html">How-to</a> / <span>Validations</span></div>
+  <span class="tag how">How-to</span>
+  <h1>Validation Modes</h1>
+  <p>The lambda executable has three built-in validation modes to verify the Koning-Delaroche OMP implementation against TALYS and MARLEY.</p>
+
+  <h2>1. KD03 Parameter Validation (<code>--mode kd03</code>)</h2>
+  <p>This is the default mode. It performs three diagnostics:</p>
+
+  <h3>1a. KD03 Coefficient Dump</h3>
+  <p>Dumps all Koning-Delaroche optical model coefficients from the MARLEY <code>KoningDelarocheOpticalModel</code> constructor for Ar-40 (Z=18, A=40):</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--mode kd03"</span>
+  </div>
+  <p>Output file: <code>lambda_printouts/OMP/KD03_Output/kd03_Ar40_n_*.log</code></p>
+  <p>Contents include:</p>
+  <ul>
+    <li>Neutron and proton coefficients: v1&ndash;v4, w1&ndash;w2, d1&ndash;d3, vso1&ndash;vso2, wso1&ndash;wso2</li>
+    <li>Fermi energies E<sub>f</sub><sup>n</sup> and E<sub>f</sub><sup>p</sup></li>
+    <li>Geometry parameters: R<sub>v</sub>, a<sub>v</sub>, R<sub>d</sub>, a<sub>d</sub>, R<sub>so</sub>, a<sub>so</sub> in both absolute (fm) and reduced (fm) forms</li>
+    <li>Coulomb parameters (proton): V<sub>cbar</sub>, R<sub>c</sub></li>
+  </ul>
+
+  <h3>1b. MARLEY Q-Values</h3>
+  <p>Q-values for all open channels on Ar-40 + n, computed from the MARLEY MassTable:</p>
+  <div class="eq-block">
+    \[
+    Q_{(n,\gamma)} = M_{\text{Ar-40}} + M_n - M_{\text{Ar-41}}
+    \]
+  </div>
+  <p>The MassTable uses experimental atomic masses from the Atomic Mass Evaluation (AME), with liquid-drop model fallback by Koning et al. (2008). Q-values are computed for:</p>
+  <table>
+    <tr><th>Channel</th><th>Reaction</th><th>Formula</th></tr>
+    <tr><td>(n,&gamma;)</td><td>n + Ar-40 &rarr; Ar-41 + &gamma;</td><td>ME<sub>Ar40</sub> + ME<sub>n</sub> &minus; ME<sub>Ar41</sub></td></tr>
+    <tr><td>(n,p)</td><td>n + Ar-40 &rarr; p + K-40</td><td>ME<sub>Ar40</sub> + ME<sub>n</sub> &minus; ME<sub>H1</sub> &minus; ME<sub>K40</sub></td></tr>
+    <tr><td>(n,d)</td><td>n + Ar-40 &rarr; d + Cl-39</td><td>ME<sub>Ar40</sub> + ME<sub>n</sub> &minus; ME<sub>d</sub> &minus; ME<sub>Cl39</sub></td></tr>
+    <tr><td>(n,t)</td><td>n + Ar-40 &rarr; t + Cl-38</td><td>ME<sub>Ar40</sub> + ME<sub>n</sub> &minus; ME<sub>t</sub> &minus; ME<sub>Cl38</sub></td></tr>
+    <tr><td>(n,<sup>3</sup>He)</td><td>n + Ar-40 &rarr; <sup>3</sup>He + S-38</td><td>ME<sub>Ar40</sub> + ME<sub>n</sub> &minus; ME<sub>h</sub> &minus; ME<sub>S38</sub></td></tr>
+    <tr><td>(n,&alpha;)</td><td>n + Ar-40 &rarr; &alpha; + S-37</td><td>ME<sub>Ar40</sub> + ME<sub>n</sub> &minus; ME<sub>&alpha;</sub> &minus; ME<sub>S37</sub></td></tr>
+  </table>
+  <p>The atomic mass unit u = 931.494061 MeV is used for converting mass excesses.</p>
+
+  <h3>1c. Energy-Dependent OMP Table (TALYS flagomponly format)</h3>
+  <p>For each projectile type (neutron and proton), prints the KD03 parameters at selected energies from &minus;8.0 to 20.0 MeV in TALYS-compatible format.</p>
+
+  <h2>2. Well Depths Validation (<code>--mode well_depths</code>)</h2>
+  <p>Computes the six well depths as functions of energy:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--mode well_depths"</span>
+  </div>
+  <p>Output file: <code>lambda_printouts/OMP/Well_Depths_Output/well_depths_Ar40_n_*.log</code></p>
+  <p>Columns: <code>E(MeV)  k  Vv(MeV)  Wv(MeV)  Wd(MeV)  Vso(MeV)  Wso(MeV)  Rv(fm)  av(fm)  Rd(fm)  ad(fm)  Rso(fm)  aso(fm)</code></p>
+  <p>where k = 1 (neutron) or 2 (proton). Validated against TALYS <code>flagomponly y</code> output.</p>
+
+  <h2>3. Radial Potential Validation (<code>--mode radial_potential</code>)</h2>
+  <p>Computes the complex radial profile of the optical potential U(r):</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--mode radial_potential --l 0"</span><br>
+    <span class="prompt">$</span> <span class="output">make run ARGS="--mode radial_potential --l 2"</span>  <span class="comment"># with d-wave SO contribution</span>
+  </div>
+  <p>Output file: <code>lambda_printouts/OMP/Radial_Potential_Output/radpot_Ar40_n_*.log</code></p>
+  <p>Columns: <code>E(MeV)  k  r(fm)  Re(U)(MeV)  Im(U)(MeV)</code></p>
+  <p>The potential includes the spin-orbit contribution: \(U(r) = V(r) + V_{so}(r)\langle\mathbf{l}\cdot\mathbf{s}\rangle + i[W(r) + W_{so}(r)\langle\mathbf{l}\cdot\mathbf{s}\rangle]\).</p>
+
+  <div class="box warn">
+    <strong>Validation against TALYS:</strong> The Python script <code>talys_total_omp/talys_omp_total.py</code> runs TALYS and extracts the same radial profiles for comparison:
+    <div class="terminal" style="margin-top:0.5rem;">
+      <span class="prompt">$</span> <span class="output">python3 talys_total_omp/talys_omp_total.py --energies 20.0 --ls 0 -o talys_u.dat</span>
+    </div>
+  </div>
+
+  <h2>4. Comparison Scripts</h2>
+  <h3>Lambda Comparison</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">python3 compare_lambda.py \</span><br>
+    <span class="output">  lambda_printouts/OMP/Rates_Output/lambda_ref.txt \</span><br>
+    <span class="output">  lambda_printouts/OMP/Rates_Output/lambda_new.txt \</span><br>
+    <span class="output">  comparison_report.txt 1e-4</span>
+  </div>
+
+  <h3>Omega Comparison</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">python3 compare_omega.py \</span><br>
+    <span class="output">  omega_printouts/omega_ref.txt \</span><br>
+    <span class="output">  omega_printouts/omega_new.txt \</span><br>
+    <span class="output">  omega_comparison.txt 1e-4</span>
+  </div>
+
+  <h3>TALYS OMP Extraction</h3>
+  <p>For cross-checking radial potential profiles:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">python3 talys_total_omp/talys_omp_total.py \</span><br>
+    <span class="output">  --energies 0.0,5.0,10.0,15.0,20.0 \</span><br>
+    <span class="output">  --element ar --mass 40 --projectile n \</span><br>
+    <span class="output">  --ls 0 -o talys_omp_comparison.dat</span>
+  </div>
+
+  <h2>5. Model Term Checks</h2>
+  <p>Several physics quantities should be checked when modifying the code:</p>
+  <table>
+    <tr><th>Quantity</th><th>Expected (Ar-40, n, 20 MeV)</th><th>Source</th></tr>
+    <tr><td>\(g_p = Z/15\)</td><td>1.2 MeV<sup>-1</sup></td><td><code>preeq_common.cpp:6</code></td></tr>
+    <tr><td>\(g_n = N/15\)</td><td>1.5333&hellip; MeV<sup>-1</sup></td><td><code>preeq_common.cpp:12</code></td></tr>
+    <tr><td>\(\Delta = \chi\cdot 12/\sqrt{A}\)</td><td>1.874 MeV (\(\chi=1\))</td><td><code>preeq_common.cpp:122</code></td></tr>
+    <tr><td>\(n_{\text{crit}} = 2gT_{\text{crit}}\ln 2\)</td><td>~21.5</td><td><code>preeq_common.cpp:129</code></td></tr>
+    <tr><td>\(V\) (default well)</td><td>38.0 MeV</td><td>Hardcoded in both executables</td></tr>
+  </table>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

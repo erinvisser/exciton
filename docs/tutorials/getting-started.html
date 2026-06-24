@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting Started — exciton tutorials</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html" style="color:#fff;font-weight:600;">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../index.html">Tutorials</a> / <span>Getting Started</span></div>
+  <span class="tag tut">Tutorial</span>
+  <h1>Getting Started with exciton</h1>
+  <p>This tutorial walks you through your first encounter with the exciton code — from prerequisites to running your first calculation.</p>
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li><strong>C++17</strong> compiler (g++ or clang)</li>
+    <li><strong>GNU Scientific Library</strong> (GSL)</li>
+    <li><strong>ROOT</strong> (CERN data analysis framework)</li>
+    <li><strong>MARLEY library</strong> at <code>../marley-private/</code></li>
+    <li><strong>Python 3</strong> (for comparison scripts)</li>
+  </ul>
+
+  <h2>Building the Code</h2>
+  <p>Navigate to the project root and run:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">cd /workspace/exciton</span><br>
+    <span class="prompt">$</span> <span class="output">make</span>
+  </div>
+  <p>This compiles two executables:</p>
+  <table>
+    <tr><th>Executable</th><th>Purpose</th><th>Source files</th></tr>
+    <tr><td><code>executables/omega</code></td><td>Particle-hole state density computation</td><td><code>main_omega.cpp</code>, <code>state_density.cpp</code>, <code>preeq_common.cpp</code></td></tr>
+    <tr><td><code>executables/lambda</code></td><td>Internal transition rate computation</td><td><code>main_lambda.cpp</code>, <code>transition_rates.cpp</code>, <code>preeq_common.cpp</code>, <code>state_density.cpp</code> + MARLEY sources</td></tr>
+  </table>
+
+  <h2>Running Your First Calculation: <code>omega</code></h2>
+  <p>The omega executable computes particle-hole state densities for the n + Ar-40 system. Since it has no external dependencies beyond C++ math, it runs immediately:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">./executables/omega</span>
+  </div>
+  <p>This prints a YANDF-0.4 text table to stdout containing 25 rows of excitation energies (E<sub>x</sub> = 1&ndash;25 MeV) with state densities for 9 exciton configurations, followed by a spin distribution table for n = 1&ndash;12.</p>
+  <p>To save the output:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">./executables/omega > omega_output.txt</span>
+  </div>
+
+  <h2>Running Your First Calculation: <code>lambda</code></h2>
+  <p>The lambda executable computes internal transition rates and also requires the <code>MARLEY</code> environment variable to point to the MARLEY data directory:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">MARLEY=../marley-private ./executables/lambda</span>
+  </div>
+  <p>By default this runs the <strong>KD03 validation mode</strong> (<code>--mode kd03</code>), which produces:</p>
+  <ol>
+    <li>A KD03 parameters log (<code>lambda_printouts/OMP/KD03_Output/kd03_Ar40_n_*.log</code>)</li>
+    <li>A transition rates file (<code>lambda_printouts/OMP/Rates_Output/lambda_Ar40_n_*.log</code>)</li>
+  </ol>
+  <div class="box">
+    <strong>Tip:</strong> Use <code>make run</code> to automatically set the <code>MARLEY</code> environment variable:
+    <div class="terminal" style="margin-top:0.5rem;">
+      <span class="prompt">$</span> <span class="output">make run</span>
+    </div>
+  </div>
+
+  <h2>Exploring the Output</h2>
+  <p>Both executables produce YANDF-0.4 format (Yet Another Nuclear Data Format). The lambda output contains columns for four rate types across 21 exciton states:</p>
+  <table>
+    <tr><th>Column</th><th>Meaning</th><th>Units</th></tr>
+    <tr><td><code>p(p), h(p), p(n), h(n)</code></td><td>Proton/neutron particle and hole numbers</td><td>&mdash;</td></tr>
+    <tr><td><code>lambdapiplus</code></td><td>Proton pair creation rate</td><td>s<sup>-1</sup></td></tr>
+    <tr><td><code>lambdanuplus</code></td><td>Neutron pair creation rate</td><td>s<sup>-1</sup></td></tr>
+    <tr><td><code>lambdapinu</code></td><td>Proton-to-neutron conversion rate</td><td>s<sup>-1</sup></td></tr>
+    <tr><td><code>lambdanupi</code></td><td>Neutron-to-proton conversion rate</td><td>s<sup>-1</sup></td></tr>
+  </table>
+
+  <h2>Comparing with TALYS</h2>
+  <p>The <code>compare_lambda.py</code> and <code>compare_omega.py</code> scripts compare two YANDF-0.4 output files and produce absolute difference and relative error reports:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">python3 compare_lambda.py file1 file2 report.txt</span><br>
+    <span class="prompt">$</span> <span class="output">python3 compare_omega.py file1 file2 report.txt</span>
+  </div>
+
+  <h2>What's Next?</h2>
+  <ul>
+    <li><a href="running-calculations.html">Running Calculations</a> — detailed options for both executables</li>
+    <li><a href="../howto/validations.html">Validations</a> — MARLEY Q-values, OMP parameters, model term checks</li>
+    <li><a href="../explanation/exciton-model.html">The Exciton Model</a> — the physics behind the code</li>
+  </ul>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

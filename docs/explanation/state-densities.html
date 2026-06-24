@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Densities — exciton explanation</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html" style="color:#fff;font-weight:600;">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Explanation / <span>State Densities</span></div>
+  <span class="tag exp">Explanation</span>
+  <h1>Particle-Hole State Densities</h1>
+  <p>Understanding the combinatorial foundation of the exciton model.</p>
+
+  <h2>What Is a State Density?</h2>
+  <p>
+    The particle-hole state density \(\omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x)\)
+    counts the number of ways to distribute \(n = p_\pi + h_\pi + p_\nu + h_\nu\)
+    excitons among the single-particle states at excitation energy \(E_x\).
+    It is the <strong>density of accessible nuclear configurations</strong>
+    at a given energy — the phase space available to the pre-equilibrium
+    reaction.
+  </p>
+
+  <h2>The Combinatorial Formula</h2>
+  <p>
+    The state density (Eq. 13.4) has three factors:
+  </p>
+
+  <div class="eq-block">
+    \[
+    \omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x) =
+    \underbrace{\frac{g_p^{n_\pi}\, g_n^{n_\nu}}
+                     {p_\pi!\, h_\pi!\, p_\nu!\, h_\nu!\, (n-1)!}}_{\text{Combinatorial factor}}
+    \times
+    \underbrace{(E_{\text{avail}})^{n-1}}_{\text{Energy factor}}
+    \times
+    \underbrace{f_{\text{FW}}(p, h, U, V)}_{\text{Finite well correction}}
+    \]
+  </div>
+
+  <h3>1. The Combinatorial Factor</h3>
+  <p>
+    This factor counts the number of distinct exciton configurations. For each
+    particle type (protons and neutrons), the number of ways to choose
+    \(p\) particles among \(g\) single-particle states and \(h\) holes
+    among the same \(g\) states, <strong>with</strong> the exclusion that
+    particles and holes cannot occupy the same state, is:
+  </p>
+  <div class="eq-block">
+    \[
+    \frac{g^p}{p!} \cdot \frac{g^h}{h!}
+    \]
+  </div>
+  <p>
+    The factor \(1/(n-1)!\) accounts for the indistinguishability of the
+    \(n\) excitons in the energy-sharing configuration. For the two-component
+    model, proton and neutron single-particle densities are separate:
+    \(g_p = Z/15\) and \(g_n = N/15\).
+  </p>
+
+  <h3>2. The Energy Factor</h3>
+  <p>
+    After accounting for the minimum energy required by the Pauli principle,
+    the remaining energy \(E_{\text{avail}}\) is shared among \(n\) excitons.
+    The density of states in \(n-1\) dimensional phase space scales as
+    \(E^{n-1}\).
+  </p>
+  <p>
+    The available energy is:
+  </p>
+  <div class="eq-block">
+    \[
+    E_{\text{avail}} = U - A(p_\pi, h_\pi, p_\nu, h_\nu)
+    \]
+  </div>
+  <p>
+    where \(U = E_x - f_u\) (excitation energy minus pairing correction) and
+    \(A\) is the Pauli blocking correction.
+  </p>
+
+  <h3>3. The Finite Well Correction</h3>
+  <p>
+    The finite well correction accounts for the fact that the nuclear potential
+    is not infinitely deep. When the excitation energy approaches the well
+    depth \(V\), the number of accessible hole states decreases because
+    holes cannot be created beyond the bottom of the well:
+  </p>
+  <div class="eq-block">
+    \[
+    f_{\text{FW}}(p, h, U, V) = 1 + \sum_{i=1}^{h} (-1)^i \binom{h}{i}
+    \left(\frac{U - iV}{U}\right)^{n-1} \Theta(U - iV)
+    \]
+  </div>
+  <p>
+    For well depths much larger than the excitation energy (\(V \gg U\)),
+    this correction is close to 1. For \(U > V\), the correction alters the
+    state density as hole states begin to be blocked.
+  </p>
+
+  <h2>The Pauli Correction</h2>
+  <p>
+    The Pauli correction \(A(p_\pi, h_\pi, p_\nu, h_\nu)\) accounts for the
+    minimum energy required to create a given exciton configuration while
+    respecting the Pauli exclusion principle:
+  </p>
+  <div class="eq-block">
+    \[
+    A = \frac{\max(p_\pi, h_\pi)^2}{g_p} + \frac{\max(p_\nu, h_\nu)^2}{g_n}
+    - \frac{p_\pi^2 + h_\pi^2 + p_\pi + h_\pi}{4 g_p}
+    - \frac{p_\nu^2 + h_\nu^2 + p_\nu + h_\nu}{4 g_n}
+    \]
+  </div>
+  <p>
+    The first two terms set the minimum energy based on the larger of the
+    particle/hole numbers for each type. The subtracted terms account for
+    the average lowering due to the indistinguishability of particles and
+    holes of the same type.
+  </p>
+
+  <h2>Pairing Effects</h2>
+  <p>
+    The pairing correction accounts for the odd-even staggering of nuclear
+    masses. The pairing energy is:
+  </p>
+  <div class="eq-block">
+    \[
+    \Delta(A, \chi) = \chi \cdot \frac{12}{\sqrt{A}},\qquad
+    \chi = \begin{cases}0 & \text{odd-odd}\\1 & \text{odd-A}\\2 & \text{even-even}\end{cases}
+    \]
+  </div>
+  <p>
+    The empirical function \(f_u(E_x/\Delta, n/n_{\text{crit}})\) suppresses
+    the state density at low excitation energies and transitions to
+    unpaired behavior at higher energies:
+  </p>
+  <div class="eq-block">
+    \[
+    f_u(E_x/\Delta, n/n_{\text{crit}}) =
+    \begin{cases}
+    \Delta & E_x/\Delta < \text{threshold} \\[4pt]
+    \Delta - \Delta\Bigl[0.996 - 1.76\,(n/n_{\text{crit}})^{1.6}\,(E_x/\Delta)^{-0.68}\Bigr]^2 & \text{otherwise}
+    \end{cases}
+    \]
+  </div>
+
+  <h2>Spin Distribution</h2>
+  <p>
+    The spin distribution \(R_n(J)\) gives the fraction of states with total
+    angular momentum \(J\) at exciton number \(n\):
+  </p>
+  <div class="eq-block">
+    \[
+    R_n(J) = \frac{2J+1}{\sqrt{\pi}\, k^{3/2}\, \sigma^3}
+    \exp\!\left[-\frac{(J+\tfrac12)^2}{k\,\sigma^2}\right],
+    \quad \sigma^2 = 0.24\, n\, A^{2/3}
+    \]
+  </div>
+  <p>
+    The spin cutoff parameter \(\sigma^2\) depends on the mass number \(A\)
+    and exciton number \(n\). The parameter \(k\) distinguishes between the
+    TALYS-compatible formula (\(k=2\)) and the original formulation
+    (\(k=n\)).
+  </p>
+
+  <h2>Behavior at Low Excitation Energy</h2>
+  <p>
+    For a given exciton configuration, the state density is zero when:
+  </p>
+  <ul>
+    <li>The excitation energy is below the Pauli threshold: \(E_x < \max(p_\pi, h_\pi)^2/g_p + \max(p_\nu, h_\nu)^2/g_n\)</li>
+    <li>The available energy after the pairing correction is negative</li>
+    <li>The total exciton number \(n < 1\)</li>
+  </ul>
+  <p>
+    This is why for Ar-40, the 2p2h configurations have zero density at
+    E<sub>x</sub> &lt; 5&ndash;6 MeV.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 700 300" width="100%" style="max-width:700px">
+      <defs>
+        <style>
+          .ax { stroke:#555; stroke-width:1.5; }
+          .gr2 { stroke:#ddd; stroke-width:0.5; }
+        </style>
+      </defs>
+      <line x1="60" y1="260" x2="660" y2="260" class="ax"/>
+      <line x1="60" y1="260" x2="60" y2="30" class="ax"/>
+      <text x="660" y="278" text-anchor="end" class="lb2">E<sub>x</sub> (MeV)</text>
+      <text x="30" y="150" text-anchor="middle" class="lb2" transform="rotate(-90,30,150)">log &omega; (MeV<sup>-1</sup>)</text>
+      <line x1="60" y1="200" x2="660" y2="200" class="gr2"/>
+      <line x1="60" y1="140" x2="660" y2="140" class="gr2"/>
+      <line x1="60" y1="80" x2="660" y2="80" class="gr2"/>
+      <text x="55" y="205" text-anchor="end" class="lb2" style="font-size:10px;">10<sup>2</sup></text>
+      <text x="55" y="145" text-anchor="end" class="lb2" style="font-size:10px;">10<sup>4</sup></text>
+      <text x="55" y="85" text-anchor="end" class="lb2" style="font-size:10px;">10<sup>6</sup></text>
+      <path d="M60,258 C100,258 150,258 200,255 C250,240 280,220 310,200
+               C340,180 360,160 380,140 C400,120 420,105 440,92
+               C460,80 480,70 500,62 C520,55 540,50 560,46
+               C580,43 600,41 620,39 660,37"
+            fill="none" stroke="#0f4c81" stroke-width="2.5"/>
+      <path d="M60,258 C200,258 280,255 320,250 C360,240 390,220 410,195
+               C430,170 450,140 470,115 C490,95 510,80 530,68
+               C550,58 570,50 590,44 620,38 660,33"
+            fill="none" stroke="#2d6a4f" stroke-width="2.5" stroke-dasharray="6,3"/>
+      <path d="M60,258 C300,258 380,256 420,250 C460,240 490,225 510,205
+               C530,185 550,162 570,142 C590,125 610,112 630,102
+               C650,94 660,90 660,90"
+            fill="none" stroke="#5a189a" stroke-width="2.5" stroke-dasharray="3,3"/>
+      <text x="380" y="25" text-anchor="middle" class="lb2" style="font-size:11px;font-weight:bold;">State Densities for n + Ar-40</text>
+      <text x="300" y="220" class="lb2" fill="#0f4c81" font-size:10px;">n = 2 (1p1h)</text>
+      <text x="300" y="235" class="lb2" fill="#2d6a4f" font-size:10px;">n = 4 (2p2h)</text>
+      <text x="300" y="250" class="lb2" fill="#5a189a" font-size:10px;">n = 6 (3p3h)</text>
+    </svg>
+    <figcaption>
+      Schematic growth of state density with excitation energy for different
+      exciton numbers. Higher n gives faster growth but higher threshold.
+    </figcaption>
+  </figure>
+
+  <h2>Critical Exciton Number</h2>
+  <p>
+    The critical exciton number \(n_{\text{crit}}\) marks the transition
+    from pre-equilibrium to equilibrium behavior. It is the exciton number
+    at which the system can be considered fully equilibrated:
+  </p>
+  <div class="eq-block">
+    \[
+    n_{\text{crit}} = 2 g T_{\text{crit}} \ln 2, \qquad
+    T_{\text{crit}} = \frac{2}{3.5} \sqrt{\frac{\Delta}{0.25 g}}
+    \]
+  </div>
+  <p>
+    For Ar-40 (odd-A, \(\chi=1\)), the pairing gap is \(\Delta \approx 1.87\) MeV,
+    the single-particle density \(g = g_p + g_n \approx 2.73\) MeV<sup>-1</sup>,
+    and \(n_{\text{crit}} \approx 21\). This means the system is expected to
+    equilibrate at around 21 excitons.
+  </p>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

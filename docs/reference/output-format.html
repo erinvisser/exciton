@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Output Format — exciton reference</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html" style="color:#fff;font-weight:600;">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Reference / <span>Output Format</span></div>
+  <span class="tag ref">Reference</span>
+  <h1>YANDF-0.4 Output Format</h1>
+  <p>Both executables produce output in the YANDF-0.4 (Yet Another Nuclear Data Format) text format.</p>
+
+  <h2>Format Specification</h2>
+  <p>YANDF-0.4 is a flat text format with three element types:</p>
+  <table>
+    <tr><th>Element</th><th>Syntax</th><th>Purpose</th></tr>
+    <tr><td>Comment</td><td><code># text</code></td><td>Metadata headers, column descriptions</td></tr>
+    <tr><td>Header</td><td><code>## column headers</code></td><td>Column names and units on consecutive lines</td></tr>
+    <tr><td>Data</td><td>whitespace-separated numbers</td><td>Numerical data in scientific notation</td></tr>
+  </table>
+
+  <h2>Lambda Output Columns</h2>
+  <div class="terminal">
+    <span class="comment">##     p(p)           h(p)           p(n)           h(n)       lambdapiplus   lambdanuplus    lambdapinu     lambdanupi</span><br>
+    <span class="comment">##      []             []             []             []          [sec^-1]       [sec^-1]       [sec^-1]       [sec^-1]</span>
+  </div>
+  <table>
+    <tr><th>Column</th><th>Format</th><th>Description</th></tr>
+    <tr><td><code>p(p)</code></td><td>integer (14-wide)</td><td>Proton particle number</td></tr>
+    <tr><td><code>h(p)</code></td><td>integer (14-wide)</td><td>Proton hole number</td></tr>
+    <tr><td><code>p(n)</code></td><td>integer (14-wide)</td><td>Neutron particle number</td></tr>
+    <tr><td><code>h(n)</code></td><td>integer (14-wide)</td><td>Neutron hole number</td></tr>
+    <tr><td><code>lambdapiplus</code></td><td>scientific (15-wide, 6-digit precision)</td><td>Proton pair creation rate \(\lambda_{\pi^+}\)</td></tr>
+    <tr><td><code>lambdanuplus</code></td><td>scientific (15-wide)</td><td>Neutron pair creation rate \(\lambda_{\nu^+}\)</td></tr>
+    <tr><td><code>lambdapinu</code></td><td>scientific (15-wide)</td><td>Proton-to-neutron conversion rate \(\lambda_{\pi\nu}\)</td></tr>
+    <tr><td><code>lambdanupi</code></td><td>scientific (15-wide)</td><td>Neutron-to-proton conversion rate \(\lambda_{\nu\pi}\)</td></tr>
+  </table>
+
+  <h2>Omega Output — State Density Block</h2>
+  <div class="terminal">
+    <span class="comment">##      Ex            P(3)           g(p)           g(n)     1p1h0p0h   0p0h1p1h   1p1h1p0h   1p0h1p1h   2p1h0p0h   0p0h2p1h   2p2h0p0h   0p0h2p2h   1p1h1p1h</span><br>
+    <span class="comment">##     [MeV]          [MeV]        [MeV^-1]       [MeV^-1]                                                      [MeV^-1]</span>
+  </div>
+  <table>
+    <tr><th>Column</th><th>Description</th></tr>
+    <tr><td><code>Ex</code></td><td>Excitation energy E<sub>x</sub> (1 to 25 MeV)</td></tr>
+    <tr><td><code>P(3)</code></td><td>Pairing energy \(\Delta\) (MeV)</td></tr>
+    <tr><td><code>g(p)</code></td><td>Proton single-particle state density (MeV<sup>-1</sup>)</td></tr>
+    <tr><td><code>g(n)</code></td><td>Neutron single-particle state density (MeV<sup>-1</sup>)</td></tr>
+    <tr><td><code>1p1h0p0h</code> &hellip;</td><td>\(\omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x)\) for each configuration (MeV<sup>-1</sup>)</td></tr>
+  </table>
+
+  <h2>Omega Output — Spin Distribution Block</h2>
+  <div class="terminal">
+    <span class="comment">##       n         J= 0         J= 1         J= 2         J= 3         J= 4         J= 5         J= 6         J= 7         J= 8            Sum</span><br>
+    <span class="comment">##      []             []             []             []             []             []             []             []             []             []             []</span>
+  </div>
+  <table>
+    <tr><th>Column</th><th>Description</th></tr>
+    <tr><td><code>n</code></td><td>Total exciton number (p + h)</td></tr>
+    <tr><td><code>J=0</code> through <code>J=8</code></td><td>\((2J+1) \cdot R_n(J)\), the unnormalized spin distribution factor</td></tr>
+    <tr><td><code>Sum</code></td><td>Sum of J=0 through J=30 for normalization check</td></tr>
+  </table>
+
+  <h2>Lambda Output File Naming</h2>
+  <p>Lambda output files follow the pattern:</p>
+  <div class="terminal">
+    <span class="output">lambda_Ar40_n_&lt;mode&gt;_&lt;method&gt;&lt;guard&gt;_&lt;kernel&gt;_&lt;timestamp&gt;.log</span>
+  </div>
+  <p>Where:</p>
+  <ul>
+    <li><code>mode</code> = <code>analytical</code> or <code>numerical</code></li>
+    <li><code>method</code> = <code>clenshaw-curtis</code> or <code>midpoint</code></li>
+    <li><code>guard</code> = <code>_guarded</code> or empty</li>
+    <li><code>kernel</code> = <code>matrix-element</code> or <code>optical-model</code></li>
+    <li><code>timestamp</code> = <code>YYYYMMDD_HHMMSS</code></li>
+  </ul>
+
+  <h2>Validation Output Formats</h2>
+  <h3>KD03 Parameters Log</h3>
+  <div class="terminal">
+    <span class="comment"># KD03 OMP parameters for neutron  E:  20.00000 Ef:   -10.22260</span><br>
+    <span class="comment">   rv:  1.18544   av:  0.67185   v1: 12.86300   v2: 76.73000   v3: -7.67300e+01   v4:  0.00000e+00 Vcoul:  0.00000</span><br>
+    <span class="comment">   rw:  1.18544   aw:  0.67185   w1: 12.86300   w2: 76.73000</span><br>
+    <span class="comment">  rwd:  1.13140  awd:  0.53798   d1: 14.40000   d2:  0.01800   d3: 11.50000</span><br>
+    <span class="comment"> rvso:  1.03066 avso:  0.59000 vso1:  6.04200 vso2:  0.00400</span><br>
+    <span class="comment"> rwso:  1.03066 awso:  0.59000 wso1: -3.10000 wso2:  0.00000</span>
+  </div>
+
+  <h3>Well Depths Log</h3>
+  <div class="terminal">
+    <span class="comment"># Columns: E(MeV)  k  Vv(MeV)  Wv(MeV)  Wd(MeV)  Vso(MeV)  Wso(MeV)  Rv(fm)  av(fm)  Rd(fm)  ad(fm)  Rso(fm)  aso(fm)</span>
+  </div>
+
+  <h3>Radial Potential Log</h3>
+  <div class="terminal">
+    <span class="comment"># Columns: E(MeV)  k  r(fm)  Re(U)(MeV)  Im(U)(MeV)</span>
+  </div>
+
+  <h2>Output Directory Structure</h2>
+  <p>Lambda output files are organized into subdirectories under <code>lambda_printouts/OMP/</code>:</p>
+  <div class="terminal">
+    <span class="output">lambda_printouts/OMP/</span><br>
+    <span class="output">  KD03_Output/          kd03_Ar40_n_*.log   — KD03 coefficient dump</span><br>
+    <span class="output">  Well_Depths_Output/   well_depths_Ar40_n_*.log</span><br>
+    <span class="output">  Radial_Potential_Output/  radpot_Ar40_n_*.log</span><br>
+    <span class="output">  Rates_Output/         lambda_Ar40_n_*.log   — Transition rates</span>
+  </div>
+
+  <h2>Parse Script Compatibility</h2>
+  <p>The Python comparison scripts parse YANDF-0.4 format by:</p>
+  <ol>
+    <li>Skipping lines beginning with <code>#</code> or <code>##</code></li>
+    <li>Splitting remaining lines into whitespace-separated tokens</li>
+    <li>Converting tokens to <code>float</code></li>
+    <li>Grouping rows by the preceding <code># quantity: type: ...</code> header</li>
+  </ol>
+  <p>This means blank lines, extra comments, and trailing whitespace are tolerated.</p>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running Calculations — exciton tutorials</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html" style="color:#fff;font-weight:600;">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Tutorials / <span>Running Calculations</span></div>
+  <span class="tag tut">Tutorial</span>
+  <h1>Running Calculations</h1>
+  <p>This tutorial covers all the ways to run the exciton code, from basic invocations to advanced options.</p>
+
+  <h2>The <code>Makefile</code> Interface</h2>
+  <p>The project uses a Makefile with targets:</p>
+  <table>
+    <tr><th>Target</th><th>Description</th></tr>
+    <tr><td><code>make</code> or <code>make all</code></td><td>Build both executables</td></tr>
+    <tr><td><code>make run</code></td><td>Run <code>lambda</code> with <code>MARLEY</code> set automatically</td></tr>
+    <tr><td><code>make run ARGS="..."</code></td><td>Run <code>lambda</code> with custom CLI flags</td></tr>
+    <tr><td><code>make clean</code></td><td>Remove both executables</td></tr>
+  </table>
+
+  <h2>Running the Omega Executable</h2>
+  <p>The omega executable has no CLI arguments and hardcodes the n + Ar-40 target system:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">./executables/omega > omega_Ar40.txt</span>
+  </div>
+  <p>Output contains two data blocks:</p>
+  <ol>
+    <li><strong>Particle-hole state densities</strong> — 25 rows (E<sub>x</sub> = 1 to 25 MeV), 13 columns (E<sub>x</sub>, pairing correction, g<sub>p</sub>, g<sub>n</sub>, 9 exciton configurations)</li>
+    <li><strong>Spin distribution</strong> — 12 rows (n = 1 to 12), 11 columns (n, J=0 through J=8, Sum)</li>
+  </ol>
+
+  <h2>Running the Lambda Executable</h2>
+  <p>The lambda executable requires the <code>MARLEY</code> environment variable:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">MARLEY=../marley-private ./executables/lambda [options]</span><br>
+    <span class="comment"># Or equivalently:</span><br>
+    <span class="prompt">$</span> <span class="output">make run [ARGS="options"]</span>
+  </div>
+
+  <h3>CLI Flags</h3>
+  <table>
+    <tr><th>Flag</th><th>Values</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>--mode</code></td><td><code>kd03</code>, <code>well_depths</code>, <code>radial_potential</code></td><td><code>kd03</code></td><td>Validation mode</td></tr>
+    <tr><td><code>--kernel</code></td><td><code>matrix-element</code>, <code>optical-model</code></td><td><code>matrix-element</code></td><td>Collision kernel</td></tr>
+    <tr><td><code>--analytical</code></td><td>(flag)</td><td>numerical</td><td>Use analytical formulas (M² only)</td></tr>
+    <tr><td><code>--method</code></td><td><code>clenshaw-curtis</code>, <code>midpoint</code></td><td><code>clenshaw-curtis</code></td><td>Integration method</td></tr>
+    <tr><td><code>--midbins</code></td><td>integer</td><td>50</td><td>Midpoint bins</td></tr>
+    <tr><td><code>--no-guards</code></td><td>(flag)</td><td>guarded</td><td>Disable integration bounds guarding</td></tr>
+    <tr><td><code>--l</code></td><td>integer</td><td>0</td><td>Orbital angular momentum for <code>radial_potential</code> mode</td></tr>
+    <tr><td><code>--quiet</code></td><td>(flag)</td><td>verbose</td><td>Suppress diagnostic output to stderr</td></tr>
+  </table>
+
+  <h2>Example Workflows</h2>
+
+  <h3>Matrix element kernel (numerical integration)</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--kernel matrix-element --method clenshaw-curtis"</span>
+  </div>
+
+  <h3>Optical model kernel</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--kernel optical-model"</span>
+  </div>
+  <div class="box warn">
+    <strong>Note:</strong> OMP kernel overrides <code>--analytical</code> — the OMP requires numerical integration.
+  </div>
+
+  <h3>Midpoint integration</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--method midpoint --midbins 100"</span>
+  </div>
+
+  <h3>Analytical formulas only</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--analytical"</span>
+  </div>
+
+  <h3>Well depth validation</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--mode well_depths"</span>
+  </div>
+
+  <h3>Radial potential validation</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="output">make run ARGS="--mode radial_potential --l 2"</span>
+  </div>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

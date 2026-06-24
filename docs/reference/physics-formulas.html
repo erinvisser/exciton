@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Formulas — exciton reference</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html" style="color:#fff;font-weight:600;">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / Reference / <span>Physics Formulas</span></div>
+  <span class="tag ref">Reference</span>
+  <h1>Key Physics Formulas</h1>
+  <p>All equations from the TALYS 1.96 manual Section 13, implemented in the exciton code.</p>
+
+  <h2>Particle-Hole State Density</h2>
+  <p><code class="filepath">state_density.cpp:17</code> &mdash; Eq. 13.4</p>
+  <div class="eq-block">
+    \[
+    \omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x) =
+    \frac{g_p^{n_\pi}\, g_n^{n_\nu}}
+         {p_\pi!\, h_\pi!\, p_\nu!\, h_\nu!\, (n-1)!}\,
+    (E_{\text{avail}})^{n-1}\,
+    f_{\text{FW}}(p, h, U, V)
+    \]
+  </div>
+  <p>where \(n_\pi = p_\pi + h_\pi\), \(n_\nu = p_\nu + h_\nu\), \(n = n_\pi + n_\nu\), \(p = p_\pi + p_\nu\), \(h = h_\pi + h_\nu\), and \(E_{\text{avail}} = U - \Delta_{\text{Pauli}}\).</p>
+
+  <h3>Pauli Correction</h3>
+  <p><code class="filepath">preeq_common.cpp:61</code> &mdash; Eq. 13.8</p>
+  <div class="eq-block">
+    \[
+    A(p_\pi, h_\pi, p_\nu, h_\nu) =
+    \frac{\max(p_\pi, h_\pi)^2}{g_p} + \frac{\max(p_\nu, h_\nu)^2}{g_n}
+    - \frac{p_\pi^2 + h_\pi^2 + p_\pi + h_\pi}{4 g_p}
+    - \frac{p_\nu^2 + h_\nu^2 + p_\nu + h_\nu}{4 g_n}
+    \]
+  </div>
+
+  <h3>Finite Well Correction</h3>
+  <p><code class="filepath">preeq_common.cpp:71</code> &mdash; Eq. 13.10</p>
+  <div class="eq-block">
+    \[
+    f_{\text{FW}}(p, h, U, V) = 1 + \sum_{i=1}^{h} (-1)^i \binom{h}{i}
+    \left(\frac{U - iV}{U}\right)^{n-1} \Theta(U - iV)
+    \]
+  </div>
+
+  <h3>Pairing Correction</h3>
+  <p><code class="filepath">preeq_common.cpp:98</code> &mdash; Eq. 13.5</p>
+  <div class="eq-block">
+    \[
+    f_u(E_x/\Delta, n/n_{\text{crit}}) =
+    \begin{cases}
+    \Delta & E_x/\Delta < 0.716 + 2.44\,(n/n_{\text{crit}})^{2.17} \\[4pt]
+    \Delta - \Delta\Bigl[0.996 - 1.76\,(n/n_{\text{crit}})^{1.6}\,(E_x/\Delta)^{-0.68}\Bigr]^2 & \text{otherwise}
+    \end{cases}
+    \]
+  </div>
+
+  <h3>Pairing Energy</h3>
+  <p><code class="filepath">preeq_common.cpp:122</code> &mdash; Eq. 13.7</p>
+  <div class="eq-block">
+    \[
+    \Delta(A, \chi) = \chi \cdot \frac{12}{\sqrt{A}}, \qquad
+    \chi = \begin{cases} 0 & \text{odd-odd} \\ 1 & \text{odd-A} \\ 2 & \text{even-even} \end{cases}
+    \]
+  </div>
+
+  <h3>Critical Exciton Number</h3>
+  <p><code class="filepath">preeq_common.cpp:129</code> &mdash; Eq. 13.6</p>
+  <div class="eq-block">
+    \[
+    n_{\text{crit}} = 2 g T_{\text{crit}} \ln 2, \qquad
+    T_{\text{crit}} = \frac{2}{3.5} \sqrt{\frac{\Delta}{0.25 g}}
+    \]
+  </div>
+
+  <h2>Single-Particle State Densities</h2>
+  <p><code class="filepath">preeq_common.cpp:6,12</code> &mdash; Eq. 13.9</p>
+  <div class="eq-block">
+    \[
+    g_p = \frac{Z}{15}, \qquad g_n = \frac{N}{15}
+    \]
+  </div>
+
+  <h2>Potential Well Depth</h2>
+  <p><code class="filepath">preeq_common.cpp:36</code> &mdash; Eq. 13.11</p>
+  <div class="eq-block">
+    \[
+    V_{\text{well}} =
+    \begin{cases}
+    12 + 26\,\dfrac{E_p^4}{E_p^4 + (250/A^{1/3})^4} & \text{neutron, }h=1 \\[6pt]
+    22 + 16\,\dfrac{E_p^4}{E_p^4 + (450/A^{1/3})^4} & \text{proton, }h=1 \\[6pt]
+    38 & h > 1\text{ or other projectiles}
+    \end{cases}
+    \]
+  </div>
+
+  <h2>Matrix Element (Kalbach-Cline)</h2>
+  <p><code class="filepath">transition_rates.cpp:34</code> &mdash; Eq. 13.26</p>
+  <div class="eq-block">
+    \[
+    M^2 = C_1 \frac{A_p}{A^3}
+    \left[7.48\,C_2 + \frac{4.62\times10^5}{\bigl(10.7\,C_3 + \frac{E_{\text{tot}}}{n A_p}\bigr)^3}\right]
+    \]
+  </div>
+
+  <h2>Channel Matrix Elements</h2>
+  <p><code class="filepath">transition_rates.cpp:48</code> &mdash; Eq. 13.24</p>
+  <div class="eq-block">
+    \[
+    M^2_{ab} = R_{ab} \cdot M^2
+    \]
+  </div>
+
+  <h2>Analytical Transition Rates</h2>
+  <p><code class="filepath">transition_rates.cpp:86,354</code> &mdash; Eq. 13.27</p>
+  <div class="eq-block">
+    \[
+    \lambda_{\pi^+} = \frac{2\pi}{\hbar}\,
+    \frac{g_p^2\, E_{\text{next}}^{n+1}\, f_{\text{FW}}(p+1,h+1,U,V)}
+         {2n(n+1)\, E_{\text{curr}}^{n-1}}
+    \bigl[n_\pi g_p M^2_{\pi\pi} + 2 n_\nu g_n M^2_{\pi\nu}\bigr]
+    \]
+  </div>
+
+  <h2>Volume-Averaged Imaginary Potential</h2>
+  <p><code class="filepath">transition_rates.cpp:13</code> &mdash; Eqs. 13.29&ndash;13.30</p>
+  <div class="eq-block">
+    \[
+    W(r) = W_v f_v(r) - 4 a_d W_d \frac{df_s}{dr},
+    \qquad
+    \langle W \rangle = \frac{\int_0^\infty W(r) f_v(r) r^2 dr}{\int_0^\infty f_v(r) r^2 dr}
+    \]
+  </div>
+
+  <h2>Collision Rate (OMP Kernel)</h2>
+  <div class="eq-block">
+    \[
+    \lambda_{\text{collision}} = \frac{2}{\hbar} \cdot \text{wompfac} \cdot \langle W \rangle
+    \]
+  </div>
+
+  <h2>Wompfac Values</h2>
+  <div class="eq-block">
+    \[
+    \begin{aligned}
+    \text{R}_{\pi\nu} &= R_{\pi\nu} / R_{\pi\pi} \\
+    \text{wompfac}_{\text{same}} &= M^2_c \cdot 0.55 / (1 + 2\text{R}_{\pi\nu}) \\
+    \text{wompfac}_{\text{cross}} &= M^2_c \cdot 0.55 \cdot 2\text{R}_{\pi\nu} / (1 + 2\text{R}_{\pi\nu}) \\
+    \text{wompfac}_{\text{conv}} &= \tfrac12(\text{wompfac}_{\text{same}} + \text{wompfac}_{\text{cross}})
+    \end{aligned}
+    \]
+  </div>
+
+  <h2>Spin Distribution</h2>
+  <p><code class="filepath">preeq_common.cpp:148</code> &mdash; Eqs. 13.59, 13.61</p>
+  <div class="eq-block">
+    \[
+    R_n(J) = \frac{2J+1}{\sqrt{\pi}\, k^{3/2}\, \sigma^3}
+    \exp\!\left[-\frac{(J+\tfrac12)^2}{k\,\sigma^2}\right],
+    \quad \sigma^2 = 0.24\, n\, A^{2/3},
+    \quad k = \begin{cases}2 & \text{TALYS compat} \\ n & \text{default}\end{cases}
+    \]
+  </div>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>
