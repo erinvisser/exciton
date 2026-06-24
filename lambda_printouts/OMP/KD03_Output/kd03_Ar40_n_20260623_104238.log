@@ -36,7 +36,7 @@
 # (n,3He):     -15.0386
 # (n,alpha):   -2.49708
 #
-# --- Energy-dependent OMP values (TALYS flagomponly format) ---
+# --- Energy-dependent OMP values (TALYS format) ---
 # Grid: -8.0 to 20.0 MeV, 0.1 MeV step
 KD03 OMP parameters for neutron  E:   -8.00000 Ef:   -10.22300
    rv:   1.18536   av:   0.67185   v1:  56.24000   v2:   0.00717   v3: 1.91400e-05   v4: 7.00000e-09 Vcoul:   0.00000
