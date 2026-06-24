@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     bool guardBounds = true;
     CollisionKernel kernel = CollisionKernel::MatrixElement;
     bool quiet = false;
+    int l_val = 0;
     ValidationMode vmode = ValidationMode::KD03;
 
     for (int i = 1; i < argc; ++i)
@@ -52,6 +53,8 @@ int main(int argc, char *argv[])
             else if (std::strcmp(argv[i], "matrix-element") == 0)
                 kernel = CollisionKernel::MatrixElement;
         }
+        else if (std::strcmp(argv[i], "--l") == 0 && i + 1 < argc)
+            l_val = std::atoi(argv[++i]);
         else if (std::strcmp(argv[i], "--mode") == 0 && i + 1 < argc)
         {
             ++i;
@@ -380,8 +383,9 @@ int main(int argc, char *argv[])
         rp_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
         rp_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
         rp_file << "# Radial grid: 0.1 to 15.0 fm, 0.1 fm step\n";
+        rp_file << "# l = " << l_val << " (j = l + 1/2, l·σ = l)\n";
         rp_file << "#\n";
-        rp_file << "# Columns: E(MeV)  k  r(fm)  V(MeV)  W(MeV)\n";
+        rp_file << "# Columns: E(MeV)  k  r(fm)  Re(U)(MeV)  Im(U)(MeV)\n";
 
         for (int nen = -80; nen <= 200; ++nen)
         {
@@ -393,7 +397,7 @@ int main(int argc, char *argv[])
             {
                 int pdg = (k == 2) ? 2212 : 2112;
                 double e_safe = std::max(e, 0.0);
-                kd.updateWellDepths(e_safe, pdg);
+                kd.updateWellDepths(e_safe, pdg, l_val);
 
                 for (int nr = 1; nr <= 150; ++nr)
                 {
