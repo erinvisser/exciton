@@ -14,7 +14,7 @@
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/MassTable.hh"
 
-enum class ValidationMode { KD03, WellDepths, RadialPotential };
+enum class ValidationMode { KD03, WellDepths, RadialPotential, EvalList };
 
 int main(int argc, char *argv[])
 {
@@ -25,6 +25,10 @@ int main(int argc, char *argv[])
     CollisionKernel kernel = CollisionKernel::MatrixElement;
     bool quiet = false;
     int l_val = 0;
+    double emin_val = -8.0, emax_val = 20.0, estep_val = 1.0;
+    double rstep_val = 0.26746, rmax_val = 15.0;
+    std::string input_file;
+    std::string proj = "n";
     ValidationMode vmode = ValidationMode::KD03;
 
     for (int i = 1; i < argc; ++i)
@@ -55,6 +59,20 @@ int main(int argc, char *argv[])
         }
         else if (std::strcmp(argv[i], "--l") == 0 && i + 1 < argc)
             l_val = std::atoi(argv[++i]);
+        else if (std::strcmp(argv[i], "--emin") == 0 && i + 1 < argc)
+            emin_val = std::atof(argv[++i]);
+        else if (std::strcmp(argv[i], "--emax") == 0 && i + 1 < argc)
+            emax_val = std::atof(argv[++i]);
+        else if (std::strcmp(argv[i], "--estep") == 0 && i + 1 < argc)
+            estep_val = std::atof(argv[++i]);
+        else if (std::strcmp(argv[i], "--rstep") == 0 && i + 1 < argc)
+            rstep_val = std::atof(argv[++i]);
+        else if (std::strcmp(argv[i], "--rmax") == 0 && i + 1 < argc)
+            rmax_val = std::atof(argv[++i]);
+        else if (std::strcmp(argv[i], "--input") == 0 && i + 1 < argc)
+            input_file = argv[++i];
+        else if (std::strcmp(argv[i], "--proj") == 0 && i + 1 < argc)
+            proj = argv[++i];
         else if (std::strcmp(argv[i], "--mode") == 0 && i + 1 < argc)
         {
             ++i;
@@ -62,6 +80,8 @@ int main(int argc, char *argv[])
                 vmode = ValidationMode::WellDepths;
             else if (std::strcmp(argv[i], "radial_potential") == 0)
                 vmode = ValidationMode::RadialPotential;
+            else if (std::strcmp(argv[i], "eval_list") == 0)
+                vmode = ValidationMode::EvalList;
             else if (std::strcmp(argv[i], "kd03") == 0)
                 vmode = ValidationMode::KD03;
         }
@@ -328,22 +348,23 @@ int main(int argc, char *argv[])
 
         wd_file << "# Well depths from MARLEY KoningDelarocheOpticalModel\n";
         wd_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
-        wd_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
+        wd_file << "# Energy grid: " << emin_val << " to " << emax_val
+                << " MeV, " << estep_val << " MeV step\n";
         wd_file << "#\n";
         wd_file << "# Columns: E(MeV)  k  Vv(MeV)  Wv(MeV)  Wd(MeV)  Vso(MeV)  Wso(MeV)";
         wd_file << "  Rv(fm)  av(fm)  Rd(fm)  ad(fm)  Rso(fm)  aso(fm)\n";
 
-        for (int nen = -80; nen <= 200; ++nen)
+        int ne_min = static_cast<int>(std::round(emin_val / estep_val));
+        int ne_max = static_cast<int>(std::round(emax_val / estep_val));
+
+        for (int nen = ne_min; nen <= ne_max; ++nen)
         {
-            double e = 0.1 * nen;
-            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
-                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
-            if (!print) continue;
+            double e = nen * estep_val;
             for (int k = 1; k <= 2; ++k)
             {
                 int pdg = (k == 2) ? 2212 : 2112;
                 double e_safe = std::max(e, 0.0);
-                kd.updateWellDepths(e_safe, pdg);
+                kd.updateWellDepths(e_safe, pdg, l_val);
 
                 double Vv = kd.getVv();
                 double Wv = kd.getWv();
@@ -379,29 +400,32 @@ int main(int argc, char *argv[])
     {
         marley::KoningDelarocheOpticalModel kd(18, 40);
 
+        int num_steps = static_cast<int>(std::round(rmax_val / rstep_val));
+
         rp_file << "# Radial optical model potential from MARLEY KoningDelarocheOpticalModel\n";
         rp_file << "# Target: Z=18  A=40  nuclide=Ar40\n";
-        rp_file << "# Grid: -8.0 to 20.0 MeV, 0.1 MeV step\n";
-        rp_file << "# Radial grid: 0.1 to 15.0 fm, 0.1 fm step\n";
-        rp_file << "# l = " << l_val << " (j = l + 1/2, l·σ = l)\n";
-        rp_file << "#\n";
+        rp_file << "# Energy grid: " << emin_val << " to " << emax_val
+                << " MeV, " << estep_val << " MeV step\n";
+        rp_file << "# Radial grid: 0 to " << rmax_val << " fm, "
+                << rstep_val << " fm step\n";
+        rp_file << "# l = " << l_val << " (j = l + 1/2, l.s = l)\n";
         rp_file << "# Columns: E(MeV)  k  r(fm)  Re(U)(MeV)  Im(U)(MeV)\n";
 
-        for (int nen = -80; nen <= 200; ++nen)
+        int ne_min = static_cast<int>(std::round(emin_val / estep_val));
+        int ne_max = static_cast<int>(std::round(emax_val / estep_val));
+
+        for (int nen = ne_min; nen <= ne_max; ++nen)
         {
-            double e = 0.1 * nen;
-            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
-                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
-            if (!print) continue;
+            double e = nen * estep_val;
             for (int k = 1; k <= 2; ++k)
             {
                 int pdg = (k == 2) ? 2212 : 2112;
                 double e_safe = std::max(e, 0.0);
                 kd.updateWellDepths(e_safe, pdg, l_val);
 
-                for (int nr = 1; nr <= 150; ++nr)
+                for (int nr = 1; nr <= num_steps; ++nr)
                 {
-                    double r = 0.1 * nr;
+                    double r = nr * rstep_val;
                     std::complex<double> U = kd.evalOMP(r);
                     rp_file << std::setw(10) << std::fixed << std::setprecision(5) << e
                             << std::setw(4) << k
@@ -411,6 +435,49 @@ int main(int argc, char *argv[])
                 }
             }
         }
+    }
+
+    // EvalList mode: read (E, r) pairs from file, evaluate MARLEY OMP at each
+    if (vmode == ValidationMode::EvalList)
+    {
+        if (input_file.empty())
+        {
+            std::cerr << "Error: --input <file> required for eval_list mode\n";
+            return 1;
+        }
+        int pdg = (proj == "p") ? 2212 : 2112;
+        marley::KoningDelarocheOpticalModel kd(18, 40);
+        std::ifstream infile(input_file);
+        if (!infile.is_open())
+        {
+            std::cerr << "Error: could not open " << input_file << "\n";
+            return 1;
+        }
+        std::cout << "# MARLEY OMP evaluation from " << input_file << "\n";
+        std::cout << "# projectile = " << proj << "  l = " << l_val << "\n";
+        std::cout << "# Columns: E(MeV)  r(fm)  Re(U)(MeV)  Im(U)(MeV)\n";
+
+        double last_E = -1e99;
+        std::string line;
+        while (std::getline(infile, line))
+        {
+            if (line.empty() || line[0] == '#') continue;
+            std::istringstream iss(line);
+            double E, r;
+            if (!(iss >> E >> r)) continue;
+            if (E != last_E)
+            {
+                double e_safe = std::max(E, 0.0);
+                kd.updateWellDepths(e_safe, pdg, l_val);
+                last_E = E;
+            }
+            std::complex<double> U = kd.evalOMP(r);
+            std::cout << std::fixed << std::setprecision(5) << std::setw(10) << E
+                      << std::setw(12) << std::setprecision(6) << r
+                      << std::setw(16) << std::scientific << std::setprecision(6) << U.real()
+                      << std::setw(16) << U.imag() << "\n";
+        }
+        return 0;
     }
 
     // Rates computation
