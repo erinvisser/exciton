@@ -1,6 +1,6 @@
 # Comparison: MARLEY vs TALYS U(r)
 # System: n + ar40  (KD03 global)
-# MARLEY l = 0,  TALYS l.s = 0.0
+# l = 0  (l.s eigenvalue = 0)
 # Columns:  E(MeV)  r(fm)  Re(MARLEY)(MeV)  Im(MARLEY)(MeV)  Re(TALYS)(MeV)  Im(TALYS)(MeV)  rel_diff_Re  rel_diff_Im
    20.00000   0.26746   -4.48671900e+01   -1.73335600e+00   -4.48669000e+01   -1.73338000e+00   -6.46356223e-06    1.38457811e-05
    20.00000   0.53492   -4.47893300e+01   -1.73800400e+00   -4.47889000e+01   -1.73804000e+00   -9.60059300e-06    2.07129870e-05
