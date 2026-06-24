@@ -2,17 +2,18 @@
 """Run TALYS at specified energies and extract total U(r) from omp.out.
 
 Usage:
-  python3 talys_omp_total.py --energies 20.0 --ls 0 -o talys_u.dat
-  python3 talys_omp_total.py --energies 0.0,5.0,10.0,20.0 --ls 1
-  python3 talys_omp_total.py --energies 0.0:20.0:2.0 --ls 0
+  python3 talys_omp_total.py --energies 20.0 --l 0 -o talys_u.dat
+  python3 talys_omp_total.py --energies 0.0,5.0,10.0,20.0 --l 1
+  python3 talys_omp_total.py --energies 0.0:20.0:2.0 --l 0
 
 Output columns: E(MeV)  r(fm)  Re(U)(MeV)  Im(U)(MeV)
 
-Re(U) = -V + Vso_raw * ls
-Im(U) = -W + Wso_raw * ls
+Re(U) = -V - Vso_raw * l
+Im(U) = -W - Wso_raw * l
 
-where V/W/Vso/Wso are the four potential columns from TALYS omp.out.
-For l=0 (s-wave), the spin-orbit l.s eigenvalue is zero and only central terms contribute.
+where V/W/Vso/Wso are the four potential columns from TALYS omp.out,
+and l is the orbital angular momentum (l.s eigenvalue = l for aligned spin j=l+1/2).
+For l=0 (s-wave), the spin-orbit term is zero.
 """
 
 import argparse
@@ -67,10 +68,10 @@ def main():
         "--energies", required=True, help="Comma-separated list or start:stop:step"
     )
     parser.add_argument(
-        "--ls",
-        type=float,
-        default=0.0,
-        help="l.s eigenvalue for spin-orbit contribution (default: 0)",
+        "--l",
+        type=int,
+        default=0,
+        help="Orbital angular momentum for SO eigenvalue l.s=l (default: 0)",
     )
     parser.add_argument(
         "--output", "-o", default=None, help="Output file (default: stdout)"
@@ -111,7 +112,7 @@ def main():
 
     out_fh.write(f"# TALYS total OMP: {args.projectile} + {args.element}{args.mass}\n")
     out_fh.write("# KD03 global (localomp n)\n")
-    out_fh.write(f"# l.s = {args.ls}\n")
+    out_fh.write(f"# l = {args.l}  (l.s eigenvalue = {args.l})\n")
     out_fh.write("# Columns:  E(MeV)  r(fm)  Re(U)(MeV)  Im(U)(MeV)\n")
 
     total_points = 0
@@ -185,8 +186,8 @@ def main():
                     Wso = float(parts[4])
                 except ValueError:
                     continue
-                U_re = -V + Vso * args.ls
-                U_im = -W + Wso * args.ls
+                U_re = -V - Vso * args.l
+                U_im = -W - Wso * args.l
                 out_fh.write(f"  {energy:9.5f}  {r:8.5f}  {U_re:16.8e}  {U_im:16.8e}\n")
                 n_parsed += 1
         total_points += n_parsed

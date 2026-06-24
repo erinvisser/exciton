@@ -3,12 +3,12 @@
 
 Usage:
   python3 talys_vs_marley.py --energies 20.0 --talys-exe /path/to/talys \
-    --marley-exe /path/to/exciton --ls 0 --l 0 -o comparison.dat
+    --marley-exe /path/to/exciton --l 0 -o comparison.dat
 
 Output columns: E(MeV)  r(fm)  Re(MARLEY)(MeV)  Im(MARLEY)(MeV)  Re(TALYS)(MeV)  Im(TALYS)(MeV)  rel_diff_Re  rel_diff_Im
 
-Re(TALYS) = -V + Vso_raw * ls
-Im(TALYS) = -W + Wso_raw * ls
+Re(TALYS) = -V - Vso_raw * ls
+Im(TALYS) = -W - Wso_raw * ls
 
 Relative difference = (MARLEY - TALYS) / |TALYS|, or 0 if TALYS == 0.
 """
@@ -48,10 +48,8 @@ def main():
     )
     parser.add_argument("--energies", required=True,
                         help="Comma-separated list or start:stop:step")
-    parser.add_argument("--ls", type=float, default=0.0,
-                        help="l.s eigenvalue for TALYS SO (default: 0)")
-    parser.add_argument("--l", dest="l_val", type=int, default=0,
-                        help="l quantum number for MARLEY SO (default: 0)")
+    parser.add_argument("--l", type=int, default=0, dest="l_val",
+                        help="l quantum number for SO eigenvalue (default: 0)")
     parser.add_argument("--output", "-o", default=None,
                         help="Output file (default: stdout)")
     parser.add_argument("--element", default="ar")
@@ -80,7 +78,7 @@ def main():
 
     out_fh.write(f"# Comparison: MARLEY vs TALYS U(r)\n")
     out_fh.write(f"# System: {args.projectile} + {args.element}{args.mass}  (KD03 global)\n")
-    out_fh.write(f"# MARLEY l = {args.l_val},  TALYS l.s = {args.ls}\n")
+    out_fh.write(f"# l = {args.l_val}  (l.s eigenvalue = {args.l_val})\n")
     out_fh.write("# Columns:  E(MeV)  r(fm)  "
                  "Re(MARLEY)(MeV)  Im(MARLEY)(MeV)  "
                  "Re(TALYS)(MeV)  Im(TALYS)(MeV)  "
@@ -145,8 +143,8 @@ def main():
                     Wso = float(parts[4])
                 except ValueError:
                     continue
-                U_re_talys = -V + Vso * args.ls
-                U_im_talys = -W + Wso * args.ls
+                U_re_talys = -V - Vso * args.l_val
+                U_im_talys = -W - Wso * args.l_val
                 talys_data.append((r, U_re_talys, U_im_talys))
 
         # --- Step 3: Write MARLEY eval list (E r only) ---

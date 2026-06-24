@@ -1,0 +1,7 @@
+energy 20.0
+element ar
+mass 40
+projectile n
+localomp n
+outomp y
+blockomp y
