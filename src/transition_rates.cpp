@@ -194,7 +194,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
     if (omega_initial <= 0.0)
         return 0.0;
 
-    marley::KoningDelarocheOpticalModel kd_omp(Z_comp, A_compound);
+    marley::KoningDelarocheOpticalModel kd_omp(Z, A_target);
     marley::Integrator integrator(50);
     double sum = 0.0;
 
@@ -467,7 +467,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
     if (omega_initial <= 0.0)
         return 0.0;
 
-    marley::KoningDelarocheOpticalModel kd_omp(Z_comp, A_compound);
+    marley::KoningDelarocheOpticalModel kd_omp(Z, A_target);
     marley::Integrator integrator(50);
 
     auto integrate_conversion = [&](int c_pi, int c_hi, int c_pn, int c_hn,
