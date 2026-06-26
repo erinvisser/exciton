@@ -110,7 +110,7 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
     int A_compound = Z + N + A_p;
 
     double g_p = spDensityProton(Z);
-    int N_comp = N + A_p;  // compound N (Z_proj=0 for neutron projectile; N_comp = N + 1)
+    int N_comp = N + A_p; // compound N (Z_proj=0 for neutron projectile; N_comp = N + 1)
     double g_n = spDensityNeutron(N_comp);
 
     double prefactor = 2 * PI / HBAR;
@@ -170,10 +170,10 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
     double g_p = spDensityProton(Z_comp);
     double g_n = spDensityNeutron(N_comp);
     const auto &mt = marley::MassTable::Instance();
-    double sep_p_res = mt.get_fragment_separation_energy(
-        Z_comp - 1, A_compound - 1, 2212);
-    double sep_n_res = mt.get_fragment_separation_energy(
-        Z_comp, A_compound - 1, 2112);
+    double sep_p = mt.get_fragment_separation_energy(
+        Z_comp, A_compound, 2212);
+    double sep_n = mt.get_fragment_separation_energy(
+        Z_comp, A_compound, 2112);
 
     double wompfac_same = 0.0, wompfac_cross = 0.0;
     if (kernel == CollisionKernel::OpticalModel)
@@ -218,7 +218,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
             }
             else
             {
-                double e_kin = (collider_pdg == 2212) ? e - sep_p_res : e - sep_n_res;
+                double e_kin = (collider_pdg == 2212) ? e - sep_p : e - sep_n;
                 if (e_kin < -20.0)
                     e_kin = -20.0;
                 kd_omp.setIncidentEnergyAndFragment(e_kin, collider_pdg);
@@ -235,7 +235,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
                     std::cerr << "state=" << p_pi << "," << h_pi << "," << p_nu << "," << h_nu
                               << " term=" << t_pi << "," << t_hi << "," << t_pn << "," << t_hn
                               << " e=" << e << " e_kin=" << e_kin
-                              << " sep_p=" << sep_p_res << " sep_n=" << sep_n_res
+                              << " sep_p=" << sep_p << " sep_n=" << sep_n
                               << " Wv=" << Wv << " Wd=" << Wd
                               << " Rv=" << Rv << " av=" << av
                               << " Rd=" << Rd << " ad=" << ad
