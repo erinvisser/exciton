@@ -133,7 +133,7 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
         if (ratio < 0.01)
             return 0.0;
         double numerator = std::pow(g_p, 2) * std::pow(next_energy, n + 1);
-        double matrix_term = n_proton * g_p * M2_element(MatrixElement::PiPi, A_p, A_compound, E_tot, n) + 2 * n_neutron * g_n * M2_element(MatrixElement::PiNu, A_p, A_compound, E_tot, n);
+        double matrix_term = n_proton * g_p * M2_element(MatrixElement::PiPi, A_p, A_compound, E_tot, n) + 2 * n_neutron * g_n * M2_element(MatrixElement::NuPi, A_p, A_compound, E_tot, n);
         return prefactor * numerator * matrix_term * well_term / denom;
     }
     else
@@ -145,7 +145,7 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
         if (ratio < 0.01)
             return 0.0;
         double numerator = std::pow(g_n, 2) * std::pow(next_energy, n + 1);
-        double matrix_term = n_neutron * g_n * M2_element(MatrixElement::NuNu, A_p, A_compound, E_tot, n) + 2 * n_proton * g_p * M2_element(MatrixElement::NuPi, A_p, A_compound, E_tot, n);
+        double matrix_term = n_neutron * g_n * M2_element(MatrixElement::NuNu, A_p, A_compound, E_tot, n) + 2 * n_proton * g_p * M2_element(MatrixElement::PiNu, A_p, A_compound, E_tot, n);
         return prefactor * numerator * matrix_term * well_term / denom;
     }
 }
