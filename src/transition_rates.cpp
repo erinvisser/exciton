@@ -445,10 +445,10 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
     double g_p = spDensityProton(Z_comp);
     double g_n = spDensityNeutron(N_comp);
     const auto &mt = marley::MassTable::Instance();
-    double sep_p_res = mt.get_fragment_separation_energy(
-        Z_comp - 1, A_compound - 1, 2212);
-    double sep_n_res = mt.get_fragment_separation_energy(
-        Z_comp, A_compound - 1, 2112);
+    double sep_p = mt.get_fragment_separation_energy(
+        Z_comp, A_compound, 2212);
+    double sep_n = mt.get_fragment_separation_energy(
+        Z_comp, A_compound, 2112);
 
     double wompfac_conv = 0.0;
     if (kernel == CollisionKernel::OpticalModel)
@@ -496,7 +496,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
             {
                 double omega_a = particleHoleStateDensity(
                     a_pi, a_hi, a_pn, a_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-                double e_kin = (collider_pdg == 2212) ? e - sep_p_res : e - sep_n_res;
+                double e_kin = (collider_pdg == 2212) ? e - sep_p : e - sep_n;
                 if (e_kin < -20.0)
                     e_kin = -20.0;
                 kd_omp.setIncidentEnergyAndFragment(e_kin, collider_pdg);
@@ -513,7 +513,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
                     std::cerr << "CONV state=" << p_pi << "," << h_pi << "," << p_nu << "," << h_nu
                               << " term=" << c_pi << "," << c_hi << "," << c_pn << "," << c_hn
                               << " e=" << e << " e_kin=" << e_kin
-                              << " sep_p=" << sep_p_res << " sep_n=" << sep_n_res
+                              << " sep_p=" << sep_p << " sep_n=" << sep_n
                               << " Wv=" << Wv << " Wd=" << Wd
                               << " Rv=" << Rv << " av=" << av
                               << " Rd=" << Rd << " ad=" << ad
