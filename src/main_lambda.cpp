@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 {
     PreeqMode mode = PreeqMode::Numerical;
     IntegrationMethod method = IntegrationMethod::ClenshawCurtis;
-    int midBins = 50;
+    int midBins = 20;
     bool guardBounds = true;
     CollisionKernel kernel = CollisionKernel::MatrixElement;
     bool quiet = false;
@@ -93,11 +93,12 @@ int main(int argc, char *argv[])
         mode = PreeqMode::Numerical;
     }
 
-    int Z = 18;
-    int N = 22;
+    int Z_target = 18;
+    int N_target = 22;
+    int Z_comp = 18;
+    int N_comp = 23;
     int A_p = 1;
-    int A_target = Z + N;
-    int A_compound = A_target + A_p;
+    int A_target = Z_target + N_target;
     int chi = 1;
     double E_comp = 25.60156;
     double V = 38.0;
@@ -111,8 +112,8 @@ int main(int argc, char *argv[])
     double C3 = 1.0;
     double M2c = 1.0;
 
-    double delta = pairingEnergyDelta(A_target, chi);
-    double ncrit = nCrit(Z, N, delta);
+    double delta = pairingEnergyDelta(Z_comp + N_comp, chi);
+    double ncrit = nCrit(Z_comp, N_comp, delta);
 
     // Output file setup
     std::string outdir = "lambda_printouts/OMP";
@@ -495,7 +496,7 @@ int main(int argc, char *argv[])
         rates_file << "#   date: 2026-06-23\n";
         rates_file << "#   format: YANDF-0.4\n";
         rates_file << "# target: \n";
-        rates_file << "#   Z: " << Z << "\n";
+        rates_file << "#   Z: " << Z_target << "\n";
         rates_file << "#   A: 40\n";
         rates_file << "#   nuclide: Ar40\n";
         rates_file << "# parameters: \n";
@@ -555,19 +556,19 @@ int main(int argc, char *argv[])
             double U = availableExcitationEnergy(E_comp, P_ph);
 
             double lam_pi_plus = lambdaRate(LambdaType::ProtonPairCreation,
-                                            mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                            mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                             method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
             double lam_nu_plus = lambdaRate(LambdaType::NeutronPairCreation,
-                                            mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                            mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                             method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
             double lam_pi_nu = lambdaRate(LambdaType::ProtonToNeutronConversion,
-                                          mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                           mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                           R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                           method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
             double lam_nu_pi = lambdaRate(LambdaType::NeutronToProtonConversion,
-                                          mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                           mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                           R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                           method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
 

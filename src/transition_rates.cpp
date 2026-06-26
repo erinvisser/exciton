@@ -110,7 +110,8 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
     int A_compound = Z + N + A_p;
 
     double g_p = spDensityProton(Z);
-    double g_n = spDensityNeutron(N);
+    int N_comp = N + A_p;  // compound N (Z_proj=0 for neutron projectile; N_comp = N + 1)
+    double g_n = spDensityNeutron(N_comp);
 
     double prefactor = 2 * PI / HBAR;
     double current_energy = U - pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n);
@@ -159,8 +160,6 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
                               int Z_proj)
 {
     int n = p_pi + h_pi + p_nu + h_nu;
-    double g_p = spDensityProton(Z);
-    double g_n = spDensityNeutron(N);
     double prefactor = 2 * PI / HBAR;
 
     int A_target = Z + N;
@@ -168,6 +167,8 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
 
     int Z_comp = Z + Z_proj;
     int N_comp = N + (A_p - Z_proj);
+    double g_p = spDensityProton(Z_comp);
+    double g_n = spDensityNeutron(N_comp);
     const auto &mt = marley::MassTable::Instance();
     double sep_p_res = mt.get_fragment_separation_energy(
         Z_comp - 1, A_compound - 1, 2212);
@@ -187,7 +188,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
 
     // turning off pairing bc passing in U, not E_x
     double omega_initial = particleHoleStateDensity(
-        p_pi, h_pi, p_nu, h_nu, U, Z, N, 0, V, 0.0, false, 1.0);
+        p_pi, h_pi, p_nu, h_nu, U, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
     if (omega_initial <= 0.0)
         return 0.0;
 
@@ -208,11 +209,11 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
         auto integrand = [&](double e) -> double
         {
             double omega_r = particleHoleStateDensity(
-                r_pi, r_hi, r_pn, r_hn, U - e, Z, N, 0, V, 0.0, false, 1.0);
+                r_pi, r_hi, r_pn, r_hn, U - e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
             if (kernel == CollisionKernel::MatrixElement)
             {
                 double omega_t = particleHoleStateDensity(
-                    t_pi, t_hi, t_pn, t_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                    t_pi, t_hi, t_pn, t_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                 return prefactor * M2_val * omega_t * g_factor * omega_r;
             }
             else
@@ -246,9 +247,9 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
                 if (ref_pi != 0 || ref_hi != 0 || ref_pn != 0 || ref_hn != 0)
                 {
                     double omega_hole = particleHoleStateDensity(
-                        t_pi, t_hi, t_pn, t_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                        t_pi, t_hi, t_pn, t_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                     double omega_particle = particleHoleStateDensity(
-                        ref_pi, ref_hi, ref_pn, ref_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                        ref_pi, ref_hi, ref_pn, ref_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                     if (omega_particle > 1.0)
                         collision *= omega_hole / omega_particle;
                 }
@@ -378,7 +379,8 @@ double lambdaPairConversionAnalytical(ConversionType conversion, int Z, int N, i
     int A_compound = Z + N + A_p;
 
     double g_p = spDensityProton(Z);
-    double g_n = spDensityNeutron(N);
+    int N_comp = N + A_p;
+    double g_n = spDensityNeutron(N_comp);
 
     double pauli = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n);
 
@@ -429,9 +431,6 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
 {
     int n = p_pi + h_pi + p_nu + h_nu;
 
-    double g_p = spDensityProton(Z);
-    double g_n = spDensityNeutron(N);
-
     double prefactor = 2 * PI / HBAR;
 
     int A_target = Z + N;
@@ -439,6 +438,8 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
 
     int Z_comp = Z + Z_proj;
     int N_comp = N + (A_p - Z_proj);
+    double g_p = spDensityProton(Z_comp);
+    double g_n = spDensityNeutron(N_comp);
     const auto &mt = marley::MassTable::Instance();
     double sep_p_res = mt.get_fragment_separation_energy(
         Z_comp - 1, A_compound - 1, 2212);
@@ -458,7 +459,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
     }
 
     double omega_initial = particleHoleStateDensity(
-        p_pi, h_pi, p_nu, h_nu, U, Z, N, 0, V, 0.0, false, 1.0);
+        p_pi, h_pi, p_nu, h_nu, U, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
     if (omega_initial <= 0.0)
         return 0.0;
 
@@ -478,19 +479,19 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
         auto integrand = [&](double e) -> double
         {
             double omega_r = particleHoleStateDensity(
-                r_pi, r_hi, r_pn, r_hn, U - e, Z, N, 0, V, 0.0, false, 1.0);
+                r_pi, r_hi, r_pn, r_hn, U - e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
             if (kernel == CollisionKernel::MatrixElement)
             {
                 double omega_c = particleHoleStateDensity(
-                    c_pi, c_hi, c_pn, c_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                    c_pi, c_hi, c_pn, c_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                 double omega_a = particleHoleStateDensity(
-                    a_pi, a_hi, a_pn, a_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                    a_pi, a_hi, a_pn, a_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                 return prefactor * M2_val * omega_c * omega_a * omega_r;
             }
             else
             {
                 double omega_a = particleHoleStateDensity(
-                    a_pi, a_hi, a_pn, a_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                    a_pi, a_hi, a_pn, a_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                 double e_kin = (collider_pdg == 2212) ? e - sep_p_res : e - sep_n_res;
                 if (e_kin < -20.0)
                     e_kin = -20.0;
@@ -520,9 +521,9 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
                 if (ref_pi != 0 || ref_hi != 0 || ref_pn != 0 || ref_hn != 0)
                 {
                     double omega_created = particleHoleStateDensity(
-                        c_pi, c_hi, c_pn, c_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                        c_pi, c_hi, c_pn, c_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                     double omega_ref = particleHoleStateDensity(
-                        ref_pi, ref_hi, ref_pn, ref_hn, e, Z, N, 0, V, 0.0, false, 1.0);
+                        ref_pi, ref_hi, ref_pn, ref_hn, e, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
                     if (omega_ref > 1.0)
                         collision *= omega_created / omega_ref;
                 }
