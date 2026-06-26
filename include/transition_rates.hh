@@ -64,13 +64,13 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
                                int p_pi, int h_pi, int p_nu, int h_nu,
                                double E_tot, double U, double V,
                                double R_nu_nu = 1.5, double R_nu_pi = 1.0, double R_pi_pi = 1.0, double R_pi_nu = 1.0,
-                               double C1 = 1.0, double C2 = 1.0, double C3 = 1.0);
+                               double C1 = 1.0, double C2 = 1.0, double C3 = 1.0, int Z_proj = 0);
 
 double lambdaPairConversionAnalytical(ConversionType conversion, int Z, int N, int A_p,
                                       int p_pi, int h_pi, int p_nu, int h_nu,
                                       double E_tot, double U, double V,
                                       double R_nu_nu = 1.5, double R_nu_pi = 1.0, double R_pi_pi = 1.0, double R_pi_nu = 1.0,
-                                      double C1 = 1.0, double C2 = 1.0, double C3 = 1.0);
+                                      double C1 = 1.0, double C2 = 1.0, double C3 = 1.0, int Z_proj = 0);
 
 // Numerical-mode helpers
 double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,

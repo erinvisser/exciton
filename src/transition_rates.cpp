@@ -99,7 +99,8 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
                                int p_pi, int h_pi, int p_nu, int h_nu,
                                double E_tot, double U, double V,
                                double R_nu_nu, double R_nu_pi, double R_pi_pi, double R_pi_nu,
-                               double C1, double C2, double C3)
+                               double C1, double C2, double C3,
+                               int Z_proj)
 {
     // first half of Equation (13.27) — TALYS lambdapiplus / lambdanuplus
     int n_proton = p_pi + h_pi;
@@ -109,8 +110,9 @@ double lambdaNewPairAnalytical(ExcitonType particle, int Z, int N, int A_p,
     int n = p + h;
     int A_compound = Z + N + A_p;
 
-    double g_p = spDensityProton(Z);
-    int N_comp = N + A_p; // compound N (Z_proj=0 for neutron projectile; N_comp = N + 1)
+    int Z_comp = Z + Z_proj;
+    int N_comp = N + (A_p - Z_proj);
+    double g_p = spDensityProton(Z_comp);
     double g_n = spDensityNeutron(N_comp);
 
     double prefactor = 2 * PI / HBAR;
@@ -365,10 +367,11 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
 }
 
 double lambdaPairConversionAnalytical(ConversionType conversion, int Z, int N, int A_p,
-                                      int p_pi, int h_pi, int p_nu, int h_nu,
-                                      double E_tot, double U, double V,
-                                      double R_nu_nu, double R_nu_pi, double R_pi_pi, double R_pi_nu,
-                                      double C1, double C2, double C3)
+                                       int p_pi, int h_pi, int p_nu, int h_nu,
+                                       double E_tot, double U, double V,
+                                       double R_nu_nu, double R_nu_pi, double R_pi_pi, double R_pi_nu,
+                                       double C1, double C2, double C3,
+                                       int Z_proj)
 {
     // Second half of Equation (13.27) — TALYS lambdapinu / lambdanupi
     int n_proton = p_pi + h_pi;
@@ -378,8 +381,9 @@ double lambdaPairConversionAnalytical(ConversionType conversion, int Z, int N, i
     int n = p + h;
     int A_compound = Z + N + A_p;
 
-    double g_p = spDensityProton(Z);
-    int N_comp = N + A_p;
+    int Z_comp = Z + Z_proj;
+    int N_comp = N + (A_p - Z_proj);
+    double g_p = spDensityProton(Z_comp);
     double g_n = spDensityNeutron(N_comp);
 
     double pauli = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n);
@@ -611,7 +615,7 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
         if (useAnalytical)
             result = lambdaNewPairAnalytical(ExcitonType::Proton, Z, N, A_p,
                                              p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
-                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3);
+                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
         else
             result = lambdaNewPairNumerical(ExcitonType::Proton, Z, N, A_p,
                                             p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
@@ -623,7 +627,7 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
         if (useAnalytical)
             result = lambdaNewPairAnalytical(ExcitonType::Neutron, Z, N, A_p,
                                              p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
-                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3);
+                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
         else
             result = lambdaNewPairNumerical(ExcitonType::Neutron, Z, N, A_p,
                                             p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
@@ -634,8 +638,8 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
     case LambdaType::ProtonToNeutronConversion:
         if (useAnalytical)
             result = lambdaPairConversionAnalytical(ConversionType::ProtonToNeutron, Z, N, A_p,
-                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
-                                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3);
+                                                     p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
+                                                     R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
         else
             result = lambdaPairConversionNumerical(ConversionType::ProtonToNeutron, Z, N, A_p,
                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
@@ -646,8 +650,8 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
     default:
         if (useAnalytical)
             result = lambdaPairConversionAnalytical(ConversionType::NeutronToProton, Z, N, A_p,
-                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
-                                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3);
+                                                     p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
+                                                     R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
         else
             result = lambdaPairConversionNumerical(ConversionType::NeutronToProton, Z, N, A_p,
                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
