@@ -308,9 +308,9 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
         double L2nuh = U - less_nu_hole;
 
         double m2_pipi = M2_element(MatrixElement::PiPi, A_p, A_compound, E_tot, n,
-                                    R_pi_pi, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
+                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
         double m2_nupi = M2_element(MatrixElement::NuPi, A_p, A_compound, E_tot, n,
-                                    R_pi_pi, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
+                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
 
         // Equation (13.17)
         sum += integrate_sub(2, 1, 0, 0, p_pi - 1, h_pi, p_nu, h_nu, m2_pipi, g_p, L1pip, L2pip,
@@ -348,7 +348,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
         double m2_nunu = M2_element(MatrixElement::NuNu, A_p, A_compound, E_tot, n,
                                     R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
         double m2_pinu = M2_element(MatrixElement::PiNu, A_p, A_compound, E_tot, n,
-                                    R_pi_pi, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
+                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
 
         sum += integrate_sub(0, 0, 2, 1, p_pi, h_pi, p_nu - 1, h_nu, m2_nunu, g_n, L1nup, L2nup,
                              wompfac_same, 0, 0, 0, 0, 2112);
@@ -568,7 +568,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
         double L2 = U - less_proton_pair;
 
         double m2_pinu = M2_element(MatrixElement::PiNu, A_p, A_compound, E_tot, n,
-                                    R_pi_pi, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
+                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
 
         double integral = integrate_conversion(
             0, 0, 1, 1, 1, 1, 0, 0, p_pi - 1, h_pi - 1, p_nu, h_nu, m2_pinu, L1, L2,
@@ -582,7 +582,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
         double L2 = U - less_neutron_pair;
 
         double m2_nupi = M2_element(MatrixElement::NuPi, A_p, A_compound, E_tot, n,
-                                    R_pi_pi, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
+                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, PreeqMode::Numerical);
 
         double integral = integrate_conversion(
             1, 1, 0, 0, 0, 0, 1, 1, p_pi, h_pi, p_nu - 1, h_nu - 1, m2_nupi, L1, L2,
