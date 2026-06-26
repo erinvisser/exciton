@@ -194,7 +194,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
     if (omega_initial <= 0.0)
         return 0.0;
 
-    marley::KoningDelarocheOpticalModel kd_omp(Z, A_target);
+    marley::KoningDelarocheOpticalModel kd_omp(Z_comp, A_compound);
     marley::Integrator integrator(50);
     double sum = 0.0;
 
