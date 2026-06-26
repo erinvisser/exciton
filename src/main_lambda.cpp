@@ -14,7 +14,13 @@
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/MassTable.hh"
 
-enum class ValidationMode { KD03, WellDepths, RadialPotential, EvalList };
+enum class ValidationMode
+{
+    KD03,
+    WellDepths,
+    RadialPotential,
+    EvalList
+};
 
 int main(int argc, char *argv[])
 {
@@ -238,21 +244,21 @@ int main(int argc, char *argv[])
 
         // Q-values from MARLEY MassTable
         {
-            auto& mt = marley::MassTable::Instance();
+            auto &mt = marley::MassTable::Instance();
             double u = 931.494061; // atomic mass unit (MeV)
             double ME_n = mt.get_particle_mass(marley_utils::NEUTRON) - u;
             double ME_Ar40 = mt.get_mass_excess(18, 40);
             double ME_Ar41 = mt.get_mass_excess(18, 41);
-            double ME_K40  = mt.get_mass_excess(19, 40);
+            double ME_K40 = mt.get_mass_excess(19, 40);
             double ME_Cl39 = mt.get_mass_excess(17, 39);
             double ME_Cl38 = mt.get_mass_excess(17, 38);
-            double ME_S38  = mt.get_mass_excess(16, 38);
-            double ME_S37  = mt.get_mass_excess(16, 37);
-            double ME_H1   = mt.get_mass_excess(1, 1);
-            double ME_d    = mt.get_mass_excess(1, 2);
-            double ME_t    = mt.get_mass_excess(1, 3);
-            double ME_h    = mt.get_mass_excess(2, 3);
-            double ME_a    = mt.get_mass_excess(2, 4);
+            double ME_S38 = mt.get_mass_excess(16, 38);
+            double ME_S37 = mt.get_mass_excess(16, 37);
+            double ME_H1 = mt.get_mass_excess(1, 1);
+            double ME_d = mt.get_mass_excess(1, 2);
+            double ME_t = mt.get_mass_excess(1, 3);
+            double ME_h = mt.get_mass_excess(2, 3);
+            double ME_a = mt.get_mass_excess(2, 4);
 
             kd03_file << "# --- Q-values [MeV] from MARLEY MassTable ---\n";
             kd03_file << "# (n,gamma):   " << (ME_Ar40 + ME_n - ME_Ar41) << "\n";
@@ -271,9 +277,9 @@ int main(int argc, char *argv[])
         for (int nen = -80; nen <= 200; ++nen)
         {
             double e = 0.1 * nen;
-            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0
-                        || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
-            if (!print) continue;
+            bool print = (nen == -80 || nen == -70 || nen == -60 || nen == 0 || nen == 10 || nen == 20 || (nen > 0 && nen % 20 == 0));
+            if (!print)
+                continue;
             for (int k = 1; k <= 2; ++k)
             {
                 int pdg = (k == 2) ? 2212 : 2112;
@@ -462,10 +468,12 @@ int main(int argc, char *argv[])
         std::string line;
         while (std::getline(infile, line))
         {
-            if (line.empty() || line[0] == '#') continue;
+            if (line.empty() || line[0] == '#')
+                continue;
             std::istringstream iss(line);
             double E, r;
-            if (!(iss >> E >> r)) continue;
+            if (!(iss >> E >> r))
+                continue;
             if (E != last_E)
             {
                 double e_safe = std::max(E, 0.0);
@@ -487,11 +495,11 @@ int main(int argc, char *argv[])
         rates_file << "# header: \n";
         rates_file << "#   title: Ar40(n,x) two-component exciton model\n";
         rates_file << "#   source: exciton (C++), "
-                  << mode_str << " mode, "
-                  << method_str
-                  << (method == IntegrationMethod::ClenshawCurtis && guardBounds ? ", guarded" : "")
-                  << " integration, "
-                  << kernel_str << " kernel\n";
+                   << mode_str << " mode, "
+                   << method_str
+                   << (method == IntegrationMethod::ClenshawCurtis && guardBounds ? ", guarded" : "")
+                   << " integration, "
+                   << kernel_str << " kernel\n";
         rates_file << "#   user: Erin Visser\n";
         rates_file << "#   date: 2026-06-23\n";
         rates_file << "#   format: YANDF-0.4\n";
@@ -513,7 +521,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            double Rpinu = R_pi_nu / R_pi_pi;
+            double Rpinu = R_pi_nu;
             double denom = 1.0 + 2.0 * Rpinu;
             double ws = M2c * 0.55 / denom;
             double wc = M2c * 0.55 * 2.0 * Rpinu / denom;
@@ -564,23 +572,23 @@ int main(int argc, char *argv[])
                                             R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                             method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
             double lam_pi_nu = lambdaRate(LambdaType::ProtonToNeutronConversion,
-                                           mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                          mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                           R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                           method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
             double lam_nu_pi = lambdaRate(LambdaType::NeutronToProtonConversion,
-                                           mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
+                                          mode, Z_target, N_target, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                           R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, M2c,
                                           method, midBins, guardBounds, kernel, /* Z_proj = */ 0);
 
             rates_file << std::setw(14) << s.p_pi
-                      << std::setw(14) << s.h_pi
-                      << std::setw(14) << s.p_nu
-                      << std::setw(14) << s.h_nu
-                      << std::setw(15) << lam_pi_plus
-                      << std::setw(15) << lam_nu_plus
-                      << std::setw(15) << lam_pi_nu
-                      << std::setw(15) << lam_nu_pi
-                      << "\n";
+                       << std::setw(14) << s.h_pi
+                       << std::setw(14) << s.p_nu
+                       << std::setw(14) << s.h_nu
+                       << std::setw(15) << lam_pi_plus
+                       << std::setw(15) << lam_nu_plus
+                       << std::setw(15) << lam_pi_nu
+                       << std::setw(15) << lam_nu_pi
+                       << "\n";
         }
     }
 

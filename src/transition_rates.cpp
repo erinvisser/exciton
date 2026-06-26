@@ -182,7 +182,7 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
     {
         constexpr double C_OMP = 0.55; // TODO: potentially a configurable later on.
         double M2c = M2constant;
-        double Rpinu = R_pi_nu / R_pi_pi;
+        double Rpinu = R_pi_nu;
         double denom = 1.0 + 2.0 * Rpinu;
         wompfac_same = M2c * C_OMP / denom;
         wompfac_cross = M2c * C_OMP * 2.0 * Rpinu / denom;
@@ -367,11 +367,11 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
 }
 
 double lambdaPairConversionAnalytical(ConversionType conversion, int Z, int N, int A_p,
-                                       int p_pi, int h_pi, int p_nu, int h_nu,
-                                       double E_tot, double U, double V,
-                                       double R_nu_nu, double R_nu_pi, double R_pi_pi, double R_pi_nu,
-                                       double C1, double C2, double C3,
-                                       int Z_proj)
+                                      int p_pi, int h_pi, int p_nu, int h_nu,
+                                      double E_tot, double U, double V,
+                                      double R_nu_nu, double R_nu_pi, double R_pi_pi, double R_pi_nu,
+                                      double C1, double C2, double C3,
+                                      int Z_proj)
 {
     // Second half of Equation (13.27) — TALYS lambdapinu / lambdanupi
     int n_proton = p_pi + h_pi;
@@ -455,7 +455,7 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
     {
         constexpr double C_OMP = 0.55;
         double M2c = M2constant;
-        double Rpinu = R_pi_nu / R_pi_pi;
+        double Rpinu = R_pi_nu;
         double denom = 1.0 + 2.0 * Rpinu;
         double wompfac_same = M2c * C_OMP / denom;
         double wompfac_cross = M2c * C_OMP * 2.0 * Rpinu / denom;
@@ -638,8 +638,8 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
     case LambdaType::ProtonToNeutronConversion:
         if (useAnalytical)
             result = lambdaPairConversionAnalytical(ConversionType::ProtonToNeutron, Z, N, A_p,
-                                                     p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
-                                                     R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
+                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
+                                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
         else
             result = lambdaPairConversionNumerical(ConversionType::ProtonToNeutron, Z, N, A_p,
                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
@@ -650,8 +650,8 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
     default:
         if (useAnalytical)
             result = lambdaPairConversionAnalytical(ConversionType::NeutronToProton, Z, N, A_p,
-                                                     p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
-                                                     R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
+                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
+                                                    R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3, Z_proj);
         else
             result = lambdaPairConversionNumerical(ConversionType::NeutronToProton, Z, N, A_p,
                                                    p_pi, h_pi, p_nu, h_nu, E_tot, U, V,
