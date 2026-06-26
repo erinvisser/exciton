@@ -9,26 +9,38 @@
 #include <cmath>
 #include <algorithm>
 
-// Volume-averaged imaginary potential: Eqs. (13.29-13.30), matching TALYS bonetti.f90
+// Volume-averaged imaginary potential: matching TALYS bonetti.f90:104-122
 double wvolRadialIntegral(double Wv, double Wd, double Rv, double av,
                           double Rd, double ad)
 {
-    constexpr int nbins = 50;
-    constexpr double dr = 0.4; // fm
+    constexpr int nrbins = 50;
+    constexpr double dr = 20.0 / nrbins;
 
-    double num = 0.0, denom = 0.0;
-    for (int i = 0; i < nbins; ++i)
+    double sum1 = 0.0, sum2 = 0.0;
+    for (int i = 1; i <= nrbins; ++i)
     {
-        double r = (i + 0.5) * dr;
-        double f_vol = 1.0 / (1.0 + std::exp((r - Rv) / av));
-        double f_surf = 1.0 / (1.0 + std::exp((r - Rd) / ad));
-        double dfdr_surf = -std::exp((r - Rd) / ad) / (ad * std::pow(1.0 + std::exp((r - Rd) / ad), 2));
-        double Wr = Wv * f_vol - 4.0 * ad * Wd * dfdr_surf;
-        double r2 = r * r;
-        num += Wr * f_vol * r2;
-        denom += f_vol * r2;
+        double rr = (i - 0.5) * dr;
+
+        double fwsvol = 0.0;
+        double expo_v = (rr - Rv) / av;
+        if (expo_v <= 80.0)
+            fwsvol = 1.0 / (1.0 + std::exp(expo_v));
+
+        double fwssurf = 0.0;
+        double expo_d = (rr - Rd) / ad;
+        if (expo_d <= 80.0)
+        {
+            double exp_d = std::exp(expo_d);
+            fwssurf = -exp_d / (ad * (1.0 + exp_d) * (1.0 + exp_d));
+        }
+
+        double term2 = fwsvol * rr * rr * dr;
+        double term1 = term2 * (Wv * fwsvol - 4.0 * ad * Wd * fwssurf);
+        sum1 += term1;
+        sum2 += term2;
     }
-    return (denom > 0.0) ? num / denom : 0.0;
+
+    return (sum2 != 0.0) ? sum1 / sum2 : 0.0;
 }
 
 double M2(int A_p, int A, double E_tot, int n, double C1, double C2, double C3, PreeqMode mode)
