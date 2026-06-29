@@ -758,11 +758,11 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
     // Equation (13.18)
     double new_pi_pair = pauliCorrection(p_pi + 1, h_pi + 1, p_nu, h_nu, g_p, g_n);
 
-    double less_pi_part = pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n);
-    double less_pi_hole = pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n);
+    double less_pi_part = (p_pi >= 1) ? pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n) : 0.0;
+    double less_pi_hole = (h_pi >= 1) ? pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n) : 0.0;
 
-    double less_nu_part = pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n);
-    double less_nu_hole = pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n);
+    double less_nu_part = (p_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n) : 0.0;
+    double less_nu_hole = (h_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n) : 0.0;
 
     double L1pip = new_pi_pair - less_pi_part;
     double L2pip = U - less_pi_part;
@@ -792,11 +792,11 @@ double lambdaNewPairNumerical(ExcitonType particle, int Z, int N, int A_p,
     // Equation (13.18)
     double new_nu_pair = pauliCorrection(p_pi, h_pi, p_nu + 1, h_nu + 1, g_p, g_n);
 
-    double less_pi_part = pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n);
-    double less_pi_hole = pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n);
+    double less_pi_part = (p_pi >= 1) ? pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n) : 0.0;
+    double less_pi_hole = (h_pi >= 1) ? pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n) : 0.0;
 
-    double less_nu_part = pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n);
-    double less_nu_hole = pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n);
+    double less_nu_part = (p_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n) : 0.0;
+    double less_nu_hole = (h_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n) : 0.0;
 
     double L1nup = new_nu_pair - less_nu_part;
     double L2nup = U - less_nu_part;
