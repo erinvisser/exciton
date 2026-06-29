@@ -335,9 +335,9 @@ static double lambdaPairConversionOMP(ConversionType conversion,
     p_pi, h_pi, p_nu, h_nu, U, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
   if (omega_initial <= 0.0) return 0.0;
 
-  int nexc = std::max(midBins / 2, 2);
+    int nexc = std::max(midBins / 4, 2);
 
-  // ---- lambdapinu (ProtonToNeutron) or lambdanupi (NeutronToProton) ----
+    // ---- lambdapinu (ProtonToNeutron) or lambdanupi (NeutronToProton) ----
   TalysOmpChannel ch;
   double L1, L2;
   // Annihilated pair (c in TALYS convention)
