@@ -279,11 +279,12 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
   if (particle == ExcitonType::Proton)
   {
     // ---- lambdapiplus-style: 4 subterms ----
+    // Guard "less" Pauli values: TALYS sets Apauli2=0 for nonexistent states
     double new_pi = pauliCorrection(p_pi + 1, h_pi + 1, p_nu, h_nu, g_p, g_n);
-    double less_pi_p = pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n);
-    double less_pi_h = pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n);
-    double less_nu_p = pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n);
-    double less_nu_h = pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n);
+    double less_pi_p = (p_pi >= 1) ? pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n) : 0.0;
+    double less_pi_h = (h_pi >= 1) ? pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n) : 0.0;
+    double less_nu_p = (p_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n) : 0.0;
+    double less_nu_h = (h_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n) : 0.0;
 
     terms.push_back({new_pi - less_pi_p, U - less_pi_p, 0,
                      2, 1, 0, 0, p_pi - 1, h_pi, p_nu, h_nu, 1, g_p});
@@ -298,10 +299,10 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
   {
     // ---- lambdanuplus-style: 4 subterms ----
     double new_nu = pauliCorrection(p_pi, h_pi, p_nu + 1, h_nu + 1, g_p, g_n);
-    double less_nu_p = pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n);
-    double less_nu_h = pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n);
-    double less_pi_p = pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n);
-    double less_pi_h = pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n);
+    double less_nu_p = (p_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu, g_p, g_n) : 0.0;
+    double less_nu_h = (h_nu >= 1) ? pauliCorrection(p_pi, h_pi, p_nu, h_nu - 1, g_p, g_n) : 0.0;
+    double less_pi_p = (p_pi >= 1) ? pauliCorrection(p_pi - 1, h_pi, p_nu, h_nu, g_p, g_n) : 0.0;
+    double less_pi_h = (h_pi >= 1) ? pauliCorrection(p_pi, h_pi - 1, p_nu, h_nu, g_p, g_n) : 0.0;
 
     terms.push_back({new_nu - less_nu_p, U - less_nu_p, 0,
                      0, 0, 2, 1, p_pi, h_pi, p_nu - 1, h_nu, 1, g_n});
@@ -356,8 +357,14 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
       {
         double densh = particleHoleStateDensity(
             t.t_pi, t.t_hi, t.t_pn, t.t_hn, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        double densp = particleHoleStateDensity(
-            1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        // TALYS: lambdapiplus j=4 uses (1,1,1,0), lambdanuplus j=4 uses (0,1,1,1)
+        double densp;
+        if (particle == ExcitonType::Neutron)
+          densp = particleHoleStateDensity(
+              0, 1, 1, 1, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        else
+          densp = particleHoleStateDensity(
+              1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
         double ratio = (densp > 1.) ? densh / densp : 1.;
         lambda_col *= ratio;
       }
