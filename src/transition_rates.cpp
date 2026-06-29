@@ -263,7 +263,7 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
   if (omega_initial <= 0.0)
     return 0.0;
 
-  int nexc = std::max(midBins / 2, 2); // TALYS: primary? nbins/2 : nbins/4
+  int nexc = std::max(midBins, 2); // TALYS primary: nbins/2 = midBins
 
   struct SubTerm
   {
@@ -419,7 +419,7 @@ static double lambdaPairConversionOMP(ConversionType conversion,
   if (omega_initial <= 0.0)
     return 0.0;
 
-  int nexc = std::max(midBins / 4, 2);
+  int nexc = std::max(midBins, 2);
 
   // ---- lambdapinu (ProtonToNeutron) or lambdanupi (NeutronToProton) ----
   TalysOmpChannel ch;
