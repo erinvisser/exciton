@@ -6,13 +6,13 @@
 double spDensityProton(int Z)
 {
     // Equation (13.9)
-    return Z / 15.0;
+    return Z / 13.0;
 }
 
 double spDensityNeutron(int N)
 {
     // Equation (13.9)
-    return N / 15.0;
+    return N / 13.0;
 }
 
 double binomial(int h, int i)
