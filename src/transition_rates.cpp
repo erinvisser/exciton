@@ -8,6 +8,7 @@
 #include "marley/marley_utils.hh"
 
 #include <cmath>
+#include <iomanip>
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -98,6 +99,8 @@ static void ensure_wvol_table(int Z_comp, int N_comp, int A_p, int Z_proj,
   static const double R_MAX = 20.0;
   double dr = R_MAX / static_cast<double>(N_BINS);
 
+  double A13 = std::pow(static_cast<double>(A_target), 1.0 / 3.0);
+
   // Build for k=1 (neutron, PDG 2112) and k=2 (proton, PDG 2212)
   for (int k = 0; k < 2; ++k)
   {
@@ -124,7 +127,24 @@ static void ensure_wvol_table(int Z_comp, int N_comp, int A_p, int Z_proj,
         sum1 += term2 * absorption;
         sum2 += term2;
       }
-      tbl.data[k][nen + NEN_OFFSET] = (sum2 > 0.) ? sum1 / sum2 : 0.;
+      double wvol = (sum2 > 0.) ? sum1 / sum2 : 0.;
+      tbl.data[k][nen + NEN_OFFSET] = wvol;
+
+      if (diagnostic_) {
+        std::cerr << "MY_OMP k=" << std::setw(2) << k + 1
+                  << " nen=" << std::setw(5) << nen
+                  << " e=" << std::fixed << std::setprecision(2) << std::setw(8) << e
+                  << " w=" << std::setprecision(5) << std::setw(10) << Wv
+                  << " wd=" << std::setw(10) << Wd
+                  << " rw=" << std::setw(10) << Rv / A13
+                  << " aw=" << std::setw(10) << av
+                  << " rwd=" << std::setw(10) << Rd / A13
+                  << " awd=" << std::setw(10) << ad
+                  << " radv=" << std::setw(10) << Rv
+                  << " radd=" << std::setw(10) << Rd
+                  << " wvol=" << std::scientific << std::setprecision(4) << std::setw(12) << wvol
+                  << "\n";
+      }
     }
   }
 
