@@ -214,13 +214,13 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
     double less_nu_h = pauliCorrection(p_pi, h_pi, p_nu, h_nu-1, g_p, g_n);
 
     terms.push_back({new_pi - less_pi_p, U - less_pi_p, 0,
-      2,1,0,0, p_pi-1,h_pi,p_nu,hnu, 1, g_p});
+      2,1,0,0, p_pi-1,h_pi,p_nu,h_nu, 1, g_p});
     terms.push_back({new_pi - less_pi_h, U - less_pi_h, 0,
-      1,2,0,0, p_pi,h_pi-1,p_nu,hnu, 2, g_p});
+      1,2,0,0, p_pi,h_pi-1,p_nu,h_nu, 2, g_p});
     terms.push_back({new_pi - less_nu_p, U - less_nu_p, 0,
-      1,1,1,0, p_pi,h_pi,p_nu-1,hnu, 3, g_n});
+      1,1,1,0, p_pi,h_pi,p_nu-1,h_nu, 3, g_n});
     terms.push_back({new_pi - less_nu_h, U - less_nu_h, 0,
-      1,1,0,1, p_pi,h_pi,p_nu,hnu-1, 4, g_n});
+      1,1,0,1, p_pi,h_pi,p_nu,h_nu-1, 4, g_n});
   } else {
     // ---- lambdanuplus-style: 4 subterms ----
     double new_nu = pauliCorrection(p_pi, h_pi, p_nu+1, h_nu+1, g_p, g_n);
@@ -230,13 +230,13 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
     double less_pi_h = pauliCorrection(p_pi, h_pi-1, p_nu, h_nu, g_p, g_n);
 
     terms.push_back({new_nu - less_nu_p, U - less_nu_p, 0,
-      0,0,2,1, p_pi,h_pi,p_nu-1,hnu, 1, g_n});
+      0,0,2,1, p_pi,h_pi,p_nu-1,h_nu, 1, g_n});
     terms.push_back({new_nu - less_nu_h, U - less_nu_h, 0,
-      0,0,1,2, p_pi,h_pi,p_nu,hnu-1, 2, g_n});
+      0,0,1,2, p_pi,h_pi,p_nu,h_nu-1, 2, g_n});
     terms.push_back({new_nu - less_pi_p, U - less_pi_p, 0,
-      1,0,1,1, p_pi-1,h_pi,p_nu,hnu, 3, g_p});
+      1,0,1,1, p_pi-1,h_pi,p_nu,h_nu, 3, g_p});
     terms.push_back({new_nu - less_pi_h, U - less_pi_h, 0,
-      0,1,1,1, p_pi,h_pi-1,p_nu,hnu, 4, g_p});
+      0,1,1,1, p_pi,h_pi-1,p_nu,h_nu, 4, g_p});
   }
 
   for (auto& t : terms) t.dEx = (t.L2 - t.L1) / nexc;

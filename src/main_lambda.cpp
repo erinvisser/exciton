@@ -2,9 +2,12 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <cstring>
+#include <ctime>
+#include <sys/stat.h>
 
 #include "preeq_common.hh"
 #include "transition_rates.hh"
@@ -45,6 +48,26 @@ int main(int argc, char *argv[])
             set_diagnostic_output(true);
         }
     }
+
+    // Build output filename with timestamp
+    std::time_t now = std::time(nullptr);
+    char time_buf[32];
+    std::strftime(time_buf, sizeof(time_buf), "%Y%m%d_%H%M%S", std::localtime(&now));
+
+    std::string kernel_str = (kernel == CollisionKernel::OpticalModel)
+      ? "optical-model" : "matrix-element";
+    std::string method_str = (method == IntegrationMethod::Midpoint)
+      ? "midpoint" : "clenshaw-curtis";
+
+    std::string outdir = "/Users/erinvisser/Downloads/opencode/exciton/lambda_printouts/OMP/TALYS_Mimic";
+    mkdir(outdir.c_str(), 0755); // will fail silently if exists
+
+    std::string outpath = outdir + "/lambda_" + kernel_str + "_" + method_str + "_" + time_buf + ".txt";
+    std::ofstream outfile(outpath);
+    if (outfile.is_open()) {
+      std::cout.rdbuf(outfile.rdbuf());
+    }
+    std::cerr << "# Output: " << outpath << "\n";
 
     int Z = 18;
     int N = 23; // compound N (target is 22, projectile adds 1)
