@@ -357,14 +357,8 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
       {
         double densh = particleHoleStateDensity(
             t.t_pi, t.t_hi, t.t_pn, t.t_hn, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        // TALYS: lambdapiplus j=4 uses (1,1,1,0), lambdanuplus j=4 uses (0,1,1,1)
-        double densp;
-        if (particle == ExcitonType::Neutron)
-          densp = particleHoleStateDensity(
-              0, 1, 1, 1, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        else
-          densp = particleHoleStateDensity(
-              1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        double densp = particleHoleStateDensity(
+            1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
         double ratio = (densp > 1.) ? densh / densp : 1.;
         lambda_col *= ratio;
       }
