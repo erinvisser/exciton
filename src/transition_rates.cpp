@@ -452,7 +452,8 @@ static double lambdaPairConversionOMP(ConversionType conversion,
   {
     // lambdapinu
     ch = channel_pinu(Z_comp, N_comp);
-    double less = pauliCorrection(p_pi - 1, h_pi - 1, p_nu, h_nu, g_p, g_n);
+    double less = (p_pi >= 1 && h_pi >= 1)
+        ? pauliCorrection(p_pi - 1, h_pi - 1, p_nu, h_nu, g_p, g_n) : 0.0;
     L1 = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n) - less;
     L2 = U - less;
     // densh: created pair = (0,0,1,1)
@@ -467,7 +468,8 @@ static double lambdaPairConversionOMP(ConversionType conversion,
   {
     // lambdanupi
     ch = channel_nupi(Z_comp, N_comp);
-    double less = pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu - 1, g_p, g_n);
+    double less = (p_nu >= 1 && h_nu >= 1)
+        ? pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu - 1, g_p, g_n) : 0.0;
     L1 = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n) - less;
     L2 = U - less;
     // densh: created pair = (1,1,0,0)
@@ -951,7 +953,8 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
 
   if (conversion == ConversionType::ProtonToNeutron)
   {
-    double less_proton_pair = pauliCorrection(p_pi - 1, h_pi - 1, p_nu, h_nu, g_p, g_n);
+    double less_proton_pair = (p_pi >= 1 && h_pi >= 1)
+        ? pauliCorrection(p_pi - 1, h_pi - 1, p_nu, h_nu, g_p, g_n) : 0.0;
     double L1 = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n) - less_proton_pair;
     double L2 = U - less_proton_pair;
 
@@ -964,7 +967,8 @@ double lambdaPairConversionNumerical(ConversionType conversion, int Z, int N, in
   }
   else
   {
-    double less_neutron_pair = pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu - 1, g_p, g_n);
+    double less_neutron_pair = (p_nu >= 1 && h_nu >= 1)
+        ? pauliCorrection(p_pi, h_pi, p_nu - 1, h_nu - 1, g_p, g_n) : 0.0;
     double L1 = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n) - less_neutron_pair;
     double L2 = U - less_neutron_pair;
 
