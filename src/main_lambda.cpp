@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     double C2 = 1.0;
     double C3 = 1.0;
 
-    double delta = pairingEnergyDelta(A_target, chi);
+    double delta = pairingEnergyDelta(Z + N, chi); // compound mass, matches TALYS pair() call
     double ncrit = nCrit(Z, N, delta);
 
     std::cout << "# header: \n";
