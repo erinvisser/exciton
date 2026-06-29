@@ -344,22 +344,41 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
       double lambda_col = 2. * Weff / HBAR;
 
       // Hole terms (j==2 or j==4) get density ratio
+      double densh = 0.0, densp = 0.0, ratio = 1.0;
       if (t.j == 2)
       {
-        double densh = particleHoleStateDensity(
-            1, 2, 0, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        double densp = particleHoleStateDensity(
-            2, 1, 0, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        double ratio = (densp > 1.) ? densh / densp : 1.;
+        if (particle == ExcitonType::Proton)
+        {
+          // TALYS lambdapiplus j=2: densh=(1,2,0,0), densp=(2,1,0,0)
+          densh = particleHoleStateDensity(
+              1, 2, 0, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+          densp = particleHoleStateDensity(
+              2, 1, 0, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        }
+        else
+        {
+          // TALYS lambdanuplus j=2: densh=(0,0,1,2), densp=(0,0,2,1)
+          densh = particleHoleStateDensity(
+              0, 0, 1, 2, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+          densp = particleHoleStateDensity(
+              0, 0, 2, 1, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        }
+        ratio = (densp > 1.) ? densh / densp : 1.;
         lambda_col *= ratio;
       }
       else if (t.j == 4)
       {
-        double densh = particleHoleStateDensity(
+        densh = particleHoleStateDensity(
             t.t_pi, t.t_hi, t.t_pn, t.t_hn, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        double densp = particleHoleStateDensity(
-            1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-        double ratio = (densp > 1.) ? densh / densp : 1.;
+        if (particle == ExcitonType::Neutron)
+          // TALYS lambdanuplus j=4: densp=(1,0,1,1)
+          densp = particleHoleStateDensity(
+              1, 0, 1, 1, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        else
+          // TALYS lambdapiplus j=4: densp=(1,1,1,0)
+          densp = particleHoleStateDensity(
+              1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
+        ratio = (densp > 1.) ? densh / densp : 1.;
         lambda_col *= ratio;
       }
 
@@ -369,8 +388,8 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
 
       sum += lambda_col * t.g_factor * t.dEx * omega_r;
 
-      // Diagnostic: print first bin of first term
-      if (diagnostic_ && i == 0 && ti == 0)
+      // Diagnostic: print first bin of every subterm
+      if (diagnostic_ && i == 0)
       {
         std::cerr << "# DIAG pair_creation particle="
                   << (particle == ExcitonType::Proton ? "proton" : "neutron")
@@ -378,13 +397,14 @@ static double lambdaNewPairOMP(ExcitonType particle, int Z, int N, int A_p,
                   << " p_nu=" << p_nu << " h_nu=" << h_nu
                   << " j=" << t.j
                   << " k=" << ch.k
-                  << " Z_res=" << ch.Z_res << " A_res=" << ch.A_res
-                  << " pdg=" << ch.pdg
                   << " sep=" << sep
                   << " L1=" << t.L1 << " L2=" << t.L2 << " dEx=" << t.dEx
                   << " uu=" << uu
                   << " eopt=" << eopt << " nen=" << nen
                   << " wvol=" << wv << " Weff=" << Weff
+                  << " densh=" << densh
+                  << " densp=" << densp
+                  << " ratio=" << ratio
                   << " lambda_col=" << lambda_col
                   << " g_factor=" << t.g_factor
                   << " omega_r=" << omega_r
