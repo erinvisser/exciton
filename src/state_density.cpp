@@ -25,6 +25,8 @@ double particleHoleStateDensity(int p_pi, int h_pi, int p_nu, int h_nu, double E
 
     if (n < 1)
         return 0.0;
+    if (p_pi < 0 || h_pi < 0 || p_nu < 0 || h_nu < 0)
+        return 0.0;
     if (E_x <= 0.0)
         return 0.0;
 
