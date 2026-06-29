@@ -1,0 +1,55 @@
+# header: 
+#   title: Ar40(n,x) two-component exciton model
+#   source: exciton (C++), numerical mode, midpoint, optical-model kernel
+#   user: Erin Visser
+#   date: 2026-06-29
+#   format: YANDF-0.4
+# target: 
+#   Z: 18
+#   A: 40
+#   nuclide: Ar40
+# parameters: 
+#   E-incident [MeV]:  2.000000E+01
+#   E-compound [MeV]:  25.6016
+#   Fermi well depth [MeV]:  38
+#   Constant for matrix element:  1.000000E+00
+#   p-p ratio for matrix element:  1.000000E+00
+#   n-n ratio for matrix element:  1.500000E+00
+#   p-n ratio for matrix element:  1.000000E+00
+#   n-p ratio for matrix element:  1.000000E+00
+#   quantity: 
+#     type: internal transition rate
+#   datablock: 
+#     columns: 8
+#   optical-model parameters: 
+#     M2c (C1): 1
+#     Rpinu (R_pi_nu): 1
+#     Wompfac_same (Wompfac1): 0.183333
+#     Wompfac_cross (Wompfac2): 0.366667
+#     Wompfac_exchange (Wompfac0): 0.275
+#     Z_proj: 0
+#     entries: 21
+##     p(p)           h(p)           p(n)           h(n)       lambdapiplus   lambdanuplus    lambdapinu     lambdanupi
+##      []             []             []             []          [sec^-1]       [sec^-1]       [sec^-1]       [sec^-1]
+             0             0             1             0   2.551566E+21   2.917593E+21   0.000000E+00   0.000000E+00
+Loading particle and atomic masses from /Users/erinvisser/Downloads/opencode/marley-private/data/mass_table.js
+             0             0             2             1   2.146373E+20   1.068551E+20   0.000000E+00   1.463045E+19
+             1             1             1             0   1.174774E+20   1.416380E+20   7.969146E+18   0.000000E+00
+             0             0             3             2   2.285765E+20   1.055776E+20   0.000000E+00   6.065491E+19
+             1             1             2             1   1.505426E+20   1.008758E+20   5.460334E+18   1.823323E+19
+             2             2             1             0   6.990194E+19   8.492362E+19   2.561338E+19   0.000000E+00
+             0             0             4             3   2.393385E+20   8.417014E+19   0.000000E+00   1.587891E+20
+             1             1             3             2   1.626278E+20   8.168463E+19   2.987988E+18   6.796869E+19
+             2             2             2             1   9.469399E+19   6.429856E+19   1.626888E+19   1.771061E+19
+             3             3             1             0   3.460813E+19   3.732128E+19   4.481348E+19   0.000000E+00
+             0             0             5             4   2.668029E+20   4.808219E+19   0.000000E+00   3.559534E+20
+             1             1             4             3   1.720057E+20   5.985016E+19   1.378869E+18   1.760777E+20
+             2             2             3             2   1.074415E+20   5.457640E+19   9.189827E+18   7.235085E+19
+             3             3             2             1   5.412491E+19   3.643959E+19   2.970732E+19   1.698245E+19
+             4             4             1             0   1.413702E+19   1.344267E+19   6.665575E+19   0.000000E+00
+             0             0             6             5   3.094274E+20   9.051988E+18   0.000000E+00   7.861929E+20
+             1             1             5             4   1.830546E+20   3.079881E+19   4.439960E+17   3.946317E+20
+             2             2             4             3   1.084607E+20   3.854180E+19   4.496620E+18   1.903792E+20
+             3             3             3             2   5.991111E+19   3.267378E+19   1.739331E+19   7.896905E+19
+             4             4             2             1   2.329463E+19   1.968833E+19   4.572719E+19   1.556448E+19
+             5             5             1             0   2.202435E+18   3.693004E+18   9.480792E+19   0.000000E+00
