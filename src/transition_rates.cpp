@@ -108,7 +108,7 @@ static void ensure_wvol_table(int Z_comp, int N_comp, int A_p, int Z_proj,
     for (int nen = -80; nen <= nenend; ++nen)
     {
       double e = 0.1 * static_cast<double>(nen);
-      omp.setIncidentEnergyAndFragment(e, pdg);
+      omp.setIncidentEnergyAndFragment(std::max(e, 0.0), pdg);
       double Wv = omp.getWv();
       double Wd = omp.getWd();
       double Rv = omp.getRv();
