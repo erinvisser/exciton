@@ -64,8 +64,9 @@ int main(int argc, char *argv[])
 
     std::string outpath = outdir + "/lambda_" + kernel_str + "_" + method_str + "_" + time_buf + ".txt";
     std::ofstream outfile(outpath);
+    std::streambuf* old_cout_buf = nullptr;
     if (outfile.is_open()) {
-      std::cout.rdbuf(outfile.rdbuf());
+      old_cout_buf = std::cout.rdbuf(outfile.rdbuf());
     }
     std::cerr << "# Output: " << outpath << "\n";
 
@@ -189,5 +190,6 @@ int main(int argc, char *argv[])
                   << "\n";
     }
 
+    if (old_cout_buf) std::cout.rdbuf(old_cout_buf);
     return 0;
 }
