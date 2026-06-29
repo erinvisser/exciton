@@ -50,6 +50,10 @@ double particleHoleStateDensity(int p_pi, int h_pi, int p_nu, int h_nu, double E
 
     double A_pauli = pauliCorrection(p_pi, h_pi, p_nu, h_nu, g_p, g_n);
 
+    double guard = std::pow(std::max(p_pi, h_pi), 2) / g_p + std::pow(std::max(p_nu, h_nu), 2) / g_n;
+    if (guard >= pair_energy)
+        return 0.0;
+
     double E_avail = pair_energy - A_pauli;
     if (E_avail <= 0.0)
         return 0.0;
