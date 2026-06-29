@@ -858,8 +858,8 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
 {
     int n = p_pi + h_pi + p_nu + h_nu;
 
-    if (kernel == CollisionKernel::OpticalModel) {
-      // OMP kernel forces numerical integration
+    // OMP kernel for n>=3; n=1 falls through to analytical formula below
+    if (kernel == CollisionKernel::OpticalModel && n >= 3) {
       switch (type)
       {
       case LambdaType::ProtonPairCreation:
