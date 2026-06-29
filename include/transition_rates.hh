@@ -3,6 +3,12 @@
 
 #include "preeq_common.hh"
 
+enum class CollisionKernel
+{
+    MatrixElement,
+    OpticalModel
+};
+
 enum class ExcitonType
 {
     Proton,
@@ -90,6 +96,10 @@ double lambdaRate(LambdaType type, PreeqMode mode, int Z, int N, int A_p,
                   double C1 = 1.0, double C2 = 1.0, double C3 = 1.0,
                   IntegrationMethod method = IntegrationMethod::ClenshawCurtis,
                   int midBins = 20,
-                  bool guardBounds = true);
+                  bool guardBounds = true,
+                  CollisionKernel kernel = CollisionKernel::MatrixElement,
+                  int Z_proj = 0);
+
+void set_diagnostic_output(bool on);
 
 #endif

@@ -13,8 +13,10 @@ int main(int argc, char *argv[])
 {
     PreeqMode mode = PreeqMode::Numerical;
     IntegrationMethod method = IntegrationMethod::ClenshawCurtis;
+    CollisionKernel kernel = CollisionKernel::MatrixElement;
     int midBins = 50;
     bool guardBounds = true;
+    int Z_proj = 0;
 
     for (int i = 1; i < argc; ++i)
     {
@@ -31,6 +33,16 @@ int main(int argc, char *argv[])
         else if (std::strcmp(argv[i], "--midbins") == 0 && i + 1 < argc)
         {
             midBins = std::atoi(argv[++i]);
+        }
+        else if (std::strcmp(argv[i], "--kernel") == 0 && i + 1 < argc)
+        {
+            ++i;
+            if (std::strcmp(argv[i], "optical-model") == 0)
+                kernel = CollisionKernel::OpticalModel;
+        }
+        else if (std::strcmp(argv[i], "--diagnostic") == 0)
+        {
+            set_diagnostic_output(true);
         }
     }
 
@@ -60,9 +72,10 @@ int main(int argc, char *argv[])
               << " mode, "
               << (method == IntegrationMethod::Midpoint ? "midpoint" : "clenshaw-curtis")
               << (method == IntegrationMethod::ClenshawCurtis && guardBounds ? ", guarded" : "")
-              << " integration, matrix-element kernel\n";
+              << (kernel == CollisionKernel::OpticalModel ? ", optical-model kernel" : ", matrix-element kernel")
+              << "\n";
     std::cout << "#   user: Erin Visser\n";
-    std::cout << "#   date: 2026-06-16\n";
+    std::cout << "#   date: 2026-06-29\n";
     std::cout << "#   format: YANDF-0.4\n";
     std::cout << "# target: \n";
     std::cout << "#   Z: " << Z << "\n";
@@ -81,6 +94,20 @@ int main(int argc, char *argv[])
     std::cout << "#     type: internal transition rate\n";
     std::cout << "#   datablock: \n";
     std::cout << "#     columns: 8\n";
+
+    if (kernel == CollisionKernel::OpticalModel) {
+      std::cout << "#   optical-model parameters: \n";
+      std::cout << "#     M2c (C1): " << C1 << "\n";
+      std::cout << "#     Rpinu (R_pi_nu): " << R_pi_nu << "\n";
+      double denom = 1. + 2. * R_pi_nu;
+      double wf_same = C1 * 0.55 / denom;
+      double wf_cross = C1 * 0.55 * 2. * R_pi_nu / denom;
+      double wf_exch = 0.5 * (wf_same + wf_cross);
+      std::cout << "#     Wompfac_same (Wompfac1): " << wf_same << "\n";
+      std::cout << "#     Wompfac_cross (Wompfac2): " << wf_cross << "\n";
+      std::cout << "#     Wompfac_exchange (Wompfac0): " << wf_exch << "\n";
+      std::cout << "#     Z_proj: " << Z_proj << "\n";
+    }
 
     std::vector<ExcitonState> states;
 
@@ -110,19 +137,23 @@ int main(int argc, char *argv[])
         double lam_pi_plus = lambdaRate(LambdaType::ProtonPairCreation,
                                         mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                         R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3,
-                                        method, midBins, guardBounds);
+                                        method, midBins, guardBounds,
+                                        kernel, Z_proj);
         double lam_nu_plus = lambdaRate(LambdaType::NeutronPairCreation,
                                         mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                         R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3,
-                                        method, midBins, guardBounds);
+                                        method, midBins, guardBounds,
+                                        kernel, Z_proj);
         double lam_pi_nu = lambdaRate(LambdaType::ProtonToNeutronConversion,
                                       mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                       R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3,
-                                      method, midBins, guardBounds);
+                                      method, midBins, guardBounds,
+                                      kernel, Z_proj);
         double lam_nu_pi = lambdaRate(LambdaType::NeutronToProtonConversion,
                                       mode, Z, N, A_p, s.p_pi, s.h_pi, s.p_nu, s.h_nu, E_comp, U, V,
                                       R_nu_nu, R_nu_pi, R_pi_pi, R_pi_nu, C1, C2, C3,
-                                      method, midBins, guardBounds);
+                                      method, midBins, guardBounds,
+                                      kernel, Z_proj);
 
         std::cout << std::setw(14) << s.p_pi
                   << std::setw(14) << s.h_pi
