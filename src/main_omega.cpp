@@ -78,8 +78,9 @@ int main()
     {
         double E_x = static_cast<double>(i);
 
+        double P3 = fuPairingCorrection(delta, E_x, 3, ncrit);
         std::cout << std::setw(14) << E_x;
-        std::cout << std::setw(14) << delta;
+        std::cout << std::setw(14) << P3;
         std::cout << std::setw(14) << g_p;
         std::cout << std::setw(14) << g_n;
 

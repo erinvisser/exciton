@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TALYS OMP Diagnostics — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+
+<body>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html" class="active">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>TALYS OMP Diagnostics</span></div>
+    <h1>TALYS OMP Diagnostics</h1>
+
+    <div class="box">
+      <strong>Purpose:</strong> Extract OMP parameters, volume-averaged absorptive
+      potential &lang;W&rang;, and transition-rate intermediate values from TALYS
+      to validate the exciton OMP kernel.
+    </div>
+
+    <p>
+      TALYS 2.2 source files were modified to print diagnostic output for the
+      pre-equilibrium OMP calculation chain. These modifications are in the
+      <code>n-Ar40-preeq</code> sample directory (<code>/workspace/talys/samples/n-Ar40-preeq/</code>).
+      The <code>talys.inp</code> input sets <code>outkd y</code> to force global
+      KD03 and enable parameter output.
+    </p>
+
+    <h2>Modified Source Files</h2>
+
+    <h3><code>bonetti.f90</code> — Volume-averaged &lang;W&rang;</h3>
+    <p>
+      A <code>write(*,'("TALYS_OMP ...")')</code> statement was added to the
+      phenomenological OMP loop to print OMP parameters and the volume-averaged
+      absorptive potential at every energy point:
+    </p>
+    <pre>
+k    — particle type (1=proton, 2=neutron)
+nen  — energy index (0.1 MeV steps, -80 to nenend)
+e    — energy (MeV)
+w    — imaginary volume depth (MeV)
+wd   — imaginary surface depth (MeV)
+rw   — imaginary volume radius parameter (fm)
+aw   — imaginary volume diffuseness (fm)
+rwd  — imaginary surface radius parameter (fm)
+awd  — imaginary surface diffuseness (fm)
+radv — volume radius = rw · A<sup>1/3</sup> (fm)
+radd — surface radius = rwd · A<sup>1/3</sup> (fm)
+wvol — volume-averaged absorptive potential ⟨W⟩ (MeV)</pre>
+    <p>
+      The radial integration uses 50 bins with dr = 20/50 = 0.4 fm, matching
+      TALYS <code>bonetti.f90</code> line 109–110. The output is captured in
+      <code>talys_wvol.txt</code> (702 lines, k=1 from nen=-80 to 270, k=2 from
+      nen=-80 to 270).
+    </p>
+
+    <h3><code>lambdapiplus.f90</code> / <code>lambdanuplus.f90</code> — Pair creation rates</h3>
+    <p>
+      Each transition-rate subroutine was modified to print diagnostic data for
+      the first integration bin (i==1):
+    </p>
+    <pre>
+TALYS_DIAG lambdapiplus state=ppi hpi pnu hnu j=k S=... uu=...
+  eopt=... nen=... wvol=... Weff=... lamcol=... [ratio=...]
+
+state  — exciton configuration (p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>)
+j      — channel branch (1=1p, 2=1h for creation; 3=1p, 4=1h for conversion)
+k      — particle type (1=proton, 2=neutron)
+Zix    — proton index
+Nix    — neutron index
+S      — separation energy (MeV)
+uu     — intermediate excitation energy (MeV)
+eopt   — kinetic energy for OMP lookup = max(uu - S, -20) (MeV)
+nen    — energy index from eopt
+wvol   — volume-averaged ⟨W⟩ at eopt (MeV)
+Weff   — effective potential = Wompfac × wvol (MeV)
+lamcol — collision rate = 2 · Weff / ħ (s<sup>-1</sup>)
+ratio  — hole/particle density ratio (conversion channels only)</pre>
+    <p>
+      These diagnostics appear in <code>diagnostic.log</code> (2.8 MB, ~700 TALYS_OMP
+      lines + ~8400 TALYS_DIAG lines).
+    </p>
+
+    <h3><code>lambdapinu.f90</code> / <code>lambdanupi.f90</code> — Conversion rates</h3>
+    <p>
+      Neutron→proton and proton→neutron conversion subroutines print the same
+      diagnostic fields as pair creation, but with only the 1p branch (k = 2 for
+      π→ν, k=1 for ν→π). The ratio field is always printed.
+    </p>
+
+    <h3><code>opticalnp.f90</code> — KD03 coefficient output</h3>
+    <p>
+      When <code>flagoutkd</code> is set (via <code>outkd y</code>), the KD03
+      coefficients, well depths, and geometry parameters are printed to stdout.
+      This output is captured in the <code>diagnostic.log</code> header.
+    </p>
+
+    <h2>Output Files</h2>
+
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Contents</th>
+      </tr>
+      <tr>
+        <td><code>xtra_diagnostics/talys_wvol.txt</code></td>
+        <td>TALYS_OMP lines: 702 rows of (k, nen, e, w, wd, rw, aw, rwd, awd, radv, radd, wvol)</td>
+      </tr>
+      <tr>
+        <td><code>xtra_diagnostics/diagnostic.log</code></td>
+        <td>Full TALYS stdout: input summary, KD03 parameter dump, TALYS_OMP lines, TALYS_DIAG lines, pre-equilibrium
+          output</td>
+      </tr>
+      <tr>
+        <td><code>xtra_diagnostics/lambda.out</code></td>
+        <td>Final λ transition rates in YANDF-0.4 format (21 exciton states, 8 columns)</td>
+      </tr>
+      <tr>
+        <td><code>xtra_diagnostics/exciton0020.000.out</code></td>
+        <td>Exciton model internal data: M² matrix elements, emission rates, escape widths</td>
+      </tr>
+      <tr>
+        <td><code>xtra_diagnostics/preeq0020.000.out</code></td>
+        <td>Pre-equilibrium cross sections and emission spectra by particle type</td>
+      </tr>
+      <tr>
+        <td><code>xtra_diagnostics/ph_density.out</code></td>
+        <td>Particle-hole state densities ω(p,h,E) vs. excitation energy (MeV<sup>-1</sup>)</td>
+      </tr>
+    </table>
+
+    <h2>Comparison with Exciton Output</h2>
+
+    <p>
+      The exciton code prints matching diagnostics via the <code>omp_diag.txt</code>
+      output file (see <a href="exciton-diagnostics.html">Exciton Diagnostics</a>).
+      The <code>TALYS_OMP</code> and <code>OUR_OMP</code> lines share identical
+      field semantics, enabling direct line-by-line comparison of:
+    </p>
+    <ul>
+      <li><strong>Wv, Wd, Rv, av, Rd, ad</strong> — KD03 well depths and geometry</li>
+      <li><strong>wvol</strong> — volume-averaged absorptive potential</li>
+      <li><strong>OMP intermediate values</strong> — eopt, Weff, lamcol, ratio</li>
+    </ul>
+
+    <p>
+      The TALYS OMP diagnostic prints are enabled by a modified <code>bonetti.f90</code>
+      that prints unconditionally (no flag guard). An example invocation:
+    </p>
+
+    <div class="terminal">
+      <span class="comment"># Run TALYS with the diagnostic input</span><br>
+      <span class="cmd">cd</span> /workspace/talys/samples/n-Ar40-preeq<br>
+      <span class="cmd">talys</span> &lt; talys.inp &gt; xtra_diagnostics/diagnostic.log<span class="output"></span>
+    </div>
+
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
+</body>
+
+</html>

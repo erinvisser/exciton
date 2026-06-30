@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARLEY KD OMP Interface — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+
+<body>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html" class="active">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>MARLEY KD OMP Interface</span></div>
+    <h1>MARLEY KD OMP Interface (<code>v121_kd</code> branch)</h1>
+
+    <div class="box">
+      <strong>Purpose:</strong> The <code>v121_kd</code> branch of the MARLEY
+      private fork adds diagnostic getter functions, a public OMP evaluation
+      method, and a corrected spin-orbit equation to the
+      <code>KoningDelarocheOpticalModel</code> class.
+    </div>
+
+    <p>
+      These changes enable the exciton project to extract OMP parameters (well
+      depths, geometry, KD03 coefficients, and the full radial potential) for
+      comparison against TALYS output. The branch builds on MARLEY v1.2.1 and
+      is located at <code>/workspace/marley-private</code>.
+    </p>
+
+    <h2>Commit History</h2>
+
+    <table>
+      <tr>
+        <th>Commit</th>
+        <th>Date</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>4f4d65f</code></td>
+        <td>2026-06-22</td>
+        <td>Initial exciton features: <code>setIncidentEnergyAndFragment()</code>,
+          getters for Wv, Wd, Rv, av, Rd, ad</td>
+      </tr>
+      <tr>
+        <td><code>d44aa99</code></td>
+        <td>2026-06-23</td>
+        <td>Full getter set: Vv, Vso, Wso, Rso, aso, all KD03 coefficients and
+          geometry parameters for both neutrons and protons</td>
+      </tr>
+      <tr>
+        <td><code>cbfb289</code></td>
+        <td>2026-06-23</td>
+        <td>Spin-1/2 capabilities: <code>updateWellDepths()</code> method using
+          two_s=1, l=0, j=1/2 to compute all five potential depths including
+          spin-orbit</td>
+      </tr>
+      <tr>
+        <td><code>c84ae23</code></td>
+        <td>2026-06-23</td>
+        <td><code>evalOMP()</code> public method, reformatting and refactoring
+          of <code>KoningDelarocheOpticalModel.cc</code></td>
+      </tr>
+      <tr>
+        <td><code>ea6277d</code></td>
+        <td>2026-06-24</td>
+        <td><code>updateWellDepths()</code> now accepts angular momentum <code>l</code>
+          parameter; spin-orbit eigenvalue computed for j = l + 1/2 (aligned spin)</td>
+      </tr>
+      <tr>
+        <td><code>372cddd</code></td>
+        <td>2026-06-24</td>
+        <td>Fix: factor-of-2 correction in spin eigenvalue equation in
+          <code>KoningDelarocheOpticalModel.cc</code>
+        </td>
+      </tr>
+    </table>
+
+    <h2>Getter Functions</h2>
+
+    <p>
+      All getter functions are inlined in
+      <code>include/marley/KoningDelarocheOpticalModel.hh</code>.
+    </p>
+
+    <h3>Well Depths and Geometry</h3>
+    <pre>
+double getWv()  const;   // Imaginary volume depth (MeV)
+double getWd()  const;   // Imaginary surface depth (MeV)
+double getRv()  const;   // Volume radius parameter (fm)
+double getav()  const;   // Volume diffuseness (fm)
+double getRd()  const;   // Surface radius parameter (fm)
+double getad()  const;   // Surface diffuseness (fm)
+double getVv()  const;   // Real volume depth (MeV)
+double getVso() const;   // Real spin-orbit depth (MeV)
+double getWso() const;   // Imaginary spin-orbit depth (MeV)
+double getRso() const;   // Spin-orbit radius parameter (fm)
+double getaso() const;   // Spin-orbit diffuseness (fm)</pre>
+
+    <h3>KD03 Neutron Coefficients</h3>
+    <pre>
+double getV1n()  const;   double getV2n()   const;
+double getV3n()  const;   double getV4n()   const;
+double getW1n()  const;   double getW2n()   const;
+double getD1n()  const;   double getD2n()   const;
+double getD3n()  const;
+double getVso1n() const;  double getVso2n()  const;
+double getWso1n() const;  double getWso2n()  const;
+double getEfn()  const;   // Fermi energy (MeV)</pre>
+
+    <h3>KD03 Neutron Geometry</h3>
+    <pre>
+double getRvn()   const;  // Volume radius coefficient
+double getavn()   const;  // Volume diffuseness coefficient
+double getRdn()   const;  // Surface radius coefficient
+double getadn()   const;  // Surface diffuseness coefficient
+double getRso_n() const;  // Spin-orbit radius coefficient
+double getaso_n() const;  // Spin-orbit diffuseness coefficient</pre>
+
+    <h3>KD03 Proton Coefficients</h3>
+    <pre>
+double getV1p()  const;   double getV2p()   const;
+double getV3p()  const;   double getV4p()   const;
+double getW1p()  const;   double getW2p()   const;
+double getD1p()  const;   double getD2p()   const;
+double getD3p()  const;
+double getVso1p() const;  double getVso2p()  const;
+double getWso1p() const;  double getWso2p()  const;
+double getEfp()  const;   // Fermi energy (MeV)
+double getVcbar_p() const; // Coulomb correction (MeV)</pre>
+
+    <h3>KD03 Proton Geometry</h3>
+    <pre>
+double getRvp()   const;  double getavp()   const;
+double getRdp()   const;  double getadp()   const;
+double getRso_p() const;  double getaso_p() const;</pre>
+
+    <h3>Coulomb Radius</h3>
+    <pre>
+double getRc() const;     // Coulomb radius parameter (fm)</pre>
+
+    <h2>Public Methods</h2>
+
+    <h3><code>setIncidentEnergyAndFragment()</code></h3>
+    <p>Original method from <code>4f4d65f</code>. Computes central OMP parameters
+      only (spin-0, l=0, j=0):</p>
+    <pre>
+void setIncidentEnergyAndFragment(double E_kin, int fragment_pdg);</pre>
+
+    <h3><code>updateWellDepths()</code></h3>
+    <p>Added in <code>cbfb289</code>, extended with <code>l</code> parameter in
+      <code>ea6277d</code>. Computes all five potential depths including spin-orbit
+      (Vso, Wso) using j = l + 1/2 (aligned spin):
+    </p>
+    <pre>
+void updateWellDepths(double E_kin, int fragment_pdg, int l = 0);</pre>
+
+    <h3><code>evalOMP()</code></h3>
+    <p>Added in <code>c84ae23</code>. Public wrapper around the private
+      <code>omp(double r)</code> method, which computes U(r) = V(r) + iW(r):
+    </p>
+    <pre>
+std::complex&lt;double&gt; evalOMP(double r) const;</pre>
+
+    <h2>Spin-Orbit Formalism</h2>
+
+    <p>
+      The spin-orbit eigenvalue is computed in
+      <code>calculate_om_parameters()</code> as:
+    </p>
+
+    <pre>
+// Eigenvalue of l·σ = ½[j(j+1) - l(l+1) - s(s+1)]
+// With ħ = 1, the term entering the potential is:
+spin_orbit_eigenvalue = 0.25 * ((two_j - two_s) * (two_j + two_s + 2))
+                        - l * (l + 1);</pre>
+
+    <p>
+      For <code>updateWellDepths()</code> with l = 0: j = 1/2, so
+      l·σ = 0 and the spin-orbit term vanishes. The central potential geometry
+      terms (Rv, av, Rd, ad) are unaffected by the spin choice.
+    </p>
+
+    <p>
+      Commit <code>372cddd</code> corrected a factor-of-2 error in the spin
+      eigenvalue equation. The validated formula produces spin-orbit eigenvalues
+      that match TALYS.
+    </p>
+
+    <h2>Usage in Exciton Code</h2>
+
+    <pre>
+// Create KD model for target nucleus
+marley::KoningDelarocheOpticalModel kd(target_Z, target_A);
+
+// For central potential only (preeqmode=3):
+kd.setIncidentEnergyAndFragment(kinetic_energy, pdg_code);
+
+// For full potential including spin-orbit:
+kd.updateWellDepths(kinetic_energy, pdg_code, /* l = */ 0);
+
+// Extract parameters
+double Wv = kd.getWv();
+double Wd = kd.getWd();
+double wvol = wvolRadialIntegral(kd);
+
+// Evaluate radial potential at r = 5.0 fm
+std::complex&lt;double&gt; U = kd.evalOMP(5.0);</pre>
+
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
+</body>
+
+</html>

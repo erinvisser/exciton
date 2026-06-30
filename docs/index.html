@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>exciton — pre-equilibrium nuclear reaction model</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+
+<body>
+  <nav>
+    <div class="container">
+      <a href="index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="tutorials/getting-started.html">Getting Started</a>
+      <a href="tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="howto/omega-calculations.html">Omega</a>
+      <a href="howto/lambda-calculations.html">Lambda</a>
+      <a href="howto/validations.html">Validations</a>
+      <a href="howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="reference/physics-formulas.html">Formulas</a>
+      <a href="reference/parameters.html">Parameters</a>
+      <a href="reference/api.html">API</a>
+      <a href="reference/output-format.html">Output</a>
+      <a href="reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="explanation/exciton-model.html">Exciton Model</a>
+      <a href="explanation/omp-implementation.html">OMP</a>
+      <a href="explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="hero">
+      <h1>exciton</h1>
+      <p>C++ implementation of the two-component exciton model for pre-equilibrium nuclear reactions, validated against
+        TALYS 2.2.</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3><a href="tutorials/getting-started.html">Getting Started</a></h3>
+        <p>Build the code, run your first calculation, and understand the output.</p>
+      </div>
+      <div class="card">
+        <h3><a href="tutorials/running-calculations.html">Running Calculations</a></h3>
+        <p>Step-by-step guide for omega and lambda rate computations.</p>
+      </div>
+      <div class="card">
+        <h3><a href="howto/omega-calculations.html">Omega Calculations</a></h3>
+        <p>Compute particle–hole state densities for the Ar40(n,x) system.</p>
+      </div>
+      <div class="card">
+        <h3><a href="howto/lambda-calculations.html">Lambda Calculations</a></h3>
+        <p>Compute internal transition and conversion rates.</p>
+      </div>
+      <div class="card">
+        <h3><a href="howto/validations.html">Validations</a></h3>
+        <p>Compare against TALYS output for state densities, spin distributions, and transition rates.</p>
+      </div>
+      <div class="card">
+        <h3><a href="reference/physics-formulas.html">Formulas</a></h3>
+        <p>Key equations: M² matrix element, state density, collision rate, wompfac.</p>
+      </div>
+      <div class="card">
+        <h3><a href="reference/parameters.html">Parameters</a></h3>
+        <p>Physical constants, tunable coefficients, and their default values.</p>
+      </div>
+      <div class="card">
+        <h3><a href="reference/api.html">API</a></h3>
+        <p>Function signatures, enums, and header file reference.</p>
+      </div>
+      <div class="card">
+        <h3><a href="reference/output-format.html">Output</a></h3>
+        <p>YANDF-0.4 format specification for lambda and omega output.</p>
+      </div>
+      <div class="card">
+        <h3><a href="explanation/exciton-model.html">Exciton Model</a></h3>
+        <p>The two-component exciton formalism: particle–hole states, the master equation, transition rates.</p>
+      </div>
+      <div class="card">
+        <h3><a href="explanation/omp-implementation.html">OMP Implementation</a></h3>
+        <p>Optical model potential collision kernel for preeqmode=3.</p>
+      </div>
+      <div class="card">
+        <h3><a href="explanation/state-densities.html">State Densities</a></h3>
+        <p>Particle–hole state density formalism and implementation details.</p>
+      </div>
+      <div class="card">
+        <h3><a href="howto/talys-omp-diagnostics.html">TALYS OMP Diagnostics</a></h3>
+        <p>Extract OMP parameters, wvol, and transition-rate intermediates from TALYS.</p>
+      </div>
+      <div class="card">
+        <h3><a href="howto/exciton-diagnostics.html">Exciton Diagnostics</a></h3>
+        <p>Print OMP diagnostics, L1/L2 bounds, and collision rates from the exciton code.</p>
+      </div>
+      <div class="card">
+        <h3><a href="reference/marley-kd-diagnostics.html">MARLEY KD Interface</a></h3>
+        <p>Getter functions, evalOMP, and spin-orbit formalism on the v121_kd branch.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><a href="status.html">Branch Status</a></h3>
+      <p>Comprehensive status of the MatrixSquared, OMPfromScratch, and OMP branches, validation matrix, and open
+        issues.</p>
+    </div>
+
+    <h2>System</h2>
+    <p>This implementation calculates pre-equilibrium transition rates for neutron-induced reactions on <sup>40</sup>Ar
+      at 20 MeV incident energy. The two-component exciton model tracks separate proton and neutron particle–hole
+      configurations, with internal transitions driven by the residual two-body interaction.</p>
+
+    <h2>Quick Reference</h2>
+    <table>
+      <tr>
+        <th>Item</th>
+        <th>Value</th>
+      </tr>
+      <tr>
+        <td>Target</td>
+        <td><sup>40</sup>Ar (Z=18, N=22)</td>
+      </tr>
+      <tr>
+        <td>Compound nucleus</td>
+        <td><sup>41</sup>Ar (Z=18, N=23)</td>
+      </tr>
+      <tr>
+        <td>Incident energy</td>
+        <td>20 MeV</td>
+      </tr>
+      <tr>
+        <td>Compound excitation</td>
+        <td>25.60156 MeV</td>
+      </tr>
+      <tr>
+        <td>Fermi well depth (V)</td>
+        <td>38.0 MeV</td>
+      </tr>
+      <tr>
+        <td>Single-particle densities</td>
+        <td>g<sub>p</sub> = Z/15, g<sub>n</sub> = N/15</td>
+      </tr>
+      <tr>
+        <td>Collision kernel</td>
+        <td>M² constant (preeqmode=1) or OMP (preeqmode=3)</td>
+      </tr>
+      <tr>
+        <td>Integration</td>
+        <td>Clenshaw–Curtis adaptive quadrature (MARLEY)</td>
+      </tr>
+    </table>
+  </main>
+  <footer>
+    <div class="container">exciton documentation &mdash; pre-equilibrium nuclear reaction model</div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics Formulas — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+
+<body>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html" class="active">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Formulas</span></div>
+    <h1>Physics Formulas</h1>
+    <p>Key equations from the TALYS manual (Chapter 13) implemented in this codebase.</p>
+
+    <h2>1. Single-Particle State Densities</h2>
+    <p>Ericson's formula (Eq. 13.5):</p>
+    \[
+    g_\pi = \frac{Z}{15}, \qquad g_\nu = \frac{N}{15}
+    \]
+    <p>Code: <code>spDensityProton()</code> / <code>spDensityNeutron()</code> in <code>src/preeq_common.cpp</code>.</p>
+
+    <h2>2. Particle–Hole State Density</h2>
+    <p>Eq. 13.4 (Williams formula, two-component):</p>
+    \[
+    \omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x) =
+    \frac{g_\pi^{p_\pi + h_\pi} g_\nu^{p_\nu + h_\nu}}
+    {p_\pi!\, h_\pi!\, p_\nu!\, h_\nu!\, (n-1)!}
+    \, U^{n-1}
+    \, f_{\text{Pauli}} \cdot f_{\text{well}} \cdot f_{\text{pairing}} \cdot f_{\text{parity}}
+    \]
+    <p>Code: <code>particleHoleStateDensity()</code> in <code>src/state_density.cpp:17</code>.</p>
+
+    <h2>3. Pauli Correction</h2>
+    <p>Eq. 13.9:</p>
+    \[
+    P(p_\pi, h_\pi, p_\nu, h_\nu) =
+    \frac{1}{4} \left[
+    \frac{p_\pi(p_\pi-1) + h_\pi(h_\pi-1)}{g_\pi}
+    + \frac{p_\nu(p_\nu-1) + h_\nu(h_\nu-1)}{g_\nu}
+    + 2\frac{p_\pi h_\pi + p_\nu h_\nu + p_\pi h_\nu + p_\nu h_\pi}{g_\pi + g_\nu}
+    \right]
+    \]
+    <p>Code: <code>pauliCorrection()</code> in <code>src/preeq_common.cpp</code>.</p>
+
+    <h2>4. Finite Well Correction</h2>
+    <p>Eq. 13.16:</p>
+    \[
+    f_{\text{well}}(p, h, U, V) = 1 - \left(\frac{U}{U+V}\right)^{p+h}
+    \]
+    <p>Code: <code>finiteWell()</code> in <code>src/preeq_common.cpp</code>.</p>
+
+    <h2>5. Pairing Energy Correction</h2>
+    <p>Back-shifted pairing energy (Eq. 13.10–13.13):</p>
+    \[
+    \Delta_{\chi} = \chi \frac{12}{\sqrt{A}}, \qquad
+    n_{\text{crit}} = 2 \sqrt{\frac{g_\pi g_\nu}{g_\pi + g_\nu}} \, \Delta
+    \]
+    \[
+    P_{ph}(E_x, n, n_{\text{crit}}) =
+    \begin{cases}
+    1 & n \ge n_{\text{crit}} \\
+    \exp\!\left(-\frac{n_{\text{crit}} - n}{n_{\text{crit}} - 1} \cdot \frac{\Delta}{U}\right) & n < n_{\text{crit}}
+      \end{cases} \] <p>Code: <code>pairingEnergyDelta()</code>, <code>nCrit()</code>,
+      <code>fuPairingCorrection()</code> in <code>src/preeq_common.cpp</code>.</p>
+
+      <h2>6. Matrix Element M²</h2>
+      <p>Eq. 13.26 (Kalbach–Cline parametrization):</p>
+      \[
+      M^2 = C_1 \frac{A_p}{A^3}
+      \left[ 7.48 C_2 + \frac{4.62 \times 10^5}{(10.7 C_3 + E_{\text{tot}}/(n A_p))^3} \right]
+      \]
+      <p>Analytical mode includes an additional factor of 1.20 (TALYS preeqmode=1 convention).</p>
+      <p>Channel ratios (Eq. 13.24):</p>
+      \[
+      M_{\pi\pi}^2 = R_{\pi\pi} M^2,\quad
+      M_{\nu\nu}^2 = R_{\nu\nu} M^2,\quad
+      M_{\pi\nu}^2 = R_{\pi\nu} M^2,\quad
+      M_{\nu\pi}^2 = R_{\nu\pi} M^2
+      \]
+      <p>Default ratios: \(R_{\nu\nu}=1.5\), all others 1.0.</p>
+      <p>Code: <code>M2()</code> (<code>transition_rates.cpp:10</code>), <code>M2_element()</code>
+        (<code>transition_rates.cpp:24</code>).</p>
+
+      <h2>7. Transition Rates — Pair Creation (Numerical)</h2>
+      <p>Eqs. 13.17–13.18:</p>
+      \[
+      \lambda_{\pi^+}(p,h,E) = \frac{1}{\omega_i(U)} \sum_{\text{channels}} \int_{L_1}^{L_2} de\,
+      \frac{2\pi}{\hbar} M_{\text{ch}}^2\,
+      \omega_t(e)\, g_{\text{factor}}\,
+      \omega_r(U-e)
+      \]
+      <p>Code: <code>lambdaNewPairNumerical()</code> in <code>transition_rates.cpp:117</code>.</p>
+
+      <h2>8. Transition Rates — Conversion (Numerical)</h2>
+      <p>Eq. 13.19:</p>
+      \[
+      \lambda_{\pi\nu}(p,h,E) = \frac{1}{\omega_i(U)} \int_{L_1}^{L_2} de\,
+      \frac{2\pi}{\hbar} M_{\pi\nu}^2\,
+      \omega_c(e)\, \omega_a(e)\,
+      \omega_r(U-e)
+      \]
+      <p>where \(\omega_c\) is the created state, \(\omega_a\) is the annihilated state, and \(\omega_r\) is the
+        residual state densities.</p>
+      <p>Code: <code>lambdaPairConversionNumerical()</code> in <code>transition_rates.cpp:310</code>.</p>
+
+      <h2>9. OMP Wompfac (preeqmode=3)</h2>
+      <p>TALYS weighting factors bridging M² to the optical model:</p>
+      \[
+      \text{wompfac}_{\text{same}} = \frac{M_c^2 \cdot 0.55}{1 + 2 R_{\pi\nu}/\text{R}_{\pi\pi}}
+      \]
+      \[
+      \text{wompfac}_{\text{cross}} = \frac{M_c^2 \cdot 0.55 \cdot 2 R_{\pi\nu}/\text{R}_{\pi\pi}}{1 + 2
+      R_{\pi\nu}/\text{R}_{\pi\pi}}
+      \]
+      \[
+      \text{wompfac}_{\text{conv}} = \frac{\text{wompfac}_{\text{same}} + \text{wompfac}_{\text{cross}}}{2}
+      \]
+      <p>Code: <code>transition_rates.cpp:132-140</code> (pair creation), <code>transition_rates.cpp:444-453</code>
+        (conversion).</p>
+
+      <h2>10. Volume-Averaged Imaginary Potential</h2>
+      <p>Eqs. 13.29–13.30:</p>
+      \[
+      W(r) = W_v f_v(r) - 4 a_d W_d \frac{d}{dr} f_s(r)
+      \]
+      \[
+      \langle W \rangle = \frac{\int_0^\infty W(r) f_v(r) r^2 dr}{\int_0^\infty f_v(r) r^2 dr}
+      \]
+      <p>Evaluated with a 50-bin midpoint rule at dr = 0.4 fm.</p>
+      <p>Code: <code>wvolRadialIntegral()</code> in <code>transition_rates.cpp:47-68</code> (OMP branch).</p>
+
+      <h2>11. Spin Distribution</h2>
+      \[
+      R_n(J) = \frac{2J+1}{2\sqrt{2\pi\sigma_n^2}} \exp\!\left(-\frac{(J+\frac12)^2}{2\sigma_n^2}\right)
+      \]
+      <p>where \(\sigma_n^2 = 0.28 n A^{2/3}\) (TALYS-compatible).</p>
+      <p>Code: <code>spinDistribution()</code> in <code>src/preeq_common.cpp</code>.</p>
+
+      <h2>References</h2>
+      <ol>
+        <li>A. J. Koning and J. P. Delaroche, Nucl. Phys. A <strong>713</strong> (2003) 231.</li>
+        <li>C. Kalbach, Phys. Rev. C <strong>33</strong> (1986) 818.</li>
+        <li>TALYS 2.2 manual, Chapter 13: Pre-equilibrium reactions.</li>
+      </ol>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
+</body>
+
+</html>

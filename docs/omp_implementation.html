@@ -1,512 +1,680 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Optical Model Potential — Implementation in exciton</title>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-<style>
-  :root {
-    --bg: #fafafa;
-    --fg: #1a1a2e;
-    --accent: #0f4c81;
-    --accent-light: #e8f0fe;
-    --code-bg: #f5f5f5;
-    --border: #d0d0d0;
-    --warn: #fff3cd;
-    --err: #f8d7da;
-    --ok: #d4edda;
-  }
-  *, *::before, *::after { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 2rem;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    line-height: 1.7;
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  h1 { font-size: 2rem; border-bottom: 3px solid var(--accent); padding-bottom: 0.3rem; }
-  h2 { font-size: 1.4rem; color: var(--accent); margin-top: 2.5rem; }
-  h3 { font-size: 1.15rem; margin-top: 1.8rem; }
-  a { color: var(--accent); }
-  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.9em; }
-  pre {
-    background: #1e1e2e; color: #cdd6f4;
-    padding: 1rem; border-radius: 6px; overflow-x: auto;
-    font-size: 0.85rem; line-height: 1.5;
-  }
-  pre .kw { color: #cba6f7; }
-  pre .tp { color: #89b4fa; }
-  pre .fn { color: #a6e3a1; }
-  pre .cm { color: #6c7086; font-style: italic; }
-  pre .nu { color: #fab387; }
-  pre .op { color: #89dceb; }
-  pre .sc { color: #f9e2af; }
-  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
-  th { background: var(--accent-light); }
-  .box { border-left: 4px solid var(--accent); background: var(--accent-light); padding: 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
-  .box.warn { border-left-color: #856404; background: var(--warn); }
-  .box.err { border-left-color: #721c24; background: var(--err); }
-  .box.ok { border-left-color: #155724; background: var(--ok); }
-  .filepath { font-family: monospace; color: #555; font-size: 0.85rem; }
-  .tag { display: inline-block; background: var(--accent); color: #fff; padding: 0.15em 0.6em; border-radius: 3px; font-size: 0.75rem; font-weight: 600; }
-  .tag.me { background: #2d6a4f; }
-  .tag.kd { background: #5a189a; }
-  .tag.code { background: #3a86ff; }
-  figure { margin: 1.5rem 0; text-align: center; }
-  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; }
-  svg text { font-family: system-ui; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optical Model Potential — Implementation in exciton</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-
-<h1>Optical Model Potential in the Exciton Model</h1>
-<p class="filepath">/workspace/exciton/docs/omp_implementation.html &mdash; companion to <code>transition_rates.cpp</code>, <code>KoningDelarocheOpticalModel.{hh,cc}</code>, and <code>main_lambda.cpp</code></p>
-
-<div class="box">
-<strong>Purpose:</strong> Replace the constant matrix-element approximation (M<sup>2</sup>) for nucleon&ndash;nucleon collisions inside the nucleus with a <strong>collision probability</strong> derived from the imaginary part of the nucleon&ndash;nucleus optical potential. This implements TALYS <code>preeqmode=3</code>.
-</div>
-
-<!-- ===================================================================== -->
-<h2>1. Overview of the Data Flow</h2>
-
-<figure>
-  <svg viewBox="0 0 900 480" width="100%" style="max-width:900px">
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-        <path d="M0,0 L10,5 L0,10 Z" fill="#0f4c81"/>
-      </marker>
-      <style>
-        .box { fill: #e8f0fe; stroke: #0f4c81; stroke-width:1.5; rx:6; ry:6; }
-        .box-kd { fill: #f3e8ff; stroke: #5a189a; stroke-width:1.5; rx:6; ry:6; }
-        .box-me { fill: #e8faf0; stroke: #2d6a4f; stroke-width:1.5; rx:6; ry:6; }
-        .lbl { font-size:13px; fill:#1a1a2e; }
-        .lbl-s { font-size:11px; fill:#555; }
-      </style>
-    </defs>
-
-    <!-- CLI -->
-    <rect x="20" y="20" width="160" height="50" class="box"/>
-    <text x="100" y="50" text-anchor="middle" class="lbl">
-      <tspan font-weight="bold">--kernel optical-model</tspan>
-    </text>
-
-    <!-- check -->
-    <polygon points="210,45 230,35 230,55" fill="#0f4c81" />
-
-    <!-- CollisionKernel enum -->
-    <rect x="240" y="20" width="180" height="50" class="box"/>
-    <text x="330" y="50" text-anchor="middle" class="lbl">CollisionKernel::OpticalModel</text>
-
-    <!-- lambdaRate dispatcher -->
-    <polygon points="450,45 470,35 470,55" fill="#0f4c81" />
-    <rect x="480" y="15" width="200" height="60" class="box-me"/>
-    <text x="580" y="38" text-anchor="middle" class="lbl-s">lambdaRate(…, kernel, Z_proj)</text>
-    <text x="580" y="58" text-anchor="middle" class="lbl-s">Z_comp = Z+Z_proj</text>
-
-    <!-- two branches -->
-    <polygon points="710,45 730,35 730,55" fill="#0f4c81" />
-
-    <!-- pair-creation -->
-    <rect x="740" y="5" width="150" height="45" class="box-kd"/>
-    <text x="815" y="25" text-anchor="middle" class="lbl-s">lambdaNewPairNumerical</text>
-    <text x="815" y="42" text-anchor="middle" class="lbl-s">KD model created</text>
-
-    <!-- conversion -->
-    <rect x="740" y="65" width="150" height="45" class="box-kd"/>
-    <text x="815" y="85" text-anchor="middle" class="lbl-s">lambdaPairConversionNumerical</text>
-    <text x="815" y="102" text-anchor="middle" class="lbl-s">KD model created</text>
-
-    <!-- inner integrand -->
-    <polygon points="890,27 900,27 900,82 890,82" fill="#0f4c81" opacity="0" />
-
-    <!-- KD model box -->
-    <rect x="20" y="120" width="220" height="80" class="box-kd"/>
-    <text x="130" y="145" text-anchor="middle" class="lbl">KoningDelarocheOpticalModel</text>
-    <text x="130" y="165" text-anchor="middle" class="lbl-s">kd_omp(Z_comp, A_comp)</text>
-    <text x="130" y="185" text-anchor="middle" class="lbl-s">Constructor: sets all KD parameters</text>
-
-    <!-- setIncidentEnergyAndFragment -->
-    <polygon points="270,160 290,150 290,170" fill="#5a189a" />
-    <rect x="300" y="130" width="220" height="60" class="box-kd"/>
-    <text x="410" y="155" text-anchor="middle" class="lbl">setIncidentEnergyAndFragment</text>
-    <text x="410" y="175" text-anchor="middle" class="lbl-s">(e_kin, collider_pdg)</text>
-
-    <!-- calculate_om_parameters -->
-    <polygon points="550,160 570,150 570,170" fill="#5a189a" />
-    <rect x="580" y="130" width="200" height="60" class="box-kd"/>
-    <text x="680" y="155" text-anchor="middle" class="lbl">calculate_om_parameters</text>
-    <text x="680" y="175" text-anchor="middle" class="lbl-s">two_s=0 &rArr; central only</text>
-
-    <!-- getters -->
-    <polygon points="810,160 830,150 830,170" fill="#5a189a" />
-    <rect x="20" y="250" width="240" height="80" class="box-me"/>
-    <text x="140" y="275" text-anchor="middle" class="lbl">getWv(), getWd(), getRv(),</text>
-    <text x="140" y="295" text-anchor="middle" class="lbl">getav(), getRd(), getad()</text>
-    <text x="140" y="315" text-anchor="middle" class="lbl-s">Returns Wv, Wd, Rv, av, Rd, ad</text>
-
-    <!-- wvolRadialIntegral -->
-    <polygon points="290,290 310,280 310,300" fill="#2d6a4f" />
-    <rect x="320" y="255" width="240" height="70" class="box-me"/>
-    <text x="440" y="280" text-anchor="middle" class="lbl">wvolRadialIntegral</text>
-    <text x="440" y="300" text-anchor="middle" class="lbl-s">50-bin midpoint, dr=0.4 fm</text>
-    <text x="440" y="315" text-anchor="middle" class="lbl-s">Eqs. (13.29&ndash;13.30)</text>
-
-    <!-- collision rate -->
-    <polygon points="590,290 610,280 610,300" fill="#2d6a4f" />
-    <rect x="620" y="255" width="260" height="70" class="box-me"/>
-    <text x="750" y="278" text-anchor="middle" class="lbl">&lambda; = (2/&#8463;) &middot; wompfac &middot; &lt;W&gt;</text>
-    <text x="750" y="298" text-anchor="middle" class="lbl-s">× state densities, integrated over e</text>
-    <text x="750" y="315" text-anchor="middle" class="lbl-s">hole-channel ratio ω<sub>hole</sub>/ω<sub>part</sub></text>
-
-    <!-- arrows -->
-    <line x1="180" y1="70" x2="180" y2="120" stroke="#0f4c81" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <line x1="130" y1="200" x2="130" y2="250" stroke="#5a189a" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <line x1="410" y1="190" x2="680" y2="155" stroke="#5a189a" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
-    <line x1="680" y1="190" x2="140" y2="275" stroke="#5a189a" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
-    <line x1="140" y1="330" x2="440" y2="300" stroke="#2d6a4f" stroke-width="1" marker-end="url(#arrow)"/>
-    <line x1="560" y1="290" x2="620" y2="290" stroke="#2d6a4f" stroke-width="1.5" marker-end="url(#arrow)"/>
-
-    <!-- e_kin formula -->
-    <rect x="20" y="380" width="600" height="80" class="box"/>
-    <text x="30" y="405" class="lbl-s">Inside the OMP integrand branch (for each energy bin e):</text>
-    <text x="30" y="425" class="lbl">e<sub>kin</sub> = e &minus; S<sub>p/n</sub>(Z<sub>comp</sub>, N<sub>comp</sub>)</text>
-    <text x="30" y="445" class="lbl-s">PDG 2212 (proton): use S<sub>p</sub>. PDG 2112 (neutron): use S<sub>n</sub>.</text>
-    <text x="30" y="460" class="lbl-s">Clamped to &ge; &minus;20 MeV to avoid singularities.</text>
-  </svg>
-  <figcaption>Figure 1: Data flow for OMP-based collision rates. Blue = configuration and dispatch; purple = Koning&ndash;Delaroche optical model; green = transition rate computation.</figcaption>
-</figure>
-
-<!-- ===================================================================== -->
-<h2>2. Why an Optical Model?</h2>
-
-<div class="box ok">
-<strong>Physics:</strong> In the pre-equilibrium exciton model, internal transitions (creation of new particle&ndash;hole pairs) are driven by two-body residual interactions. The standard approach uses a <strong>constant matrix element</strong> M<sup>2</sup> (Kalbach&ndash;Cline parametrization, Eq. 13.24&ndash;13.26). However, this neglects the energy and isospin dependence of the effective N&ndash;N interaction inside the nuclear medium.
-</div>
-
-<p>The Koning&ndash;Delaroche (KD) optical model potential <sup>[<a href="#ref-kd">1</a>]</sup> gives the complex nucleon&ndash;nucleus interaction:</p>
-
-\[
-U(\mathbf{r}) = V(\mathbf{r}) + i\,W(\mathbf{r}) + V_{so}(\mathbf{r})\,(\mathbf{l}\cdot\mathbf{s}) + i\,W_{so}(\mathbf{r})\,(\mathbf{l}\cdot\mathbf{s}) + V_C(\mathbf{r})
-\]
-
-<p>The <strong>imaginary volume term</strong> \(W(r)\) describes absorption out of the elastic channel into more complex configurations — exactly the physics needed for pre-equilibrium internal transitions. We replace the constant M² with a collision probability derived from \(W(r)\).</p>
-
-<!-- ===================================================================== -->
-<h2>3. The Wompfac &mdash; Bridging M² and the OMP</h2>
-
-<p>TALYS uses a <strong>Wompfac</strong> (weight factor) to scale the optical model strength to match the M² normalization. This factor preserves the same relative channel strengths (same-type vs. cross-type vs. conversion) while replacing the absolute scale with an OMP-driven collision rate.</p>
-
-<p>The three wompfac values, computed in <code class="filepath">transition_rates.cpp:132-140</code> (pair creation) and <code class="filepath">transition_rates.cpp:444-453</code> (conversion), follow the TALYS <code>matrix.f90</code> formulas:</p>
-
-\[
-\begin{aligned}
-\text{R}_{\pi\nu} &= \frac{R_{\pi\nu}}{R_{\pi\pi}} \\[4pt]
-\text{wompfac}_{\text{same}} &= \frac{M^2_c \cdot 0.55}{1 + 2\,\text{R}_{\pi\nu}} \\[4pt]
-\text{wompfac}_{\text{cross}} &= \frac{M^2_c \cdot 0.55 \cdot 2\,\text{R}_{\pi\nu}}{1 + 2\,\text{R}_{\pi\nu}} \\[4pt]
-\text{wompfac}_{\text{conv}} &= \frac{\text{wompfac}_{\text{same}} + \text{wompfac}_{\text{cross}}}{2}
-\end{aligned}
-\]
-
-<table>
-  <tr><th>Wompfac</th><th>Role</th><th>Code location</th></tr>
-  <tr><td>wompfac<sub>same</sub></td><td>Proton&rarr;proton or neutron&rarr;neutron pair creation</td><td><code>transition_rates.cpp:138</code></td></tr>
-  <tr><td>wompfac<sub>cross</sub></td><td>Proton&rarr;neutron or neutron&rarr;proton pair creation</td><td><code>transition_rates.cpp:139</code></td></tr>
-  <tr><td>wompfac<sub>conv</sub></td><td>Proton&harr;neutron conversion</td><td><code>transition_rates.cpp:453</code></td></tr>
-</table>
-
-<div class="box warn">
-<strong>Why 0.55?</strong> The constant \(C_{\text{OMP}} = 0.55\) comes from TALYS's <code>matrix.f90</code>. It normalizes the relative M² strengths such that the absolute scale is set by the OMP imaginary potential. The M² constant M<sup>2</sup><sub>c</sub> is still tunable; at M<sup>2</sup><sub>c</sub> = 1.0, R<sub>πν</sub> = 1.0, the default wompfac values are 0.1833, 0.3667, and 0.275.
-</div>
-
-<!-- ===================================================================== -->
-<h2>4. Compound Nucleus and Separation Energies</h2>
-
-<p>The optical model collision involves the <strong>compound nucleus</strong> formed by the projectile (charge Z<sub>proj</sub>, mass A<sub>p</sub>) and the target (Z, N). The kinetic energy of the emitted nucleon is the integration variable e (the energy of the created pair) <em>minus</em> its separation energy:</p>
-
-\[
-\begin{aligned}
-Z_{\text{comp}} &= Z + Z_{\text{proj}} \\
-N_{\text{comp}} &= N + (A_p - Z_{\text{proj}}) \\
-A_{\text{comp}} &= Z_{\text{comp}} + N_{\text{comp}} \\
-e_{\text{kin}} &= e - S_{p/n}(Z_{\text{comp}}, N_{\text{comp}})
-\end{aligned}
-\]
-
-<h3>4.1 MARLEY MassTable Separation Energies</h3>
-
-<p>Separation energies are obtained from the MARLEY <code>MassTable</code> singleton (<code class="filepath">transition_rates.cpp:189-190</code>):</p>
-
-\[
-\begin{aligned}
-S_p &= \text{MassTable::get\_fragment\_separation\_energy}(Z_{\text{comp}}, A_{\text{comp}}, \text{2212}) \\
-S_n &= \text{MassTable::get\_fragment\_separation\_energy}(Z_{\text{comp}}, A_{\text{comp}}, \text{2112})
-\end{aligned}
-\]
-
-<p>The <code>MassTable</code> uses experimental atomic masses from the Atomic Mass Evaluation (AME) where available, falling back to the liquid-drop model of Koning et al. (2008) <sup>[<a href="#ref-koning2008">2</a>]</sup> for unmeasured nuclides. The MassTable data file <code>mass_table.js</code> is located at <code>$MARLEY/data/mass_table.js</code>. At runtime, the <code>MARLEY</code> environment variable must point to the marley-private directory so the <code>FileManager</code> can find it.</p>
-
-<p>The underlying liquid-drop parameters used by the MassTable for theoretical masses differ slightly from the custom Bethe&ndash;Weizsäcker coefficients used in earlier versions of this code:</p>
-
-<table>
-  <tr><th>Coefficient</th><th>Previous (custom SEMF)</th><th>MassTable (Koning 2008)</th></tr>
-  <tr><td>\(a_v\)</td><td>15.75 MeV</td><td>15.677 MeV</td></tr>
-  <tr><td>\(a_s\)</td><td>17.80 MeV</td><td>18.56 MeV</td></tr>
-  <tr><td>\(a_c\)</td><td>0.711 MeV</td><td>0.717 MeV</td></tr>
-  <tr><td>\(a_{\text{sym}}\)</td><td>23.70 MeV</td><td>\(\kappa = 1.79\) (symmetry surface term included)</td></tr>
-  <tr><td>\(a_p\)</td><td>11.18 MeV</td><td>11.0 MeV</td></tr>
-  <tr><td>Mass excess basis</td><td>Binding energy (B)</td><td>\(M_n N + M_H Z +\) volume + surface + Coulomb + \(\delta\)</td></tr>
-</table>
-
-<!-- ===================================================================== -->
-<h2>5. The Koning&ndash;Delaroche Optical Model</h2>
-
-<p>The KD model <sup>[<a href="#ref-kd">1</a>]</sup> is a global phenomenological optical potential fitted to elastic scattering data across the nuclear chart. For the exciton model, we need only the <strong>central imaginary potential</strong> (volume and surface absorption), not the full scattering solution.</p>
-
-<h3>5.1 Constructor — Parameter Initialization</h3>
-
-<p><code class="filepath">KoningDelarocheOpticalModel.cc:194-255</code></p>
-
-<p>The constructor takes the target (compound) nucleus (Z, A) and computes all geometry and energy-dependent parameters of the KD model. The key parameters for the imaginary potential are:</p>
-
-\[
-\begin{aligned}
-\text{W}_1^n &= 12.195 + 0.0167 A \\
-\text{W}_2^n &= 73.55 + 0.0795 A \\
-\text{D}_1^n &= 16.0 - 16.0 (N-Z)/A \\
-\text{D}_2^n &= 0.0180 + \frac{0.003802}{1 + e^{(A-156)/8}} \\
-\text{D}_3^n &= 11.5 \\
-\text{E}_f^n &= -11.2814 + 0.02646 A
-\end{aligned}
-\]
-
-<p>Proton analogs differ in the symmetry-term sign:</p>
-
-\[
-\begin{aligned}
-\text{W}_1^p &= 14.667 + 0.009629 A \\
-\text{D}_1^p &= 16.0 + 16.0 (N-Z)/A \\
-\text{E}_f^p &= -8.4075 + 0.01378 A
-\end{aligned}
-\]
-
-<p>The geometry parameters (radii and diffusenesses) for the volume imaginary term:</p>
-
-\[
-\begin{aligned}
-R_v^n &= 1.3039 A^{1/3} - 0.4054 \quad [\text{fm}] \\
-a_v^n &= 0.6778 - 1.487\times10^{-4} A \quad [\text{fm}] \\
-R_d^n &= 1.3424 A^{1/3} - 0.01585 A^{2/3} \quad [\text{fm}] \\
-a_d^n &= 0.5446 - 1.656\times10^{-4} A \quad [\text{fm}]
-\end{aligned}
-\]
-
-<h3>5.2 Energy-Dependent Potentials</h3>
-
-<p><code class="filepath">KoningDelarocheOpticalModel.cc:79-192</code>, function <code>calculate_om_parameters()</code></p>
-
-<p>At a given fragment kinetic energy E (with energy per nucleon \(E_{\text{eff}} = E/a\)), the imaginary potentials are:</p>
-
-\[
-\begin{aligned}
-W_v(E) &= n \cdot W_1^n \frac{(E_{\text{eff}} - E_f^n)^2}{(E_{\text{eff}} - E_f^n)^2 + (W_2^n)^2}
-      + z \cdot W_1^p \frac{(E_{\text{eff}} - E_f^p)^2}{(E_{\text{eff}} - E_f^p)^2 + (W_2^p)^2} \\[6pt]
-W_d(E) &= n \cdot D_1^n \frac{(E_{\text{eff}} - E_f^n)^2 e^{-D_2^n (E_{\text{eff}} - E_f^n)}}
-                                {(E_{\text{eff}} - E_f^n)^2 + (D_3^n)^2}
-      + z \cdot D_1^p \frac{(E_{\text{eff}} - E_f^p)^2 e^{-D_2^p (E_{\text{eff}} - E_f^p)}}
-                                {(E_{\text{eff}} - E_f^p)^2 + (D_3^p)^2}
-\end{aligned}
-\]
-
-<p>where \(n\) and \(z\) are the neutron and proton numbers of the fragment. After summing over neutrons and protons, the radius and diffuseness parameters are averaged over the fragment mass number \(a\):</p>
-
-\[
-R_v = \frac{n R_v^n + z R_v^p}{a}, \qquad
-a_v = \frac{n a_v^n + z a_v^p}{a}, \qquad
-R_d = \frac{n R_d^n + z R_d^p}{a}, \qquad
-a_d = \frac{n a_d^n + z a_d^p}{a}
-\]
-
-<h3>5.3 Spin-0 Approximation for the Central Potential</h3>
-
-<p><code class="filepath">KoningDelarocheOpticalModel.cc:257-265</code></p>
-
-<p>The function <code>setIncidentEnergyAndFragment(E_kin, pdg)</code> calls <code>calculate_om_parameters</code> with <code>two_s = 0</code>. This has two important consequences:</p>
-
-<ul>
-  <li><strong>Spin-orbit eigenvative is zero</strong>: \( \langle \mathbf{l}\cdot\mathbf{s} \rangle = 0 \)</li>
-  <li><strong>Only central potential terms contribute</strong> to W<sub>v</sub>, W<sub>d</sub>, R<sub>v</sub>, a<sub>v</sub>, R<sub>d</sub>, a<sub>d</sub></li>
-</ul>
-
-<div class="box ok">
-<strong>Physics justification:</strong> The volume-averaged imaginary potential computed in the exciton model is an <em>angle-averaged</em> absorption strength. The central potential already contains the dominant absorption physics; the spin-orbit contribution averages to zero over the Fermi sphere and is negligible for internal transition rates.
-</div>
-
-<!-- ===================================================================== -->
-<h2>6. Volume-Averaged Imaginary Potential</h2>
-
-<p><code class="filepath">transition_rates.cpp:47-68</code></p>
-
-<p>The radial form of the imaginary optical model potential is (Eq. 13.29 of the TALYS manual):</p>
-
-\[
-W(r) = W_v \cdot f_v(r) - 4 a_d W_d \cdot \frac{d}{dr}f_s(r)
-\]
-
-<p>where \(f_v(r)\) and \(f_s(r)\) are Woods&ndash;Saxon form factors:</p>
-
-\[
-f_{v,s}(r) = \frac{1}{1 + \exp\!\left(\frac{r - R_{v,s}}{a_{v,s}}\right)}
-\]
-
-<p>The <strong>volume-averaged</strong> imaginary potential is (Eq. 13.30):</p>
-
-\[
-\langle W \rangle = \frac{\displaystyle\int_0^\infty W(r)\, f_v(r)\, r^2\, dr}
-                       {\displaystyle\int_0^\infty f_v(r)\, r^2\, dr}
-\]
-
-<p>Following TALYS <code>bonetti.f90</code>, the integral is evaluated with a 50-bin midpoint rule at dr = 0.4 fm (<code class="filepath">transition_rates.cpp:50-67</code>):</p>
-
-\[
-\langle W \rangle \approx \frac{\sum_{i=1}^{50} W(r_i)\, f_v(r_i)\, r_i^2}
-                                 {\sum_{i=1}^{50} f_v(r_i)\, r_i^2},
-\qquad r_i = (i - \tfrac12)\,\Delta r
-\]
-
-<p>The derivative of the surface Woods&ndash;Saxon is computed analytically:</p>
-
-\[
-\frac{d}{dr}f_s(r) = -\frac{e^{(r-R_d)/a_d}}{a_d\left(1 + e^{(r-R_d)/a_d}\right)^2}
-\]
-
-<figure>
-  <svg viewBox="0 0 700 350" width="100%" style="max-width:700px">
-    <defs>
-      <style>
-        .axis { stroke:#555; stroke-width:1.5; }
-        .grid { stroke:#ddd; stroke-width:0.5; }
-        .lbl { font-size:12px; fill:#333; }
-        .lbl-t { font-size:13px; fill:#1a1a2e; font-weight:bold; }
-      </style>
-    </defs>
-
-    <!-- axes -->
-    <line x1="60" y1="300" x2="660" y2="300" class="axis" marker-end="url(#arrow)"/>
-    <line x1="60" y1="300" x2="60" y2="30" class="axis"/>
-    <!-- grid -->
-    <line x1="60" y1="260" x2="660" y2="260" class="grid"/>
-    <line x1="60" y1="190" x2="660" y2="190" class="grid"/>
-    <line x1="60" y1="120" x2="660" y2="120" class="grid"/>
-    <line x1="60" y1="50" x2="660" y2="50" class="grid"/>
-
-    <!-- f_vol: Woods-Saxon going from 1 to 0 -->
-    <path d="M60,70 C180,70 240,72 300,80 C360,95 400,120 420,160
-             C440,200 450,230 460,260 C480,285 520,296 660,298"
-          fill="none" stroke="#0f4c81" stroke-width="2.5"/>
-
-    <!-- df_surf/dr: negative peak near R -->
-    <path d="M60,298 C180,298 300,298 360,296 C390,290 400,250 410,200
+  <nav>
+    <div class="container">
+      <a href="index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="tutorials/getting-started.html">Getting Started</a>
+      <a href="tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="howto/omega-calculations.html">Omega</a>
+      <a href="howto/lambda-calculations.html">Lambda</a>
+      <a href="howto/validations.html">Validations</a>
+      <a href="howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="reference/physics-formulas.html">Formulas</a>
+      <a href="reference/parameters.html">Parameters</a>
+      <a href="reference/api.html">API</a>
+      <a href="reference/output-format.html">Output</a>
+      <a href="reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="explanation/exciton-model.html">Exciton Model</a>
+      <a href="explanation/omp-implementation.html">OMP</a>
+      <a href="explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+
+    <h1>Optical Model Potential in the Exciton Model</h1>
+    <p class="filepath">/workspace/exciton/docs/omp_implementation.html &mdash; companion to
+      <code>transition_rates.cpp</code>, <code>KoningDelarocheOpticalModel.{hh,cc}</code>, and
+      <code>main_lambda.cpp</code></p>
+
+    <div class="box">
+      <strong>Purpose:</strong> Replace the constant matrix-element approximation (M<sup>2</sup>) for
+      nucleon&ndash;nucleon collisions inside the nucleus with a <strong>collision probability</strong> derived from the
+      imaginary part of the nucleon&ndash;nucleus optical potential. This implements TALYS <code>preeqmode=3</code>.
+    </div>
+
+    <!-- ===================================================================== -->
+    <h2>1. Overview of the Data Flow</h2>
+
+    <figure>
+      <svg viewBox="0 0 900 480" width="100%" style="max-width:900px">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0f4c81" />
+          </marker>
+          <style>
+            .box {
+              fill: #e8f0fe;
+              stroke: #0f4c81;
+              stroke-width: 1.5;
+              rx: 6;
+              ry: 6;
+            }
+
+            .box-kd {
+              fill: #f3e8ff;
+              stroke: #5a189a;
+              stroke-width: 1.5;
+              rx: 6;
+              ry: 6;
+            }
+
+            .box-me {
+              fill: #e8faf0;
+              stroke: #2d6a4f;
+              stroke-width: 1.5;
+              rx: 6;
+              ry: 6;
+            }
+
+            .lbl {
+              font-size: 13px;
+              fill: #1a1a2e;
+            }
+
+            .lbl-s {
+              font-size: 11px;
+              fill: #555;
+            }
+          </style>
+        </defs>
+
+        <!-- CLI -->
+        <rect x="20" y="20" width="160" height="50" class="box" />
+        <text x="100" y="50" text-anchor="middle" class="lbl">
+          <tspan font-weight="bold">--kernel optical-model</tspan>
+        </text>
+
+        <!-- check -->
+        <polygon points="210,45 230,35 230,55" fill="#0f4c81" />
+
+        <!-- CollisionKernel enum -->
+        <rect x="240" y="20" width="180" height="50" class="box" />
+        <text x="330" y="50" text-anchor="middle" class="lbl">CollisionKernel::OpticalModel</text>
+
+        <!-- lambdaRate dispatcher -->
+        <polygon points="450,45 470,35 470,55" fill="#0f4c81" />
+        <rect x="480" y="15" width="200" height="60" class="box-me" />
+        <text x="580" y="38" text-anchor="middle" class="lbl-s">lambdaRate(…, kernel, Z_proj)</text>
+        <text x="580" y="58" text-anchor="middle" class="lbl-s">Z_comp = Z+Z_proj</text>
+
+        <!-- two branches -->
+        <polygon points="710,45 730,35 730,55" fill="#0f4c81" />
+
+        <!-- pair-creation -->
+        <rect x="740" y="5" width="150" height="45" class="box-kd" />
+        <text x="815" y="25" text-anchor="middle" class="lbl-s">lambdaNewPairNumerical</text>
+        <text x="815" y="42" text-anchor="middle" class="lbl-s">KD model created</text>
+
+        <!-- conversion -->
+        <rect x="740" y="65" width="150" height="45" class="box-kd" />
+        <text x="815" y="85" text-anchor="middle" class="lbl-s">lambdaPairConversionNumerical</text>
+        <text x="815" y="102" text-anchor="middle" class="lbl-s">KD model created</text>
+
+        <!-- inner integrand -->
+        <polygon points="890,27 900,27 900,82 890,82" fill="#0f4c81" opacity="0" />
+
+        <!-- KD model box -->
+        <rect x="20" y="120" width="220" height="80" class="box-kd" />
+        <text x="130" y="145" text-anchor="middle" class="lbl">KoningDelarocheOpticalModel</text>
+        <text x="130" y="165" text-anchor="middle" class="lbl-s">kd_omp(Z_comp, A_comp)</text>
+        <text x="130" y="185" text-anchor="middle" class="lbl-s">Constructor: sets all KD parameters</text>
+
+        <!-- setIncidentEnergyAndFragment -->
+        <polygon points="270,160 290,150 290,170" fill="#5a189a" />
+        <rect x="300" y="130" width="220" height="60" class="box-kd" />
+        <text x="410" y="155" text-anchor="middle" class="lbl">setIncidentEnergyAndFragment</text>
+        <text x="410" y="175" text-anchor="middle" class="lbl-s">(e_kin, collider_pdg)</text>
+
+        <!-- calculate_om_parameters -->
+        <polygon points="550,160 570,150 570,170" fill="#5a189a" />
+        <rect x="580" y="130" width="200" height="60" class="box-kd" />
+        <text x="680" y="155" text-anchor="middle" class="lbl">calculate_om_parameters</text>
+        <text x="680" y="175" text-anchor="middle" class="lbl-s">two_s=0 &rArr; central only</text>
+
+        <!-- getters -->
+        <polygon points="810,160 830,150 830,170" fill="#5a189a" />
+        <rect x="20" y="250" width="240" height="80" class="box-me" />
+        <text x="140" y="275" text-anchor="middle" class="lbl">getWv(), getWd(), getRv(),</text>
+        <text x="140" y="295" text-anchor="middle" class="lbl">getav(), getRd(), getad()</text>
+        <text x="140" y="315" text-anchor="middle" class="lbl-s">Returns Wv, Wd, Rv, av, Rd, ad</text>
+
+        <!-- wvolRadialIntegral -->
+        <polygon points="290,290 310,280 310,300" fill="#2d6a4f" />
+        <rect x="320" y="255" width="240" height="70" class="box-me" />
+        <text x="440" y="280" text-anchor="middle" class="lbl">wvolRadialIntegral</text>
+        <text x="440" y="300" text-anchor="middle" class="lbl-s">50-bin midpoint, dr=0.4 fm</text>
+        <text x="440" y="315" text-anchor="middle" class="lbl-s">Eqs. (13.29&ndash;13.30)</text>
+
+        <!-- collision rate -->
+        <polygon points="590,290 610,280 610,300" fill="#2d6a4f" />
+        <rect x="620" y="255" width="260" height="70" class="box-me" />
+        <text x="750" y="278" text-anchor="middle" class="lbl">&lambda; = (2/&#8463;) &middot; wompfac &middot;
+          &lt;W&gt;</text>
+        <text x="750" y="298" text-anchor="middle" class="lbl-s">× state densities, integrated over e</text>
+        <text x="750" y="315" text-anchor="middle" class="lbl-s">hole-channel ratio
+          ω<sub>hole</sub>/ω<sub>part</sub></text>
+
+        <!-- arrows -->
+        <line x1="180" y1="70" x2="180" y2="120" stroke="#0f4c81" stroke-width="1.5" marker-end="url(#arrow)" />
+        <line x1="130" y1="200" x2="130" y2="250" stroke="#5a189a" stroke-width="1.5" marker-end="url(#arrow)" />
+        <line x1="410" y1="190" x2="680" y2="155" stroke="#5a189a" stroke-width="1" stroke-dasharray="4,3"
+          marker-end="url(#arrow)" />
+        <line x1="680" y1="190" x2="140" y2="275" stroke="#5a189a" stroke-width="1" stroke-dasharray="4,3"
+          marker-end="url(#arrow)" />
+        <line x1="140" y1="330" x2="440" y2="300" stroke="#2d6a4f" stroke-width="1" marker-end="url(#arrow)" />
+        <line x1="560" y1="290" x2="620" y2="290" stroke="#2d6a4f" stroke-width="1.5" marker-end="url(#arrow)" />
+
+        <!-- e_kin formula -->
+        <rect x="20" y="380" width="600" height="80" class="box" />
+        <text x="30" y="405" class="lbl-s">Inside the OMP integrand branch (for each energy bin e):</text>
+        <text x="30" y="425" class="lbl">e<sub>kin</sub> = e &minus; S<sub>p/n</sub>(Z<sub>comp</sub>,
+          N<sub>comp</sub>)</text>
+        <text x="30" y="445" class="lbl-s">PDG 2212 (proton): use S<sub>p</sub>. PDG 2112 (neutron): use
+          S<sub>n</sub>.</text>
+        <text x="30" y="460" class="lbl-s">Clamped to &ge; &minus;20 MeV to avoid singularities.</text>
+      </svg>
+      <figcaption>Figure 1: Data flow for OMP-based collision rates. Blue = configuration and dispatch; purple =
+        Koning&ndash;Delaroche optical model; green = transition rate computation.</figcaption>
+    </figure>
+
+    <!-- ===================================================================== -->
+    <h2>2. Why an Optical Model?</h2>
+
+    <div class="box ok">
+      <strong>Physics:</strong> In the pre-equilibrium exciton model, internal transitions (creation of new
+      particle&ndash;hole pairs) are driven by two-body residual interactions. The standard approach uses a
+      <strong>constant matrix element</strong> M<sup>2</sup> (Kalbach&ndash;Cline parametrization, Eq.
+      13.24&ndash;13.26). However, this neglects the energy and isospin dependence of the effective N&ndash;N
+      interaction inside the nuclear medium.
+    </div>
+
+    <p>The Koning&ndash;Delaroche (KD) optical model potential <sup>[<a href="#ref-kd">1</a>]</sup> gives the complex
+      nucleon&ndash;nucleus interaction:</p>
+
+    \[
+    U(\mathbf{r}) = V(\mathbf{r}) + i\,W(\mathbf{r}) + V_{so}(\mathbf{r})\,(\mathbf{l}\cdot\mathbf{s}) +
+    i\,W_{so}(\mathbf{r})\,(\mathbf{l}\cdot\mathbf{s}) + V_C(\mathbf{r})
+    \]
+
+    <p>The <strong>imaginary volume term</strong> \(W(r)\) describes absorption out of the elastic channel into more
+      complex configurations — exactly the physics needed for pre-equilibrium internal transitions. We replace the
+      constant M² with a collision probability derived from \(W(r)\).</p>
+
+    <!-- ===================================================================== -->
+    <h2>3. The Wompfac &mdash; Bridging M² and the OMP</h2>
+
+    <p>TALYS uses a <strong>Wompfac</strong> (weight factor) to scale the optical model strength to match the M²
+      normalization. This factor preserves the same relative channel strengths (same-type vs. cross-type vs. conversion)
+      while replacing the absolute scale with an OMP-driven collision rate.</p>
+
+    <p>The three wompfac values, computed in <code class="filepath">transition_rates.cpp:132-140</code> (pair creation)
+      and <code class="filepath">transition_rates.cpp:444-453</code> (conversion), follow the TALYS
+      <code>matrix.f90</code> formulas:</p>
+
+    \[
+    \begin{aligned}
+    \text{R}_{\pi\nu} &= \frac{R_{\pi\nu}}{R_{\pi\pi}} \\[4pt]
+    \text{wompfac}_{\text{same}} &= \frac{M^2_c \cdot 0.55}{1 + 2\,\text{R}_{\pi\nu}} \\[4pt]
+    \text{wompfac}_{\text{cross}} &= \frac{M^2_c \cdot 0.55 \cdot 2\,\text{R}_{\pi\nu}}{1 + 2\,\text{R}_{\pi\nu}}
+    \\[4pt]
+    \text{wompfac}_{\text{conv}} &= \frac{\text{wompfac}_{\text{same}} + \text{wompfac}_{\text{cross}}}{2}
+    \end{aligned}
+    \]
+
+    <table>
+      <tr>
+        <th>Wompfac</th>
+        <th>Role</th>
+        <th>Code location</th>
+      </tr>
+      <tr>
+        <td>wompfac<sub>same</sub></td>
+        <td>Proton&rarr;proton or neutron&rarr;neutron pair creation</td>
+        <td><code>transition_rates.cpp:138</code></td>
+      </tr>
+      <tr>
+        <td>wompfac<sub>cross</sub></td>
+        <td>Proton&rarr;neutron or neutron&rarr;proton pair creation</td>
+        <td><code>transition_rates.cpp:139</code></td>
+      </tr>
+      <tr>
+        <td>wompfac<sub>conv</sub></td>
+        <td>Proton&harr;neutron conversion</td>
+        <td><code>transition_rates.cpp:453</code></td>
+      </tr>
+    </table>
+
+    <div class="box warn">
+      <strong>Why 0.55?</strong> The constant \(C_{\text{OMP}} = 0.55\) comes from TALYS's <code>matrix.f90</code>. It
+      normalizes the relative M² strengths such that the absolute scale is set by the OMP imaginary potential. The M²
+      constant M<sup>2</sup><sub>c</sub> is still tunable; at M<sup>2</sup><sub>c</sub> = 1.0, R<sub>πν</sub> = 1.0, the
+      default wompfac values are 0.1833, 0.3667, and 0.275.
+    </div>
+
+    <!-- ===================================================================== -->
+    <h2>4. Compound Nucleus and Separation Energies</h2>
+
+    <p>The optical model collision involves the <strong>compound nucleus</strong> formed by the projectile (charge
+      Z<sub>proj</sub>, mass A<sub>p</sub>) and the target (Z, N). The kinetic energy of the emitted nucleon is the
+      integration variable e (the energy of the created pair) <em>minus</em> its separation energy:</p>
+
+    \[
+    \begin{aligned}
+    Z_{\text{comp}} &= Z + Z_{\text{proj}} \\
+    N_{\text{comp}} &= N + (A_p - Z_{\text{proj}}) \\
+    A_{\text{comp}} &= Z_{\text{comp}} + N_{\text{comp}} \\
+    e_{\text{kin}} &= e - S_{p/n}(Z_{\text{comp}}, N_{\text{comp}})
+    \end{aligned}
+    \]
+
+    <h3>4.1 MARLEY MassTable Separation Energies</h3>
+
+    <p>Separation energies are obtained from the MARLEY <code>MassTable</code> singleton (<code
+        class="filepath">transition_rates.cpp:189-190</code>):</p>
+
+    \[
+    \begin{aligned}
+    S_p &= \text{MassTable::get\_fragment\_separation\_energy}(Z_{\text{comp}}, A_{\text{comp}}, \text{2212}) \\
+    S_n &= \text{MassTable::get\_fragment\_separation\_energy}(Z_{\text{comp}}, A_{\text{comp}}, \text{2112})
+    \end{aligned}
+    \]
+
+    <p>The <code>MassTable</code> uses experimental atomic masses from the Atomic Mass Evaluation (AME) where available,
+      falling back to the liquid-drop model of Koning et al. (2008) <sup>[<a href="#ref-koning2008">2</a>]</sup> for
+      unmeasured nuclides. The MassTable data file <code>mass_table.js</code> is located at
+      <code>$MARLEY/data/mass_table.js</code>. At runtime, the <code>MARLEY</code> environment variable must point to
+      the marley-private directory so the <code>FileManager</code> can find it.</p>
+
+    <p>The underlying liquid-drop parameters used by the MassTable for theoretical masses differ slightly from the
+      custom Bethe&ndash;Weizsäcker coefficients used in earlier versions of this code:</p>
+
+    <table>
+      <tr>
+        <th>Coefficient</th>
+        <th>Previous (custom SEMF)</th>
+        <th>MassTable (Koning 2008)</th>
+      </tr>
+      <tr>
+        <td>\(a_v\)</td>
+        <td>15.75 MeV</td>
+        <td>15.677 MeV</td>
+      </tr>
+      <tr>
+        <td>\(a_s\)</td>
+        <td>17.80 MeV</td>
+        <td>18.56 MeV</td>
+      </tr>
+      <tr>
+        <td>\(a_c\)</td>
+        <td>0.711 MeV</td>
+        <td>0.717 MeV</td>
+      </tr>
+      <tr>
+        <td>\(a_{\text{sym}}\)</td>
+        <td>23.70 MeV</td>
+        <td>\(\kappa = 1.79\) (symmetry surface term included)</td>
+      </tr>
+      <tr>
+        <td>\(a_p\)</td>
+        <td>11.18 MeV</td>
+        <td>11.0 MeV</td>
+      </tr>
+      <tr>
+        <td>Mass excess basis</td>
+        <td>Binding energy (B)</td>
+        <td>\(M_n N + M_H Z +\) volume + surface + Coulomb + \(\delta\)</td>
+      </tr>
+    </table>
+
+    <!-- ===================================================================== -->
+    <h2>5. The Koning&ndash;Delaroche Optical Model</h2>
+
+    <p>The KD model <sup>[<a href="#ref-kd">1</a>]</sup> is a global phenomenological optical potential fitted to
+      elastic scattering data across the nuclear chart. For the exciton model, we need only the <strong>central
+        imaginary potential</strong> (volume and surface absorption), not the full scattering solution.</p>
+
+    <h3>5.1 Constructor — Parameter Initialization</h3>
+
+    <p><code class="filepath">KoningDelarocheOpticalModel.cc:194-255</code></p>
+
+    <p>The constructor takes the target (compound) nucleus (Z, A) and computes all geometry and energy-dependent
+      parameters of the KD model. The key parameters for the imaginary potential are:</p>
+
+    \[
+    \begin{aligned}
+    \text{W}_1^n &= 12.195 + 0.0167 A \\
+    \text{W}_2^n &= 73.55 + 0.0795 A \\
+    \text{D}_1^n &= 16.0 - 16.0 (N-Z)/A \\
+    \text{D}_2^n &= 0.0180 + \frac{0.003802}{1 + e^{(A-156)/8}} \\
+    \text{D}_3^n &= 11.5 \\
+    \text{E}_f^n &= -11.2814 + 0.02646 A
+    \end{aligned}
+    \]
+
+    <p>Proton analogs differ in the symmetry-term sign:</p>
+
+    \[
+    \begin{aligned}
+    \text{W}_1^p &= 14.667 + 0.009629 A \\
+    \text{D}_1^p &= 16.0 + 16.0 (N-Z)/A \\
+    \text{E}_f^p &= -8.4075 + 0.01378 A
+    \end{aligned}
+    \]
+
+    <p>The geometry parameters (radii and diffusenesses) for the volume imaginary term:</p>
+
+    \[
+    \begin{aligned}
+    R_v^n &= 1.3039 A^{1/3} - 0.4054 \quad [\text{fm}] \\
+    a_v^n &= 0.6778 - 1.487\times10^{-4} A \quad [\text{fm}] \\
+    R_d^n &= 1.3424 A^{1/3} - 0.01585 A^{2/3} \quad [\text{fm}] \\
+    a_d^n &= 0.5446 - 1.656\times10^{-4} A \quad [\text{fm}]
+    \end{aligned}
+    \]
+
+    <h3>5.2 Energy-Dependent Potentials</h3>
+
+    <p><code class="filepath">KoningDelarocheOpticalModel.cc:79-192</code>, function
+      <code>calculate_om_parameters()</code></p>
+
+    <p>At a given fragment kinetic energy E (with energy per nucleon \(E_{\text{eff}} = E/a\)), the imaginary potentials
+      are:</p>
+
+    \[
+    \begin{aligned}
+    W_v(E) &= n \cdot W_1^n \frac{(E_{\text{eff}} - E_f^n)^2}{(E_{\text{eff}} - E_f^n)^2 + (W_2^n)^2}
+    + z \cdot W_1^p \frac{(E_{\text{eff}} - E_f^p)^2}{(E_{\text{eff}} - E_f^p)^2 + (W_2^p)^2} \\[6pt]
+    W_d(E) &= n \cdot D_1^n \frac{(E_{\text{eff}} - E_f^n)^2 e^{-D_2^n (E_{\text{eff}} - E_f^n)}}
+    {(E_{\text{eff}} - E_f^n)^2 + (D_3^n)^2}
+    + z \cdot D_1^p \frac{(E_{\text{eff}} - E_f^p)^2 e^{-D_2^p (E_{\text{eff}} - E_f^p)}}
+    {(E_{\text{eff}} - E_f^p)^2 + (D_3^p)^2}
+    \end{aligned}
+    \]
+
+    <p>where \(n\) and \(z\) are the neutron and proton numbers of the fragment. After summing over neutrons and
+      protons, the radius and diffuseness parameters are averaged over the fragment mass number \(a\):</p>
+
+    \[
+    R_v = \frac{n R_v^n + z R_v^p}{a}, \qquad
+    a_v = \frac{n a_v^n + z a_v^p}{a}, \qquad
+    R_d = \frac{n R_d^n + z R_d^p}{a}, \qquad
+    a_d = \frac{n a_d^n + z a_d^p}{a}
+    \]
+
+    <h3>5.3 Spin-0 Approximation for the Central Potential</h3>
+
+    <p><code class="filepath">KoningDelarocheOpticalModel.cc:257-265</code></p>
+
+    <p>The function <code>setIncidentEnergyAndFragment(E_kin, pdg)</code> calls <code>calculate_om_parameters</code>
+      with <code>two_s = 0</code>. This has two important consequences:</p>
+
+    <ul>
+      <li><strong>Spin-orbit eigenvative is zero</strong>: \( \langle \mathbf{l}\cdot\mathbf{s} \rangle = 0 \)</li>
+      <li><strong>Only central potential terms contribute</strong> to W<sub>v</sub>, W<sub>d</sub>, R<sub>v</sub>,
+        a<sub>v</sub>, R<sub>d</sub>, a<sub>d</sub></li>
+    </ul>
+
+    <div class="box ok">
+      <strong>Physics justification:</strong> The volume-averaged imaginary potential computed in the exciton model is
+      an <em>angle-averaged</em> absorption strength. The central potential already contains the dominant absorption
+      physics; the spin-orbit contribution averages to zero over the Fermi sphere and is negligible for internal
+      transition rates.
+    </div>
+
+    <!-- ===================================================================== -->
+    <h2>6. Volume-Averaged Imaginary Potential</h2>
+
+    <p><code class="filepath">transition_rates.cpp:47-68</code></p>
+
+    <p>The radial form of the imaginary optical model potential is (Eq. 13.29 of the TALYS manual):</p>
+
+    \[
+    W(r) = W_v \cdot f_v(r) - 4 a_d W_d \cdot \frac{d}{dr}f_s(r)
+    \]
+
+    <p>where \(f_v(r)\) and \(f_s(r)\) are Woods&ndash;Saxon form factors:</p>
+
+    \[
+    f_{v,s}(r) = \frac{1}{1 + \exp\!\left(\frac{r - R_{v,s}}{a_{v,s}}\right)}
+    \]
+
+    <p>The <strong>volume-averaged</strong> imaginary potential is (Eq. 13.30):</p>
+
+    \[
+    \langle W \rangle = \frac{\displaystyle\int_0^\infty W(r)\, f_v(r)\, r^2\, dr}
+    {\displaystyle\int_0^\infty f_v(r)\, r^2\, dr}
+    \]
+
+    <p>Following TALYS <code>bonetti.f90</code>, the integral is evaluated with a 50-bin midpoint rule at dr = 0.4 fm
+      (<code class="filepath">transition_rates.cpp:50-67</code>):</p>
+
+    \[
+    \langle W \rangle \approx \frac{\sum_{i=1}^{50} W(r_i)\, f_v(r_i)\, r_i^2}
+    {\sum_{i=1}^{50} f_v(r_i)\, r_i^2},
+    \qquad r_i = (i - \tfrac12)\,\Delta r
+    \]
+
+    <p>The derivative of the surface Woods&ndash;Saxon is computed analytically:</p>
+
+    \[
+    \frac{d}{dr}f_s(r) = -\frac{e^{(r-R_d)/a_d}}{a_d\left(1 + e^{(r-R_d)/a_d}\right)^2}
+    \]
+
+    <figure>
+      <svg viewBox="0 0 700 350" width="100%" style="max-width:700px">
+        <defs>
+          <style>
+            .axis {
+              stroke: #555;
+              stroke-width: 1.5;
+            }
+
+            .grid {
+              stroke: #ddd;
+              stroke-width: 0.5;
+            }
+
+            .lbl {
+              font-size: 12px;
+              fill: #333;
+            }
+
+            .lbl-t {
+              font-size: 13px;
+              fill: #1a1a2e;
+              font-weight: bold;
+            }
+          </style>
+        </defs>
+
+        <!-- axes -->
+        <line x1="60" y1="300" x2="660" y2="300" class="axis" marker-end="url(#arrow)" />
+        <line x1="60" y1="300" x2="60" y2="30" class="axis" />
+        <!-- grid -->
+        <line x1="60" y1="260" x2="660" y2="260" class="grid" />
+        <line x1="60" y1="190" x2="660" y2="190" class="grid" />
+        <line x1="60" y1="120" x2="660" y2="120" class="grid" />
+        <line x1="60" y1="50" x2="660" y2="50" class="grid" />
+
+        <!-- f_vol: Woods-Saxon going from 1 to 0 -->
+        <path d="M60,70 C180,70 240,72 300,80 C360,95 400,120 420,160
+             C440,200 450,230 460,260 C480,285 520,296 660,298" fill="none" stroke="#0f4c81" stroke-width="2.5" />
+
+        <!-- df_surf/dr: negative peak near R -->
+        <path d="M60,298 C180,298 300,298 360,296 C390,290 400,250 410,200
              C420,140 430,80 445,45 C460,50 470,80 480,140
-             C490,200 500,250 510,290 C520,296 600,298 660,298"
-          fill="none" stroke="#5a189a" stroke-width="2.5" stroke-dasharray="6,3"/>
+             C490,200 500,250 510,290 C520,296 600,298 660,298" fill="none" stroke="#5a189a" stroke-width="2.5"
+          stroke-dasharray="6,3" />
 
-    <!-- W(r) total: combination of above -->
-    <path d="M60,70 C180,70 240,72 300,80
+        <!-- W(r) total: combination of above -->
+        <path d="M60,70 C180,70 240,72 300,80
              C350,88 380,95 400,105
              C420,118 430,130 440,145
              C455,120 465,95 475,80
              C490,65 510,58 540,55
-             C580,52 620,50 660,50"
-          fill="none" stroke="#2d6a4f" stroke-width="3"/>
+             C580,52 620,50 660,50" fill="none" stroke="#2d6a4f" stroke-width="3" />
 
-    <!-- markers -->
-    <circle cx="420" cy="160" r="4" fill="#0f4c81"/>
-    <text x="420" y="175" text-anchor="middle" class="lbl">R<sub>v</sub></text>
-    <circle cx="445" cy="45" r="4" fill="#5a189a"/>
-    <text x="445" y="40" text-anchor="middle" class="lbl">R<sub>d</sub></text>
+        <!-- markers -->
+        <circle cx="420" cy="160" r="4" fill="#0f4c81" />
+        <text x="420" y="175" text-anchor="middle" class="lbl">R<sub>v</sub></text>
+        <circle cx="445" cy="45" r="4" fill="#5a189a" />
+        <text x="445" y="40" text-anchor="middle" class="lbl">R<sub>d</sub></text>
 
-    <!-- shading under W(r)*f_v*r^2 -->
-    <path d="M60,300 L60,70 C180,70 240,72 300,80 C350,88 380,95 400,105
+        <!-- shading under W(r)*f_v*r^2 -->
+        <path d="M60,300 L60,70 C180,70 240,72 300,80 C350,88 380,95 400,105
              C420,118 430,130 440,145 C455,120 465,95 475,80
              C490,65 510,58 540,55 C580,52 620,50 660,50
-             L660,300 Z"
-          fill="#2d6a4f" opacity="0.12"/>
+             L660,300 Z" fill="#2d6a4f" opacity="0.12" />
 
-    <!-- labels -->
-    <text x="350" y="20" text-anchor="middle" class="lbl-t">Radial Profile of the Imaginary OMP</text>
-    <text x="60" y="25" class="lbl">W(r) [MeV]</text>
-    <text x="660" y="318" text-anchor="end" class="lbl">r [fm]</text>
-    <text x="200" y="80" class="lbl" fill="#0f4c81">f<sub>vol</sub>(r)</text>
-    <text x="200" y="95" class="lbl" fill="#5a189a">d f<sub>surf</sub>/dr &times; (&minus;4a<sub>d</sub>W<sub>d</sub>)</text>
-    <text x="200" y="110" class="lbl" fill="#2d6a4f" font-weight="bold">W(r) = W<sub>v</sub>f<sub>v</sub> &minus; 4a<sub>d</sub>W<sub>d</sub> f'<sub>s</sub></text>
-    <text x="200" y="318" class="lbl-s" fill="#555">The shaded area is W(r) &middot; f<sub>v</sub>(r) &middot; r<sup>2</sup> (the numerator integrand).</text>
-  </svg>
-  <figcaption>Figure 2: Schematic radial profile of the imaginary OMP for a typical medium-mass nucleus (A &#8776; 60). The volume Woods&ndash;Saxon (blue) and surface derivative (purple, dashed) combine to give the total imaginary potential (green). The shaded area shows the integrand weighted by \(f_v(r) r^2\).</figcaption>
-</figure>
+        <!-- labels -->
+        <text x="350" y="20" text-anchor="middle" class="lbl-t">Radial Profile of the Imaginary OMP</text>
+        <text x="60" y="25" class="lbl">W(r) [MeV]</text>
+        <text x="660" y="318" text-anchor="end" class="lbl">r [fm]</text>
+        <text x="200" y="80" class="lbl" fill="#0f4c81">f<sub>vol</sub>(r)</text>
+        <text x="200" y="95" class="lbl" fill="#5a189a">d f<sub>surf</sub>/dr &times;
+          (&minus;4a<sub>d</sub>W<sub>d</sub>)</text>
+        <text x="200" y="110" class="lbl" fill="#2d6a4f" font-weight="bold">W(r) = W<sub>v</sub>f<sub>v</sub> &minus;
+          4a<sub>d</sub>W<sub>d</sub> f'<sub>s</sub></text>
+        <text x="200" y="318" class="lbl-s" fill="#555">The shaded area is W(r) &middot; f<sub>v</sub>(r) &middot;
+          r<sup>2</sup> (the numerator integrand).</text>
+      </svg>
+      <figcaption>Figure 2: Schematic radial profile of the imaginary OMP for a typical medium-mass nucleus (A &#8776;
+        60). The volume Woods&ndash;Saxon (blue) and surface derivative (purple, dashed) combine to give the total
+        imaginary potential (green). The shaded area shows the integrand weighted by \(f_v(r) r^2\).</figcaption>
+    </figure>
 
-<!-- ===================================================================== -->
-<h2>7. Collision Rate in the Integrand</h2>
+    <!-- ===================================================================== -->
+    <h2>7. Collision Rate in the Integrand</h2>
 
-<p><code class="filepath">transition_rates.cpp:238-256</code> (pair creation) and <code class="filepath">transition_rates.cpp:486-506</code> (conversion)</p>
+    <p><code class="filepath">transition_rates.cpp:238-256</code> (pair creation) and <code
+        class="filepath">transition_rates.cpp:486-506</code> (conversion)</p>
 
-<p>The OMP branch in the integrand replaces the constant M² term with:</p>
+    <p>The OMP branch in the integrand replaces the constant M² term with:</p>
 
-\[
-\lambda_{\text{collision}} = \frac{2}{\hbar} \cdot \text{wompfac} \cdot \langle W \rangle
-\]
+    \[
+    \lambda_{\text{collision}} = \frac{2}{\hbar} \cdot \text{wompfac} \cdot \langle W \rangle
+    \]
 
-<p>The full integrand for pair creation (Eq. 13.17) becomes:</p>
+    <p>The full integrand for pair creation (Eq. 13.17) becomes:</p>
 
-\[
-\begin{aligned}
-\frac{d\lambda_{\pi^+}}{de} &= \lambda_{\text{collision}} \cdot g_{\pi} \cdot \omega_r(U - e) \cdot R_{\text{hole}} \\[4pt]
-R_{\text{hole}} &=
-\begin{cases}
-1 & \text{(particle-type sub-channel)} \\[2pt]
-\displaystyle \frac{\omega_{\text{hole}}(e)}{\omega_{\text{particle}}(e)} & \text{(hole-type sub-channel)}
-\end{cases}
-\end{aligned}
-\]
+    \[
+    \begin{aligned}
+    \frac{d\lambda_{\pi^+}}{de} &= \lambda_{\text{collision}} \cdot g_{\pi} \cdot \omega_r(U - e) \cdot R_{\text{hole}}
+    \\[4pt]
+    R_{\text{hole}} &=
+    \begin{cases}
+    1 & \text{(particle-type sub-channel)} \\[2pt]
+    \displaystyle \frac{\omega_{\text{hole}}(e)}{\omega_{\text{particle}}(e)} & \text{(hole-type sub-channel)}
+    \end{cases}
+    \end{aligned}
+    \]
 
-<p>The <strong>hole-channel ratio</strong> \(\omega_{\text{hole}}/\omega_{\text{particle}}\) is retained in OMP mode because it reflects the probability that the created hole configuration is actually populated — a purely statistical factor independent of the collision mechanism (Eq. 13.33).</p>
+    <p>The <strong>hole-channel ratio</strong> \(\omega_{\text{hole}}/\omega_{\text{particle}}\) is retained in OMP mode
+      because it reflects the probability that the created hole configuration is actually populated — a purely
+      statistical factor independent of the collision mechanism (Eq. 13.33).</p>
 
-<p>For conversion (Eq. 13.19), the analogous factor is \(\omega_{\text{created}}/\omega_{\text{ref}}\).</p>
+    <p>For conversion (Eq. 13.19), the analogous factor is \(\omega_{\text{created}}/\omega_{\text{ref}}\).</p>
 
-<h3>7.1 Collider PDG Mapping</h3>
+    <h3>7.1 Collider PDG Mapping</h3>
 
-<p>The kinetic energy and separation energy depend on whether the emitted nucleon is a proton or neutron. The mapping from sub-channel to collider PDG is:</p>
+    <p>The kinetic energy and separation energy depend on whether the emitted nucleon is a proton or neutron. The
+      mapping from sub-channel to collider PDG is:</p>
 
-<table>
-  <tr><th>Function</th><th>Channel</th><th>Collider PDG</th><th>Separation energy</th></tr>
-  <tr><td rowspan="4">lambdaNewPairNumerical<br>(Proton)</td><td>pip (same-type, particle)</td><td>2212</td><td>e &minus; S<sub>p</sub></td></tr>
-  <tr><td>pih (same-type, hole)</td><td>2212</td><td>e &minus; S<sub>p</sub></td></tr>
-  <tr><td>nup (cross-type, particle)</td><td>2112</td><td>e &minus; S<sub>n</sub></td></tr>
-  <tr><td>nuh (cross-type, hole)</td><td>2112</td><td>e &minus; S<sub>n</sub></td></tr>
-  <tr><td rowspan="4">lambdaNewPairNumerical<br>(Neutron)</td><td>nunu (same-type, particle)</td><td>2112</td><td>e &minus; S<sub>n</sub></td></tr>
-  <tr><td>nuh (same-type, hole)</td><td>2112</td><td>e &minus; S<sub>n</sub></td></tr>
-  <tr><td>pip (cross-type, particle)</td><td>2212</td><td>e &minus; S<sub>p</sub></td></tr>
-  <tr><td>pih (cross-type, hole)</td><td>2212</td><td>e &minus; S<sub>p</sub></td></tr>
-  <tr><td>lambdaPairConversionNumerical</td><td>P &rarr; N</td><td>2212</td><td>e &minus; S<sub>p</sub></td></tr>
-  <tr><td>lambdaPairConversionNumerical</td><td>N &rarr; P</td><td>2112</td><td>e &minus; S<sub>n</sub></td></tr>
-</table>
+    <table>
+      <tr>
+        <th>Function</th>
+        <th>Channel</th>
+        <th>Collider PDG</th>
+        <th>Separation energy</th>
+      </tr>
+      <tr>
+        <td rowspan="4">lambdaNewPairNumerical<br>(Proton)</td>
+        <td>pip (same-type, particle)</td>
+        <td>2212</td>
+        <td>e &minus; S<sub>p</sub></td>
+      </tr>
+      <tr>
+        <td>pih (same-type, hole)</td>
+        <td>2212</td>
+        <td>e &minus; S<sub>p</sub></td>
+      </tr>
+      <tr>
+        <td>nup (cross-type, particle)</td>
+        <td>2112</td>
+        <td>e &minus; S<sub>n</sub></td>
+      </tr>
+      <tr>
+        <td>nuh (cross-type, hole)</td>
+        <td>2112</td>
+        <td>e &minus; S<sub>n</sub></td>
+      </tr>
+      <tr>
+        <td rowspan="4">lambdaNewPairNumerical<br>(Neutron)</td>
+        <td>nunu (same-type, particle)</td>
+        <td>2112</td>
+        <td>e &minus; S<sub>n</sub></td>
+      </tr>
+      <tr>
+        <td>nuh (same-type, hole)</td>
+        <td>2112</td>
+        <td>e &minus; S<sub>n</sub></td>
+      </tr>
+      <tr>
+        <td>pip (cross-type, particle)</td>
+        <td>2212</td>
+        <td>e &minus; S<sub>p</sub></td>
+      </tr>
+      <tr>
+        <td>pih (cross-type, hole)</td>
+        <td>2212</td>
+        <td>e &minus; S<sub>p</sub></td>
+      </tr>
+      <tr>
+        <td>lambdaPairConversionNumerical</td>
+        <td>P &rarr; N</td>
+        <td>2212</td>
+        <td>e &minus; S<sub>p</sub></td>
+      </tr>
+      <tr>
+        <td>lambdaPairConversionNumerical</td>
+        <td>N &rarr; P</td>
+        <td>2112</td>
+        <td>e &minus; S<sub>n</sub></td>
+      </tr>
+    </table>
 
-<!-- ===================================================================== -->
-<h2>8. CLI Integration and Output</h2>
+    <!-- ===================================================================== -->
+    <h2>8. CLI Integration and Output</h2>
 
-<p><code class="filepath">main_lambda.cpp:36-44</code></p>
+    <p><code class="filepath">main_lambda.cpp:36-44</code></p>
 
-<pre>
+    <pre>
 <span class="kw">--kernel</span> optical-model    <span class="cm">// Select OMP kernel</span>
 <span class="kw">--kernel</span> matrix-element   <span class="cm">// Select M² kernel (default)</span>
 </pre>
 
-<p>If OMP is selected alongside <code>--analytical</code>, a runtime override switches to numerical mode (<code class="filepath">main_lambda.cpp:46-50</code>). The header output prints the wompfac values (<code class="filepath">main_lambda.cpp:101-114</code>):</p>
+    <p>If OMP is selected alongside <code>--analytical</code>, a runtime override switches to numerical mode (<code
+        class="filepath">main_lambda.cpp:46-50</code>). The header output prints the wompfac values (<code
+        class="filepath">main_lambda.cpp:101-114</code>):</p>
 
-<pre>
+    <pre>
 #   OMP constant C_omp:  0.55
 #   M2 constant (C1):    1.000000E+00
 #   Rpinu:               1.000000E+00
@@ -515,174 +683,201 @@ R_{\text{hole}} &=
 #   Wompfac(conversion): 2.750000E-01
 </pre>
 
-<!-- ===================================================================== -->
-<h2>9. Build System</h2>
+    <!-- ===================================================================== -->
+    <h2>9. Build System</h2>
 
-<p><code class="filepath">Makefile</code></p>
+    <p><code class="filepath">Makefile</code></p>
 
-<p>The KD model source file is compiled as part of the <code>lambda</code> executable. The Makefile links against GSL (required by the KD model's Coulomb wavefunctions and transmission coefficients, even though those functions are not called in the wvol-only path) and ROOT (required by MARLEY's event I/O classes). The `-ffunction-sections -Wl,-dead_strip` flags (Linux/macOS respectively) would strip unused functions, but the vtable references all virtual functions, so the linker cannot remove them.</p>
+    <p>The KD model source file is compiled as part of the <code>lambda</code> executable. The Makefile links against
+      GSL (required by the KD model's Coulomb wavefunctions and transmission coefficients, even though those functions
+      are not called in the wvol-only path) and ROOT (required by MARLEY's event I/O classes). The `-ffunction-sections
+      -Wl,-dead_strip` flags (Linux/macOS respectively) would strip unused functions, but the vtable references all
+      virtual functions, so the linker cannot remove them.</p>
 
-<p>The KD model constructor uses a simplified mass <code>target_mass_ = A · 931.494061</code> MeV (stored, not used in the wvol-only OMP kernel path). Separation energies for the integrand come from the full MARLEY <code>MassTable</code> singleton, which reads <code>mass_table.js</code> from <code>$MARLEY/data/</code> at runtime. The <code>make run</code> target sets <code>MARLEY=$(abspath ../marley-private)</code> automatically.</p>
+    <p>The KD model constructor uses a simplified mass <code>target_mass_ = A · 931.494061</code> MeV (stored, not used
+      in the wvol-only OMP kernel path). Separation energies for the integrand come from the full MARLEY
+      <code>MassTable</code> singleton, which reads <code>mass_table.js</code> from <code>$MARLEY/data/</code> at
+      runtime. The <code>make run</code> target sets <code>MARLEY=$(abspath ../marley-private)</code> automatically.</p>
 
-<!-- ===================================================================== -->
-<h2>10. Summary of Physics Approximations</h2>
+    <!-- ===================================================================== -->
+    <h2>10. Summary of Physics Approximations</h2>
 
-<table>
-  <tr><th>Approximation</th><th>Justification</th><th>Potential impact</th></tr>
-  <tr>
-    <td>Spin-0 central potential only</td>
-    <td>Angle-averaged absorption; spin-orbit averages to zero over Fermi sphere</td>
-    <td>&lt; 5% for medium-mass nuclei</td>
-  </tr>
-  <tr>
-    <td>MARLEY MassTable separation energies</td>
-    <td>AME experimental masses + liquid-drop fallback via MARLEY library</td>
-    <td>Experimental accuracy near stability; liquid-drop &sim;1&ndash;2 MeV far from stability</td>
-  </tr>
-  <tr>
-    <td>50-bin midpoint radial integral</td>
-    <td>Matches TALYS bonetti.f90 exactly</td>
-    <td>Negligible (&lt; 0.1%) for smooth Woods&ndash;Saxon profiles</td>
-  </tr>
-  <tr>
-    <td>Wompfac rescaling</td>
-    <td>Preserves M² relative channel strengths while replacing absolute scale</td>
-    <td>Calibrated to TALYS; valid for default C<sub>OMP</sub> = 0.55</td>
-  </tr>
-  <tr>
-    <td>Single KD model per call</td>
-    <td>Compound nucleus dominates — residual differences are small</td>
-    <td>May affect cross-type channels near thresholds</td>
-  </tr>
-</table>
+    <table>
+      <tr>
+        <th>Approximation</th>
+        <th>Justification</th>
+        <th>Potential impact</th>
+      </tr>
+      <tr>
+        <td>Spin-0 central potential only</td>
+        <td>Angle-averaged absorption; spin-orbit averages to zero over Fermi sphere</td>
+        <td>&lt; 5% for medium-mass nuclei</td>
+      </tr>
+      <tr>
+        <td>MARLEY MassTable separation energies</td>
+        <td>AME experimental masses + liquid-drop fallback via MARLEY library</td>
+        <td>Experimental accuracy near stability; liquid-drop &sim;1&ndash;2 MeV far from stability</td>
+      </tr>
+      <tr>
+        <td>50-bin midpoint radial integral</td>
+        <td>Matches TALYS bonetti.f90 exactly</td>
+        <td>Negligible (&lt; 0.1%) for smooth Woods&ndash;Saxon profiles</td>
+      </tr>
+      <tr>
+        <td>Wompfac rescaling</td>
+        <td>Preserves M² relative channel strengths while replacing absolute scale</td>
+        <td>Calibrated to TALYS; valid for default C<sub>OMP</sub> = 0.55</td>
+      </tr>
+      <tr>
+        <td>Single KD model per call</td>
+        <td>Compound nucleus dominates — residual differences are small</td>
+        <td>May affect cross-type channels near thresholds</td>
+      </tr>
+    </table>
 
-<!-- ===================================================================== -->
-<h2>11. Code Map</h2>
+    <!-- ===================================================================== -->
+    <h2>11. Code Map</h2>
 
-<table>
-  <tr><th>File</th><th>Lines</th><th>Content</th></tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>12&ndash;32</td>
-    <td>wvolRadialIntegral() — volume-averaged imaginary potential</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>155&ndash;160</td>
-    <td>Z_comp, N_comp, A_comp, MassTable sep_p, sep_n</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>162&ndash;171</td>
-    <td>wompfac_same, wompfac_cross (pair creation)</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>179</td>
-    <td>KD model instantiation: <code>kd_omp(Z_comp, A_comp)</code></td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>203&ndash;222</td>
-    <td>OMP integrand branch (pair creation) — e_kin, setIncidentEnergyAndFragment, wvol, collision rate</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>280&ndash;288</td>
-    <td>Proton pair-creation call sites with collider_pdg (+ wompfac, ref configs)</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>318&ndash;328</td>
-    <td>Neutron pair-creation call sites with collider_pdg</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>404&ndash;413</td>
-    <td>wompfac_conv (conversion)</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>420</td>
-    <td>KD model instantiation (conversion)</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>443&ndash;462</td>
-    <td>OMP integrand branch (conversion)</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>504&ndash;520</td>
-    <td>Conversion call sites with collider_pdg</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.cpp</code></td>
-    <td>522&ndash;608</td>
-    <td>lambdaRate dispatcher — forwards Z_proj</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.hh</code></td>
-    <td>38&ndash;42</td>
-    <td>CollisionKernel enum (MatrixElement / OpticalModel)</td>
-  </tr>
-  <tr>
-    <td><code>transition_rates.hh</code></td>
-    <td>82, 93, 104</td>
-    <td>Z_proj parameter in function declarations</td>
-  </tr>
-  <tr>
-    <td><code>KoningDelarocheOpticalModel.hh</code></td>
-    <td>60&ndash;66</td>
-    <td>Public getters + setIncidentEnergyAndFragment</td>
-  </tr>
-  <tr>
-    <td><code>KoningDelarocheOpticalModel.cc</code></td>
-    <td>194&ndash;255</td>
-    <td>Constructor — all KD parameter formulas</td>
-  </tr>
-  <tr>
-    <td><code>KoningDelarocheOpticalModel.cc</code></td>
-    <td>79&ndash;192</td>
-    <td>calculate_om_parameters() — energy-dependent potentials</td>
-  </tr>
-  <tr>
-    <td><code>KoningDelarocheOpticalModel.cc</code></td>
-    <td>257&ndash;265</td>
-    <td>setIncidentEnergyAndFragment() — spin-0 central potential</td>
-  </tr>
-  <tr>
-    <td><code>main_lambda.cpp</code></td>
-    <td>36&ndash;44</td>
-    <td>--kernel CLI flag parsing</td>
-  </tr>
-  <tr>
-    <td><code>main_lambda.cpp</code></td>
-    <td>46&ndash;50</td>
-    <td>OMP/analytical conflict check</td>
-  </tr>
-  <tr>
-    <td><code>main_lambda.cpp</code></td>
-    <td>101&ndash;114</td>
-    <td>OMP header output with wompfac values</td>
-  </tr>
-  <tr>
-    <td><code>main_lambda.cpp</code></td>
-    <td>145&ndash;160</td>
-    <td>lambdaRate calls with Z_proj = 0</td>
-  </tr>
-</table>
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Lines</th>
+        <th>Content</th>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>12&ndash;32</td>
+        <td>wvolRadialIntegral() — volume-averaged imaginary potential</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>155&ndash;160</td>
+        <td>Z_comp, N_comp, A_comp, MassTable sep_p, sep_n</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>162&ndash;171</td>
+        <td>wompfac_same, wompfac_cross (pair creation)</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>179</td>
+        <td>KD model instantiation: <code>kd_omp(Z_comp, A_comp)</code></td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>203&ndash;222</td>
+        <td>OMP integrand branch (pair creation) — e_kin, setIncidentEnergyAndFragment, wvol, collision rate</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>280&ndash;288</td>
+        <td>Proton pair-creation call sites with collider_pdg (+ wompfac, ref configs)</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>318&ndash;328</td>
+        <td>Neutron pair-creation call sites with collider_pdg</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>404&ndash;413</td>
+        <td>wompfac_conv (conversion)</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>420</td>
+        <td>KD model instantiation (conversion)</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>443&ndash;462</td>
+        <td>OMP integrand branch (conversion)</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>504&ndash;520</td>
+        <td>Conversion call sites with collider_pdg</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td>522&ndash;608</td>
+        <td>lambdaRate dispatcher — forwards Z_proj</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.hh</code></td>
+        <td>38&ndash;42</td>
+        <td>CollisionKernel enum (MatrixElement / OpticalModel)</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.hh</code></td>
+        <td>82, 93, 104</td>
+        <td>Z_proj parameter in function declarations</td>
+      </tr>
+      <tr>
+        <td><code>KoningDelarocheOpticalModel.hh</code></td>
+        <td>60&ndash;66</td>
+        <td>Public getters + setIncidentEnergyAndFragment</td>
+      </tr>
+      <tr>
+        <td><code>KoningDelarocheOpticalModel.cc</code></td>
+        <td>194&ndash;255</td>
+        <td>Constructor — all KD parameter formulas</td>
+      </tr>
+      <tr>
+        <td><code>KoningDelarocheOpticalModel.cc</code></td>
+        <td>79&ndash;192</td>
+        <td>calculate_om_parameters() — energy-dependent potentials</td>
+      </tr>
+      <tr>
+        <td><code>KoningDelarocheOpticalModel.cc</code></td>
+        <td>257&ndash;265</td>
+        <td>setIncidentEnergyAndFragment() — spin-0 central potential</td>
+      </tr>
+      <tr>
+        <td><code>main_lambda.cpp</code></td>
+        <td>36&ndash;44</td>
+        <td>--kernel CLI flag parsing</td>
+      </tr>
+      <tr>
+        <td><code>main_lambda.cpp</code></td>
+        <td>46&ndash;50</td>
+        <td>OMP/analytical conflict check</td>
+      </tr>
+      <tr>
+        <td><code>main_lambda.cpp</code></td>
+        <td>101&ndash;114</td>
+        <td>OMP header output with wompfac values</td>
+      </tr>
+      <tr>
+        <td><code>main_lambda.cpp</code></td>
+        <td>145&ndash;160</td>
+        <td>lambdaRate calls with Z_proj = 0</td>
+      </tr>
+    </table>
 
-<!-- ===================================================================== -->
-<h2>References</h2>
+    <!-- ===================================================================== -->
+    <h2>References</h2>
 
-<ol>
-  <li id="ref-kd">A. J. Koning and J. P. Delaroche, <em>Local and global nucleon optical models from 1 keV to 200 MeV</em>, Nucl. Phys. A <strong>713</strong> (2003) 231&ndash;310. <a href="https://doi.org/10.1016/S0375-9474(02)01321-0">doi:10.1016/S0375-9474(02)01321-0</a></li>
-  <li>A. V. Ignatyuk et al., <em>Phenomenological description of the pre-equilibrium neutron emission</em>, Yad. Fiz. <strong>21</strong> (1975) 485.</li>
-  <li>C. Kalbach, <em>Two-component exciton model: basic formalism and applications</em>, Phys. Rev. C <strong>33</strong> (1986) 818.</li>
-  <li>TALYS 1.96 manual, Section 13.4.4: <em>Matrix element and pre-equilibrium cross sections</em>.</li>
-  <li id="ref-koning2008">A. J. Koning, S. Hilaire, and M. C. Duijvestijn, <em>Global and local level density models</em>, Nucl. Data Sheets <strong>113</strong> (2012) 1722. <a href="https://doi.org/10.1016/j.nds.2012.06.002">doi:10.1016/j.nds.2012.06.002</a>. See also <code>mass_table.js</code> in the MARLEY distribution.</li>
-</ol>
+    <ol>
+      <li id="ref-kd">A. J. Koning and J. P. Delaroche, <em>Local and global nucleon optical models from 1 keV to 200
+          MeV</em>, Nucl. Phys. A <strong>713</strong> (2003) 231&ndash;310. <a
+          href="https://doi.org/10.1016/S0375-9474(02)01321-0">doi:10.1016/S0375-9474(02)01321-0</a></li>
+      <li>A. V. Ignatyuk et al., <em>Phenomenological description of the pre-equilibrium neutron emission</em>, Yad.
+        Fiz. <strong>21</strong> (1975) 485.</li>
+      <li>C. Kalbach, <em>Two-component exciton model: basic formalism and applications</em>, Phys. Rev. C
+        <strong>33</strong> (1986) 818.</li>
+      <li>TALYS 2.2 manual, Section 13.4.4: <em>Matrix element and pre-equilibrium cross sections</em>.</li>
+      <li id="ref-koning2008">A. J. Koning, S. Hilaire, and M. C. Duijvestijn, <em>Global and local level density
+          models</em>, Nucl. Data Sheets <strong>113</strong> (2012) 1722. <a
+          href="https://doi.org/10.1016/j.nds.2012.06.002">doi:10.1016/j.nds.2012.06.002</a>. See also
+        <code>mass_table.js</code> in the MARLEY distribution.</li>
+    </ol>
 
+  </main>
+  <footer>
+    <div class="container">exciton documentation &mdash; OMP implementation deep-dive</div>
+  </footer>
 </body>
+
 </html>

@@ -17,9 +17,19 @@ import sys
 from datetime import datetime
 
 STATE_COLUMNS = [
-    "Ex", "P(3)", "g(p)", "g(n)",
-    "1p1h0p0h", "0p0h1p1h", "1p1h1p0h", "1p0h1p1h",
-    "2p1h0p0h", "0p0h2p1h", "2p2h0p0h", "0p0h2p2h", "1p1h1p1h",
+    "Ex",
+    "P(3)",
+    "g(p)",
+    "g(n)",
+    "1p1h0p0h",
+    "0p0h1p1h",
+    "1p1h1p0h",
+    "1p0h1p1h",
+    "2p1h0p0h",
+    "0p0h2p1h",
+    "2p2h0p0h",
+    "0p0h2p2h",
+    "1p1h1p1h",
 ]
 
 SPIN_COLUMNS = ["n"] + [f"J={j}" for j in range(9)] + ["Sum"]
@@ -69,21 +79,35 @@ def parse_file(path):
     return state_rows, spin_rows
 
 
-def write_header(out, file1, state_rows, spin_rows, file2, state_rows2, spin_rows2, tol):
+def write_header(
+    out, file1, state_rows, spin_rows, file2, state_rows2, spin_rows2, tol
+):
     out.write("# omega comparison report\n")
     out.write(f"# generated: {datetime.now().isoformat()}\n")
     out.write("#\n")
     out.write("# file1: {}\n".format(file1))
-    out.write("#   particle-hole state density: {} rows, {} cols\n".format(
-        len(state_rows), len(state_rows[0]) if state_rows else 0))
-    out.write("#   spin distribution:           {} rows, {} cols\n".format(
-        len(spin_rows), len(spin_rows[0]) if spin_rows else 0))
+    out.write(
+        "#   particle-hole state density: {} rows, {} cols\n".format(
+            len(state_rows), len(state_rows[0]) if state_rows else 0
+        )
+    )
+    out.write(
+        "#   spin distribution:           {} rows, {} cols\n".format(
+            len(spin_rows), len(spin_rows[0]) if spin_rows else 0
+        )
+    )
     out.write("#\n")
     out.write("# file2: {}\n".format(file2))
-    out.write("#   particle-hole state density: {} rows, {} cols\n".format(
-        len(state_rows2), len(state_rows2[0]) if state_rows2 else 0))
-    out.write("#   spin distribution:           {} rows, {} cols\n".format(
-        len(spin_rows2), len(spin_rows2[0]) if spin_rows2 else 0))
+    out.write(
+        "#   particle-hole state density: {} rows, {} cols\n".format(
+            len(state_rows2), len(state_rows2[0]) if state_rows2 else 0
+        )
+    )
+    out.write(
+        "#   spin distribution:           {} rows, {} cols\n".format(
+            len(spin_rows2), len(spin_rows2[0]) if spin_rows2 else 0
+        )
+    )
     out.write("#\n")
     out.write("# Description:\n")
     out.write("#   Table 1: particle-hole state density — absolute difference\n")
@@ -103,8 +127,9 @@ def write_block(out, label, col_names, col_units, rows1, rows2, tol, mode="abs")
         return
 
     if len(rows1) != len(rows2):
-        out.write(f"# [SKIP] {label}: row count mismatch "
-                  f"({len(rows1)} vs {len(rows2)})\n")
+        out.write(
+            f"# [SKIP] {label}: row count mismatch ({len(rows1)} vs {len(rows2)})\n"
+        )
         return
 
     ncols = min(
@@ -158,13 +183,11 @@ def write_block(out, label, col_names, col_units, rows1, rows2, tol, mode="abs")
         out.write(f"# PASS: {total} values match within tol={tol:.0e}\n")
     else:
         out.write(
-            f"# FAIL: {mismatch_count}/{total} values differ beyond "
-            f"tol={tol:.0e}\n"
+            f"# FAIL: {mismatch_count}/{total} values differ beyond tol={tol:.0e}\n"
         )
     tag = "difference" if mode == "abs" else "relative error"
     out.write(
-        f"# Max {tag}: {max_val:.6e}  "
-        f"(row {max_row}, col {col_names[max_col]})\n"
+        f"# Max {tag}: {max_val:.6e}  (row {max_row}, col {col_names[max_col]})\n"
     )
 
 
@@ -182,30 +205,59 @@ def main():
     state_rows2, spin_rows2 = parse_file(file2)
 
     with open(outpath, "w") as out:
-        write_header(out, file1, state_rows, spin_rows,
-                     file2, state_rows2, spin_rows2, tol)
+        write_header(
+            out, file1, state_rows, spin_rows, file2, state_rows2, spin_rows2, tol
+        )
 
-        write_block(out, "particle-hole state density (absolute)",
-                    STATE_COLUMNS, STATE_UNITS,
-                    state_rows, state_rows2, tol, mode="abs")
-
-        out.write("\n")
-
-        write_block(out, "particle-hole state density (relative)",
-                    STATE_COLUMNS, ["MeV"] + ["%"] * 12,
-                    state_rows, state_rows2, 1.0, mode="rel")
-
-        out.write("\n")
-
-        write_block(out, "spin distribution (absolute)",
-                    SPIN_COLUMNS, SPIN_UNITS,
-                    spin_rows, spin_rows2, tol, mode="abs")
+        write_block(
+            out,
+            "particle-hole state density (absolute)",
+            STATE_COLUMNS,
+            STATE_UNITS,
+            state_rows,
+            state_rows2,
+            tol,
+            mode="abs",
+        )
 
         out.write("\n")
 
-        write_block(out, "spin distribution (relative)",
-                    SPIN_COLUMNS, [""] + ["%"] * 10,
-                    spin_rows, spin_rows2, 1.0, mode="rel")
+        write_block(
+            out,
+            "particle-hole state density (relative)",
+            STATE_COLUMNS,
+            ["MeV"] + ["%"] * 12,
+            state_rows,
+            state_rows2,
+            1.0,
+            mode="rel",
+        )
+
+        out.write("\n")
+
+        write_block(
+            out,
+            "spin distribution (absolute)",
+            SPIN_COLUMNS,
+            SPIN_UNITS,
+            spin_rows,
+            spin_rows2,
+            tol,
+            mode="abs",
+        )
+
+        out.write("\n")
+
+        write_block(
+            out,
+            "spin distribution (relative)",
+            SPIN_COLUMNS,
+            [""] + ["%"] * 10,
+            spin_rows,
+            spin_rows2,
+            1.0,
+            mode="rel",
+        )
 
     print(f"Report written to: {outpath}")
 

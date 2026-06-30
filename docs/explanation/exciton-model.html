@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exciton Model — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+
+<body>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html" class="active">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Exciton Model</span></div>
+    <h1>Two-Component Exciton Model</h1>
+
+    <div class="box">
+      <strong>Core idea:</strong> A nuclear reaction proceeds through a hierarchy of increasingly complex
+      configurations, from the initial interaction to statistical equilibrium. The exciton model describes this
+      evolution by tracking the number of excited particles and holes above the Fermi surface, grouped by isospin
+      (proton vs. neutron).
+    </div>
+
+    <h2>1. Particle–Hole States</h2>
+    <p>An exciton state is defined by four integers:</p>
+    \[
+    |p_\pi, h_\pi, p_\nu, h_\nu\rangle
+    \]
+    <p>where \(p_\pi\) and \(h_\pi\) are the number of proton particles and holes, and \(p_\nu\) and \(h_\nu\) are the
+      number of neutron particles and holes. The total exciton number is:</p>
+    \[
+    n = p_\pi + h_\pi + p_\nu + h_\nu
+    \]
+    <p>and the total particle/hole numbers are:</p>
+    \[
+    p = p_\pi + p_\nu, \qquad h = h_\pi + h_\nu
+    \]
+
+    <p>For the n + <sup>40</sup>Ar system at 20 MeV incident energy, the compound nucleus <sup>41</sup>Ar has excitation
+      energy E<sub>comp</sub> = 25.60156 MeV. The code enumerates all states with \(k = (p+h)/2\) from 0 to 5 (84 states
+      for lambda, 300 for omega including spin distributions).</p>
+
+    <h2>2. The Master Equation</h2>
+    <p>The time evolution of the exciton population is governed by:</p>
+    \[
+    \frac{dP(n,t)}{dt} = \lambda^+(n-2) P(n-2,t) + \lambda^-(n+2) P(n+2,t)
+    - [\lambda^+(n) + \lambda^-(n) + \lambda^0_{\pi\nu}(n) + \lambda^0_{\nu\pi}(n)] P(n,t)
+    \]
+    <p>where:</p>
+    <ul>
+      <li>\(\lambda^+(n)\) — internal transition rate (pair creation): \(n \to n+2\)</li>
+      <li>\(\lambda^-(n)\) — internal transition rate (pair annihilation): \(n \to n-2\)</li>
+      <li>\(\lambda^0(n)\) — internal conversion rate: \(n \to n\) (proton ↔ neutron, no change in n)</li>
+    </ul>
+
+    <p>This code computes the <strong>forward rates</strong> \(\lambda^+\) and \(\lambda^0\) for each state. The
+      pair-annihilation rate \(\lambda^-\) is related to \(\lambda^+\) through detailed balance but is not computed here
+      — the focus is on the initial pre-equilibrium emission from the compound system.</p>
+
+    <h2>3. Two-Component Formalism</h2>
+    <p>The extension from one-component (Griffin 1966) to two-component (Kalbach 1986) is essential because:</p>
+    <ul>
+      <li>Proton and neutron single-particle state densities differ: \(g_\pi = Z/15 \ne g_\nu = N/15\)</li>
+      <li>The residual interaction distinguishes same-type (ππ, νν) and cross-type (πν, νπ) collisions</li>
+      <li>Isospin mixing is naturally handled through conversion channels (π↔ν)</li>
+    </ul>
+
+    <h2>4. Transition Mechanisms</h2>
+    <figure>
+      <svg viewBox="0 0 850 530" width="100%" style="max-width:850px">
+        <defs>
+          <marker id="arr-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#0f4c81" />
+          </marker>
+          <marker id="arr-purple" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#5a189a" />
+          </marker>
+        </defs>
+
+        <!-- Row 1: Initial State -->
+        <rect x="300" y="10" width="240" height="60" fill="#e8f0fe" stroke="#0f4c81" stroke-width="2" rx="8" ry="8" />
+        <text x="420" y="36" text-anchor="middle" font-size="14" fill="#1a1a2e" font-weight="bold">Initial
+          Configuration</text>
+        <text x="420" y="56" text-anchor="middle" font-size="12" fill="#333">|pπ, hπ, pν, hν⟩</text>
+
+        <!-- Row 2: Two mechanism arrows -->
+        <line x1="380" y1="70" x2="260" y2="140" stroke="#0f4c81" stroke-width="2" fill="none"
+          marker-end="url(#arr-blue)" />
+        <text x="300" y="115" text-anchor="middle" font-size="13" fill="#155724" font-weight="bold">λ⁺ pair
+          creation</text>
+
+        <line x1="460" y1="70" x2="580" y2="140" stroke="#5a189a" stroke-width="2" fill="none" stroke-dasharray="6,4"
+          marker-end="url(#arr-purple)" />
+        <text x="545" y="115" text-anchor="middle" font-size="13" fill="#856404" font-weight="bold">λ⁰ conversion</text>
+
+        <!-- Row 3: Pair Creation box -->
+        <rect x="40" y="145" width="370" height="140" fill="#d4edda" stroke="#155724" stroke-width="1.5" rx="6"
+          ry="6" />
+        <text x="225" y="170" text-anchor="middle" font-size="14" fill="#1a1a2e" font-weight="bold">Pair Creation (n →
+          n+2)</text>
+        <text x="225" y="194" text-anchor="middle" font-size="12" fill="#333">|pπ+1, hπ+1, pν, hν⟩</text>
+        <text x="225" y="212" text-anchor="middle" font-size="11" fill="#555">proton particle–hole added</text>
+        <text x="225" y="236" text-anchor="middle" font-size="12" fill="#333">|pπ, hπ, pν+1, hν+1⟩</text>
+        <text x="225" y="254" text-anchor="middle" font-size="11" fill="#555">neutron particle–hole added</text>
+        <text x="225" y="274" text-anchor="middle" font-size="10" fill="#555">Collision scatters particle above Fermi
+          surface, creating a new pair.</text>
+
+        <!-- Row 3: Conversion box -->
+        <rect x="440" y="145" width="370" height="140" fill="#fff3cd" stroke="#856404" stroke-width="1.5" rx="6"
+          ry="6" />
+        <text x="625" y="170" text-anchor="middle" font-size="14" fill="#1a1a2e" font-weight="bold">Conversion (n →
+          n)</text>
+        <text x="625" y="194" text-anchor="middle" font-size="12" fill="#333">|pπ+1, hπ+1, pν-1, hν-1⟩</text>
+        <text x="625" y="212" text-anchor="middle" font-size="11" fill="#555">proton emitted, neutron absorbed</text>
+        <text x="625" y="236" text-anchor="middle" font-size="12" fill="#333">|pπ-1, hπ-1, pν+1, hν+1⟩</text>
+        <text x="625" y="254" text-anchor="middle" font-size="11" fill="#555">neutron emitted, proton absorbed</text>
+        <text x="625" y="274" text-anchor="middle" font-size="10" fill="#555">A proton particle–hole converts to a
+          neutron pair or vice versa.</text>
+
+        <!-- Row 4: Collision Kernels -->
+        <line x1="40" y1="300" x2="810" y2="300" stroke="#ccc" stroke-width="1" stroke-dasharray="3,3" />
+
+        <rect x="40" y="310" width="370" height="100" fill="#f3e8ff" stroke="#5a189a" stroke-width="1.5" rx="6"
+          ry="6" />
+        <text x="225" y="335" text-anchor="middle" font-size="14" fill="#1a1a2e" font-weight="bold">M² Matrix-Element
+          Kernel</text>
+        <text x="225" y="358" text-anchor="middle" font-size="12" fill="#333">λ = ωt · ωr · M²</text>
+        <text x="225" y="380" text-anchor="middle" font-size="10" fill="#555">M² = C₁ · Ap/A³ · (7.48·C₂ + 4.62×10⁵ /
+          (10.7·C₃ + E/(nAp))³)</text>
+        <text x="225" y="398" text-anchor="middle" font-size="10" fill="#555">Kalbach–Cline constant matrix-element
+          parametrization</text>
+
+        <rect x="440" y="310" width="370" height="100" fill="#f3e8ff" stroke="#5a189a" stroke-width="1.5" rx="6"
+          ry="6" />
+        <text x="625" y="335" text-anchor="middle" font-size="14" fill="#1a1a2e" font-weight="bold">OMP Collision
+          Kernel</text>
+        <text x="625" y="358" text-anchor="middle" font-size="12" fill="#333">λ = (2/ℏ) · wompfac · ⟨W(Ekin)⟩</text>
+        <text x="625" y="380" text-anchor="middle" font-size="10" fill="#555">⟨W⟩ = volume-averaged imaginary KD03
+          potential</text>
+        <text x="625" y="398" text-anchor="middle" font-size="10" fill="#555">wompfac bridges OMP and M²
+          normalizations</text>
+
+        <!-- Bottom note -->
+        <text x="425" y="438" text-anchor="middle" font-size="11" fill="#555" font-style="italic">Both kernels are
+          integrated over intermediate excitation energy and weighted by state densities ω of the initial and final
+          configurations.</text>
+
+        <!-- Key -->
+        <rect x="50" y="458" width="12" height="12" fill="#d4edda" stroke="#155724" stroke-width="1" rx="2" />
+        <text x="68" y="469" font-size="11" fill="#555">Pair creation</text>
+        <rect x="170" y="458" width="12" height="12" fill="#fff3cd" stroke="#856404" stroke-width="1" rx="2" />
+        <text x="188" y="469" font-size="11" fill="#555">Conversion</text>
+        <rect x="280" y="458" width="12" height="12" fill="#f3e8ff" stroke="#5a189a" stroke-width="1" rx="2" />
+        <text x="298" y="469" font-size="11" fill="#555">Collision kernel</text>
+      </svg>
+      <figcaption>Figure 1: Exciton model transition diagram. Pair creation (λ⁺) increases the exciton number by 2;
+        conversion (λ⁰) preserves n but shifts the proton–neutron balance. The collision kernel (M² or OMP) mediates the
+        transition.</figcaption>
+    </figure>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
+</body>
+
+</html>

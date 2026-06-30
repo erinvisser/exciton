@@ -16,14 +16,26 @@ import sys
 from datetime import datetime
 
 COLUMN_NAMES = [
-    "p(p)", "h(p)", "p(n)", "h(n)",
-    "lambdapiplus", "lambdanuplus", "lambdapinu", "lambdanupi",
+    "p(p)",
+    "h(p)",
+    "p(n)",
+    "h(n)",
+    "lambdapiplus",
+    "lambdanuplus",
+    "lambdapinu",
+    "lambdanupi",
 ]
 COLUMN_UNITS = ["", "", "", "", "sec^-1", "sec^-1", "sec^-1", "sec^-1"]
 
 REL_COLUMN_NAMES = [
-    "p(p)", "h(p)", "p(n)", "h(n)",
-    "lambdapiplus", "lambdanuplus", "lambdapinu", "lambdanupi",
+    "p(p)",
+    "h(p)",
+    "p(n)",
+    "h(n)",
+    "lambdapiplus",
+    "lambdanuplus",
+    "lambdapinu",
+    "lambdanupi",
 ]
 REL_COLUMN_UNITS = ["", "", "", "", "%", "%", "%", "%"]
 
@@ -69,8 +81,12 @@ def write_header(out, file1, rows1, file2, rows2, tol):
     )
     out.write("#\n")
     out.write("# Description:\n")
-    out.write("#   Table 1: Absolute difference |file1 - file2| for each lambda column.\n")
-    out.write("#   Table 2: Relative error |file1 - file2| / max(|f1|,|f2|) as percentage.\n")
+    out.write(
+        "#   Table 1: Absolute difference |file1 - file2| for each lambda column.\n"
+    )
+    out.write(
+        "#   Table 2: Relative error |file1 - file2| / max(|f1|,|f2|) as percentage.\n"
+    )
     out.write("#\n")
     out.write(f"# absolute tolerance: {tol:.0e}\n")
     out.write("# relative tolerance: 1%\n")
@@ -140,8 +156,7 @@ def write_block(out, label, col_names, col_units, rows1, rows2, tol, mode="abs")
         )
     tag = "difference" if mode == "abs" else "relative error"
     out.write(
-        f"# Max {tag}: {max_val:.6e}  "
-        f"(row {max_row}, col {col_names[max_col]})\n"
+        f"# Max {tag}: {max_val:.6e}  (row {max_row}, col {col_names[max_col]})\n"
     )
 
 
