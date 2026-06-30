@@ -1,243 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exciton Diagnostics — exciton</title>
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exciton Diagnostics — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="../index.html" class="brand">exciton</a>
-    <span class="nav-section">Tutorials</span>
-    <a href="../tutorials/getting-started.html">Getting Started</a>
-    <a href="../tutorials/running-calculations.html">Running Calculations</a>
-    <span class="nav-section">How-to</span>
-    <a href="../howto/omega-calculations.html">Omega</a>
-    <a href="../howto/lambda-calculations.html">Lambda</a>
-    <a href="../howto/validations.html">Validations</a>
-    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
-    <a href="../howto/exciton-diagnostics.html" class="active">Exciton Diag</a>
-    <span class="nav-section">Status</span>
-    <a href="../status.html">Branch Status</a>
-    <span class="nav-section">Reference</span>
-    <a href="../reference/physics-formulas.html">Formulas</a>
-    <a href="../reference/parameters.html">Parameters</a>
-    <a href="../reference/api.html">API</a>
-    <a href="../reference/output-format.html">Output</a>
-    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
-    <span class="nav-section">Explanation</span>
-    <a href="../explanation/exciton-model.html">Exciton Model</a>
-    <a href="../explanation/omp-implementation.html">OMP</a>
-    <a href="../explanation/state-densities.html">State Densities</a>
-  </div>
-</nav>
-<main class="container">
-  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Exciton Diagnostics</span></div>
-  <h1>Exciton Diagnostics</h1>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html" class="active">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Exciton Diagnostics</span></div>
+    <h1>Exciton Diagnostics</h1>
 
-  <div class="box">
-    <strong>Purpose:</strong> Print OMP parameters, Pauli integration bounds,
-    and transition-rate intermediate values from the exciton C++ code for
-    comparison against TALYS diagnostic output.
-  </div>
+    <div class="box">
+      <strong>Purpose:</strong> Print OMP parameters, Pauli integration bounds,
+      and transition-rate intermediate values from the exciton C++ code for
+      comparison against TALYS diagnostic output.
+    </div>
 
-  <h2>OUR_OMP Diagnostic Format</h2>
+    <h2>OUR_OMP Diagnostic Format</h2>
 
-  <p>
-    The exciton code prints OMP parameter diagnostics in a format matching
-    the TALYS <code>TALYS_OMP</code> lines, prefixed with <code>OUR_OMP</code>:
-  </p>
+    <p>
+      The exciton code prints OMP parameter diagnostics in a format matching
+      the TALYS <code>TALYS_OMP</code> lines, prefixed with <code>OUR_OMP</code>:
+    </p>
 
-  <pre>
+    <pre>
 # OUR_OMP Z=20 A=40 e=-8 pdg=2212 Wv=5.27935e-05 Wd=0.00250571
   Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.53952 wvol=0.00121917
 # OUR_OMP Z=20 A=40 e=-8 pdg=2112 Wv=0.0107876 Wd=0.549063
   Rv=4.05388 av=0.671852 Rd=4.40556 ad=0.537976 wvol=0.266143</pre>
 
-  <p>Fields:</p>
-  <table>
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>Z</td><td>Target atomic number</td></tr>
-    <tr><td>A</td><td>Target mass number</td></tr>
-    <tr><td>e</td><td>Kinetic energy (MeV)</td></tr>
-    <tr><td>pdg</td><td>Particle PDG code (2212=proton, 2112=neutron)</td></tr>
-    <tr><td>Wv</td><td>Imaginary volume well depth (MeV)</td></tr>
-    <tr><td>Wd</td><td>Imaginary surface well depth (MeV)</td></tr>
-    <tr><td>Rv</td><td>Volume radius parameter (fm)</td></tr>
-    <tr><td>av</td><td>Volume diffuseness (fm)</td></tr>
-    <tr><td>Rd</td><td>Surface radius parameter (fm)</td></tr>
-    <tr><td>ad</td><td>Surface diffuseness (fm)</td></tr>
-    <tr><td>wvol</td><td>Volume-averaged absorptive potential &lang;W&rang; (MeV)</td></tr>
-  </table>
+    <p>Fields:</p>
+    <table>
+      <tr>
+        <th>Field</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>Z</td>
+        <td>Target atomic number</td>
+      </tr>
+      <tr>
+        <td>A</td>
+        <td>Target mass number</td>
+      </tr>
+      <tr>
+        <td>e</td>
+        <td>Kinetic energy (MeV)</td>
+      </tr>
+      <tr>
+        <td>pdg</td>
+        <td>Particle PDG code (2212=proton, 2112=neutron)</td>
+      </tr>
+      <tr>
+        <td>Wv</td>
+        <td>Imaginary volume well depth (MeV)</td>
+      </tr>
+      <tr>
+        <td>Wd</td>
+        <td>Imaginary surface well depth (MeV)</td>
+      </tr>
+      <tr>
+        <td>Rv</td>
+        <td>Volume radius parameter (fm)</td>
+      </tr>
+      <tr>
+        <td>av</td>
+        <td>Volume diffuseness (fm)</td>
+      </tr>
+      <tr>
+        <td>Rd</td>
+        <td>Surface radius parameter (fm)</td>
+      </tr>
+      <tr>
+        <td>ad</td>
+        <td>Surface diffuseness (fm)</td>
+      </tr>
+      <tr>
+        <td>wvol</td>
+        <td>Volume-averaged absorptive potential &lang;W&rang; (MeV)</td>
+      </tr>
+    </table>
 
-  <p>
-    These lines are generated by calling
-    <code>KoningDelarocheOpticalModel::setIncidentEnergyAndFragment()</code>
-    (for central potential only, spin-0) or
-    <code>updateWellDepths()</code> (for full potential including spin-orbit,
-    spin-1/2) at each energy point, then computing &lang;W&rang; via
-    <code>wvolRadialIntegral()</code>. The output is written to
-    <code>lambda_printouts/previous/omp_diag.txt</code>.
-  </p>
+    <p>
+      These lines are generated by calling
+      <code>KoningDelarocheOpticalModel::setIncidentEnergyAndFragment()</code>
+      (for central potential only, spin-0) or
+      <code>updateWellDepths()</code> (for full potential including spin-orbit,
+      spin-1/2) at each energy point, then computing &lang;W&rang; via
+      <code>wvolRadialIntegral()</code>. The output is written to
+      <code>lambda_printouts/previous/omp_diag.txt</code>.
+    </p>
 
-  <h2>L1 / L2 Pauli Integration Bounds</h2>
+    <h2>L1 / L2 Pauli Integration Bounds</h2>
 
-  <p>
-    The TALYS lambda subroutines (<code>lambdapiplus.f90</code>,
-    <code>lambdanuplus.f90</code>) compute Pauli-prescribed integration bounds
-    L1 and L2 for each transition channel. These define the range of
-    intermediate excitation energy u over which the integrand is evaluated:
-  </p>
+    <p>
+      The TALYS lambda subroutines (<code>lambdapiplus.f90</code>,
+      <code>lambdanuplus.f90</code>) compute Pauli-prescribed integration bounds
+      L1 and L2 for each transition channel. These define the range of
+      intermediate excitation energy u over which the integrand is evaluated:
+    </p>
 
-  <pre>
+    <pre>
 L1 = A<sub>Pauli</sub>(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>+1, h<sub>ν</sub>+1) -
      A<sub>Pauli</sub>(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>-1, h<sub>ν</sub>)
 L2 = U - A<sub>Pauli</sub>(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>-1, h<sub>ν</sub>)</pre>
 
-  <p>
-    where A<sub>Pauli</sub> is the available excitation energy after Pauli
-    correction. The exciton code implements L1/L2 equivalently (see
-    <code>transition_rates.cpp</code>):
-  </p>
+    <p>
+      where A<sub>Pauli</sub> is the available excitation energy after Pauli
+      correction. The exciton code implements L1/L2 equivalently (see
+      <code>transition_rates.cpp</code>):
+    </p>
 
-  <pre>
+    <pre>
 // For neutron pair creation (ν⁺):
 L1nup = Apauli2(ppi, hpi, pnu + 1, hnu + 1) - Apauli2(ppi, hpi, pnu - 1, hnu);
 L2nup = U - Apauli2(ppi, hpi, pnu - 1, hnu);</pre>
 
-  <p>
-    Four pairs of bounds are computed per exciton state:
-  </p>
-  <table>
-    <tr><th>Bounds</th><th>Channel</th><th>TALYS subroutine</th></tr>
-    <tr><td>L1<sub>ν⁺</sub>, L2<sub>ν⁺</sub></td><td>Neutron pair creation</td><td><code>lambdanuplus.f90</code></td></tr>
-    <tr><td>L1<sub>νh</sub>, L2<sub>νh</sub></td><td>Neutron hole creation</td><td><code>lambdanuplus.f90</code></td></tr>
-    <tr><td>L1<sub>π⁺</sub>, L2<sub>π⁺</sub></td><td>Proton pair creation</td><td><code>lambdapiplus.f90</code></td></tr>
-    <tr><td>L1<sub>πh</sub>, L2<sub>πh</sub></td><td>Proton hole creation</td><td><code>lambdapiplus.f90</code></td></tr>
-  </table>
+    <p>
+      Four pairs of bounds are computed per exciton state:
+    </p>
+    <table>
+      <tr>
+        <th>Bounds</th>
+        <th>Channel</th>
+        <th>TALYS subroutine</th>
+      </tr>
+      <tr>
+        <td>L1<sub>ν⁺</sub>, L2<sub>ν⁺</sub></td>
+        <td>Neutron pair creation</td>
+        <td><code>lambdanuplus.f90</code></td>
+      </tr>
+      <tr>
+        <td>L1<sub>νh</sub>, L2<sub>νh</sub></td>
+        <td>Neutron hole creation</td>
+        <td><code>lambdanuplus.f90</code></td>
+      </tr>
+      <tr>
+        <td>L1<sub>π⁺</sub>, L2<sub>π⁺</sub></td>
+        <td>Proton pair creation</td>
+        <td><code>lambdapiplus.f90</code></td>
+      </tr>
+      <tr>
+        <td>L1<sub>πh</sub>, L2<sub>πh</sub></td>
+        <td>Proton hole creation</td>
+        <td><code>lambdapiplus.f90</code></td>
+      </tr>
+    </table>
 
-  <h2>Transition Rate Diagnostics (wvol, Weff, lamcol)</h2>
+    <h2>Transition Rate Diagnostics (wvol, Weff, lamcol)</h2>
 
-  <p>
-    The exciton model prints intermediate OMP values for each transition rate
-    in a format matching the TALYS <code>TALYS_DIAG</code> lines:
-  </p>
+    <p>
+      The exciton model prints intermediate OMP values for each transition rate
+      in a format matching the TALYS <code>TALYS_DIAG</code> lines:
+    </p>
 
-  <pre>
+    <pre>
 state=(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>)
   k=1 S=... uu=... eopt=... nen=... wvol=... Weff=... lamcol=... [ratio=...]</pre>
 
-  <p>Key intermediate quantities:</p>
-  <table>
-    <tr><th>Quantity</th><th>Formula</th><th>Description</th></tr>
-    <tr>
-      <td>S</td>
-      <td>MassTable::get_fragment_separation_energy()</td>
-      <td>Separation energy for emitted nucleon</td>
-    </tr>
-    <tr>
-      <td>eopt</td>
-      <td>max(uu - S, -20)</td>
-      <td>Kinetic energy used for OMP lookup</td>
-    </tr>
-    <tr>
-      <td>wvol</td>
-      <td>&lang;W&rang;(eopt)</td>
-      <td>Volume-averaged absorptive potential</td>
-    </tr>
-    <tr>
-      <td>Weff</td>
-      <td>Wompfac × wvol</td>
-      <td>Effective potential weighted by OMP constant</td>
-    </tr>
-    <tr>
-      <td>lamcol</td>
-      <td>2 · Weff / ħ</td>
-      <td>Collision rate (s<sup>-1</sup>)</td>
-    </tr>
-    <tr>
-      <td>ratio</td>
-      <td>ω<sub>hole</sub> / ω<sub>particle</sub></td>
-      <td>Particle-hole density ratio (conversion only)</td>
-    </tr>
-  </table>
+    <p>Key intermediate quantities:</p>
+    <table>
+      <tr>
+        <th>Quantity</th>
+        <th>Formula</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>S</td>
+        <td>MassTable::get_fragment_separation_energy()</td>
+        <td>Separation energy for emitted nucleon</td>
+      </tr>
+      <tr>
+        <td>eopt</td>
+        <td>max(uu - S, -20)</td>
+        <td>Kinetic energy used for OMP lookup</td>
+      </tr>
+      <tr>
+        <td>wvol</td>
+        <td>&lang;W&rang;(eopt)</td>
+        <td>Volume-averaged absorptive potential</td>
+      </tr>
+      <tr>
+        <td>Weff</td>
+        <td>Wompfac × wvol</td>
+        <td>Effective potential weighted by OMP constant</td>
+      </tr>
+      <tr>
+        <td>lamcol</td>
+        <td>2 · Weff / ħ</td>
+        <td>Collision rate (s<sup>-1</sup>)</td>
+      </tr>
+      <tr>
+        <td>ratio</td>
+        <td>ω<sub>hole</sub> / ω<sub>particle</sub></td>
+        <td>Particle-hole density ratio (conversion only)</td>
+      </tr>
+    </table>
 
-  <h2>Comparison Scripts</h2>
+    <h2>Comparison Scripts</h2>
 
-  <p>Two Python comparison scripts live at the project root:</p>
+    <p>Two Python comparison scripts live at the project root:</p>
 
-  <table>
-    <tr><th>Script</th><th>Purpose</th></tr>
-    <tr>
-      <td><code>compare_lambda.py</code></td>
-      <td>
-        Compare two YANDF-0.4 lambda files (8-column transition rate data
-        blocks). Outputs absolute difference and relative error (%) tables.
-        Usage: <code>python3 compare_lambda.py &lt;file1&gt; &lt;file2&gt;
+    <table>
+      <tr>
+        <th>Script</th>
+        <th>Purpose</th>
+      </tr>
+      <tr>
+        <td><code>compare_lambda.py</code></td>
+        <td>
+          Compare two YANDF-0.4 lambda files (8-column transition rate data
+          blocks). Outputs absolute difference and relative error (%) tables.
+          Usage: <code>python3 compare_lambda.py &lt;file1&gt; &lt;file2&gt;
         &lt;output&gt; [tolerance]</code>
-      </td>
-    </tr>
-    <tr>
-      <td><code>compare_omega.py</code></td>
-      <td>
-        Compare two <code>ph_density.out</code> files. Handles both
-        particle-hole state density and spin distribution blocks. Outputs
-        absolute difference and relative error tables.
-        Usage: <code>python3 compare_omega.py &lt;file1&gt; &lt;file2&gt;
+        </td>
+      </tr>
+      <tr>
+        <td><code>compare_omega.py</code></td>
+        <td>
+          Compare two <code>ph_density.out</code> files. Handles both
+          particle-hole state density and spin distribution blocks. Outputs
+          absolute difference and relative error tables.
+          Usage: <code>python3 compare_omega.py &lt;file1&gt; &lt;file2&gt;
         &lt;output&gt; [tolerance]</code>
-      </td>
-    </tr>
-  </table>
+        </td>
+      </tr>
+    </table>
 
-  <h2>Diagnostic Output Files</h2>
+    <h2>Diagnostic Output Files</h2>
 
-  <p>Key outputs in <code>lambda_printouts/previous/</code>:</p>
-  <table>
-    <tr><th>File</th><th>Description</th></tr>
-    <tr><td><code>omp_diag.txt</code></td><td>OUR_OMP lines: OMP parameters + wvol for both protons and neutrons at selected energies</td></tr>
-    <tr><td><code>lambda_neutron_Ar40_*.txt</code></td><td>Transition rate outputs from various development stages</td></tr>
-    <tr><td><code>lambda_nu_Ar40_ex*.txt</code></td><td>Experimental/exploratory lambda runs</td></tr>
-  </table>
+    <p>Key outputs in <code>lambda_printouts/previous/</code>:</p>
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>omp_diag.txt</code></td>
+        <td>OUR_OMP lines: OMP parameters + wvol for both protons and neutrons at selected energies</td>
+      </tr>
+      <tr>
+        <td><code>lambda_neutron_Ar40_*.txt</code></td>
+        <td>Transition rate outputs from various development stages</td>
+      </tr>
+      <tr>
+        <td><code>lambda_nu_Ar40_ex*.txt</code></td>
+        <td>Experimental/exploratory lambda runs</td>
+      </tr>
+    </table>
 
-  <p>Omega validation outputs in <code>omega_printouts/</code>:</p>
-  <table>
-    <tr><th>File</th><th>Description</th></tr>
-    <tr><td><code>omega_comparison_report_*.txt</code></td><td>Comparison reports between exciton and TALYS ω(p,h,E)</td></tr>
-    <tr><td><code>omega_neutron_Ar40_*.txt</code></td><td>State density calculations under different settings (fixed V, pairing on/off, guard bounds)</td></tr>
-    <tr><td><code>omega_matrixsquared_*.txt</code></td><td>Reference MatrixSquared branch omega output</td></tr>
-  </table>
+    <p>Omega validation outputs in <code>omega_printouts/</code>:</p>
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>omega_comparison_report_*.txt</code></td>
+        <td>Comparison reports between exciton and TALYS ω(p,h,E)</td>
+      </tr>
+      <tr>
+        <td><code>omega_neutron_Ar40_*.txt</code></td>
+        <td>State density calculations under different settings (fixed V, pairing on/off, guard bounds)</td>
+      </tr>
+      <tr>
+        <td><code>omega_matrixsquared_*.txt</code></td>
+        <td>Reference MatrixSquared branch omega output</td>
+      </tr>
+    </table>
 
-  <p>MatrixSquared reference output in <code>lambda_printouts/MatrixSquared/</code>:</p>
-  <table>
-    <tr><th>File</th><th>Description</th></tr>
-    <tr><td><code>Output/reverted_to_matrixelems.txt</code></td><td>Validated λ output from the MatrixSquared branch (M² kernel)</td></tr>
-    <tr><td><code>Comparison/reverted_to_matrixelems.txt</code></td><td>Comparison report against TALYS reference</td></tr>
-  </table>
+    <p>MatrixSquared reference output in <code>lambda_printouts/MatrixSquared/</code>:</p>
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>Output/reverted_to_matrixelems.txt</code></td>
+        <td>Validated λ output from the MatrixSquared branch (M² kernel)</td>
+      </tr>
+      <tr>
+        <td><code>Comparison/reverted_to_matrixelems.txt</code></td>
+        <td>Comparison report against TALYS reference</td>
+      </tr>
+    </table>
 
-  <h2>Workflow</h2>
+    <h2>Workflow</h2>
 
-  <p>To generate diagnostic output from the exciton code:</p>
+    <p>To generate diagnostic output from the exciton code:</p>
 
-  <div class="terminal">
-    <span class="cm"># Build the code</span><br>
-    <span class="cmd">make</span><br>
-    <br>
-    <span class="cm"># Run lambda calculation with OMP kernel</span><br>
-    <span class="cmd">./build/lambda --kernel optical-model</span><br>
-    <br>
-    <span class="cm"># Compare against TALYS reference</span><br>
-    <span class="cmd">python3 compare_lambda.py \</span><br>
-    &nbsp;&nbsp;lambda_printouts/previous/lambda_neutron_Ar40_numerical.txt \<br>
-    &nbsp;&nbsp;/path/to/talys/lambda.out \<br>
-    &nbsp;&nbsp;comparison_report.txt
-  </div>
+    <div class="terminal">
+      <span class="cm"># Build the code</span><br>
+      <span class="cmd">make</span><br>
+      <br>
+      <span class="cm"># Run lambda calculation with OMP kernel</span><br>
+      <span class="cmd">./build/lambda --kernel optical-model</span><br>
+      <br>
+      <span class="cm"># Compare against TALYS reference</span><br>
+      <span class="cmd">python3 compare_lambda.py \</span><br>
+      &nbsp;&nbsp;lambda_printouts/previous/lambda_neutron_Ar40_numerical.txt \<br>
+      &nbsp;&nbsp;/path/to/talys/lambda.out \<br>
+      &nbsp;&nbsp;comparison_report.txt
+    </div>
 
-</main>
-<footer>
-  <div class="container">exciton documentation</div>
-</footer>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
 </body>
+
 </html>

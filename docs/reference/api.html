@@ -1,110 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>API Reference — exciton</title>
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Reference — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="../index.html" class="brand">exciton</a>
-    <span class="nav-section">Tutorials</span>
-    <a href="../tutorials/getting-started.html">Getting Started</a>
-    <a href="../tutorials/running-calculations.html">Running Calculations</a>
-    <span class="nav-section">How-to</span>
-    <a href="../howto/omega-calculations.html">Omega</a>
-    <a href="../howto/lambda-calculations.html">Lambda</a>
-    <a href="../howto/validations.html">Validations</a>
-    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
-    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
-    <span class="nav-section">Status</span>
-    <a href="../status.html">Branch Status</a>
-    <span class="nav-section">Reference</span>
-    <a href="../reference/physics-formulas.html">Formulas</a>
-    <a href="../reference/parameters.html">Parameters</a>
-    <a href="../reference/api.html" class="active">API</a>
-    <a href="../reference/output-format.html">Output</a>
-    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
-    <span class="nav-section">Explanation</span>
-    <a href="../explanation/exciton-model.html">Exciton Model</a>
-    <a href="../explanation/omp-implementation.html">OMP</a>
-    <a href="../explanation/state-densities.html">State Densities</a>
-  </div>
-</nav>
-<main class="container">
-  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>API</span></div>
-  <h1>API Reference</h1>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html" class="active">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>API</span></div>
+    <h1>API Reference</h1>
 
-  <h2>Header: <code>include/preeq_common.hh</code></h2>
+    <h2>Header: <code>include/preeq_common.hh</code></h2>
 
-  <h3>Constants</h3>
-  <div class="terminal">
-    <span class="kw">constexpr</span> <span class="tp">double</span> PI  = <span class="nu">3.14159265358979323846</span>;<br>
-    <span class="kw">constexpr</span> <span class="tp">double</span> HBAR = <span class="nu">6.582119569e-22</span>; <span class="cm">// MeV*s</span>
-  </div>
+    <h3>Constants</h3>
+    <div class="terminal">
+      <span class="kw">constexpr</span> <span class="tp">double</span> PI = <span
+        class="nu">3.14159265358979323846</span>;<br>
+      <span class="kw">constexpr</span> <span class="tp">double</span> HBAR = <span class="nu">6.582119569e-22</span>;
+      <span class="cm">// MeV*s</span>
+    </div>
 
-  <h3>Struct: ExcitonState</h3>
-  <div class="terminal">
-    <span class="kw">struct</span> <span class="tp">ExcitonState</span> {<br>
-    &nbsp;&nbsp;<span class="tp">int</span> p_pi, h_pi, p_nu, h_nu;<br>
-    };
-  </div>
+    <h3>Struct: ExcitonState</h3>
+    <div class="terminal">
+      <span class="kw">struct</span> <span class="tp">ExcitonState</span> {<br>
+      &nbsp;&nbsp;<span class="tp">int</span> p_pi, h_pi, p_nu, h_nu;<br>
+      };
+    </div>
 
-  <h3>Functions</h3>
-  <table>
-    <tr><th>Signature</th><th>File:Line</th><th>Description</th></tr>
-    <tr><td><code>double binomial(int h, int i)</code></td><td>preeq_common.cpp</td><td>Binomial coefficient C(h,i)</td></tr>
-    <tr><td><code>double spDensityProton(int Z)</code></td><td>preeq_common.cpp</td><td>g<sub>p</sub> = Z/15</td></tr>
-    <tr><td><code>double spDensityNeutron(int N)</code></td><td>preeq_common.cpp</td><td>g<sub>n</sub> = N/15</td></tr>
-    <tr><td><code>double potentialWellDepth(...)</code></td><td>preeq_common.cpp</td><td>Energy-dependent Fermi well depth</td></tr>
-    <tr><td><code>double pauliCorrection(...)</code></td><td>preeq_common.cpp</td><td>Pauli principle correction P(p,h) (Eq. 13.9)</td></tr>
-    <tr><td><code>double finiteWell(p, h, U, V)</code></td><td>preeq_common.cpp</td><td>Finite well correction (Eq. 13.16)</td></tr>
-    <tr><td><code>double pairingEnergyDelta(A, χ)</code></td><td>preeq_common.cpp</td><td>Δ = χ·12/√A</td></tr>
-    <tr><td><code>double nCrit(Z, N, Δ)</code></td><td>preeq_common.cpp</td><td>Critical exciton number</td></tr>
-    <tr><td><code>double fuPairingCorrection(Δ, E<sub>x</sub>, n, n<sub>c</sub>)</code></td><td>preeq_common.cpp</td><td>Pairing correction factor P<sub>ph</sub></td></tr>
-    <tr><td><code>double availableExcitationEnergy(E<sub>x</sub>, P<sub>ph</sub>)</code></td><td>preeq_common.cpp</td><td>U = E<sub>x</sub> · P<sub>ph</sub></td></tr>
-    <tr><td><code>double spinDistribution(J, A, n)</code></td><td>preeq_common.cpp</td><td>Spin distribution R<sub>n</sub>(J)</td></tr>
-  </table>
+    <h3>Functions</h3>
+    <table>
+      <tr>
+        <th>Signature</th>
+        <th>File:Line</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>double binomial(int h, int i)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Binomial coefficient C(h,i)</td>
+      </tr>
+      <tr>
+        <td><code>double spDensityProton(int Z)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>g<sub>p</sub> = Z/15</td>
+      </tr>
+      <tr>
+        <td><code>double spDensityNeutron(int N)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>g<sub>n</sub> = N/15</td>
+      </tr>
+      <tr>
+        <td><code>double potentialWellDepth(...)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Energy-dependent Fermi well depth</td>
+      </tr>
+      <tr>
+        <td><code>double pauliCorrection(...)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Pauli principle correction P(p,h) (Eq. 13.9)</td>
+      </tr>
+      <tr>
+        <td><code>double finiteWell(p, h, U, V)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Finite well correction (Eq. 13.16)</td>
+      </tr>
+      <tr>
+        <td><code>double pairingEnergyDelta(A, χ)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Δ = χ·12/√A</td>
+      </tr>
+      <tr>
+        <td><code>double nCrit(Z, N, Δ)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Critical exciton number</td>
+      </tr>
+      <tr>
+        <td><code>double fuPairingCorrection(Δ, E<sub>x</sub>, n, n<sub>c</sub>)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Pairing correction factor P<sub>ph</sub></td>
+      </tr>
+      <tr>
+        <td><code>double availableExcitationEnergy(E<sub>x</sub>, P<sub>ph</sub>)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>U = E<sub>x</sub> · P<sub>ph</sub></td>
+      </tr>
+      <tr>
+        <td><code>double spinDistribution(J, A, n)</code></td>
+        <td>preeq_common.cpp</td>
+        <td>Spin distribution R<sub>n</sub>(J)</td>
+      </tr>
+    </table>
 
-  <h2>Header: <code>include/state_density.hh</code></h2>
-  <table>
-    <tr><th>Signature</th><th>File:Line</th><th>Description</th></tr>
-    <tr><td><code>double factorial(int n)</code></td><td>state_density.cpp</td><td>n! (iterative)</td></tr>
-    <tr><td><code>double theta(double x)</code></td><td>state_density.cpp</td><td>Heaviside step function</td></tr>
-    <tr><td><code>double particleHoleStateDensity(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>, E<sub>x</sub>, Z, N, χ, V, n<sub>crit</sub>, applyPairing, parityFactor)</code></td><td>state_density.cpp:17</td><td>Two-component ω(p,h,E) (Eq. 13.4)</td></tr>
-  </table>
+    <h2>Header: <code>include/state_density.hh</code></h2>
+    <table>
+      <tr>
+        <th>Signature</th>
+        <th>File:Line</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>double factorial(int n)</code></td>
+        <td>state_density.cpp</td>
+        <td>n! (iterative)</td>
+      </tr>
+      <tr>
+        <td><code>double theta(double x)</code></td>
+        <td>state_density.cpp</td>
+        <td>Heaviside step function</td>
+      </tr>
+      <tr>
+        <td>
+          <code>double particleHoleStateDensity(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>, E<sub>x</sub>, Z, N, χ, V, n<sub>crit</sub>, applyPairing, parityFactor)</code>
+        </td>
+        <td>state_density.cpp:17</td>
+        <td>Two-component ω(p,h,E) (Eq. 13.4)</td>
+      </tr>
+    </table>
 
-  <h2>Header: <code>include/transition_rates.hh</code></h2>
+    <h2>Header: <code>include/transition_rates.hh</code></h2>
 
-  <h3>Enums</h3>
-  <table>
-    <tr><th>Enum</th><th>Values</th></tr>
-    <tr><td><code>ExcitonType</code></td><td><code>Proton</code>, <code>Neutron</code></td></tr>
-    <tr><td><code>ConversionType</code></td><td><code>ProtonToNeutron</code>, <code>NeutronToProton</code></td></tr>
-    <tr><td><code>MatrixElement</code></td><td><code>PiPi</code>, <code>NuNu</code>, <code>PiNu</code>, <code>NuPi</code></td></tr>
-    <tr><td><code>PreeqMode</code></td><td><code>Analytical</code>, <code>Numerical</code></td></tr>
-    <tr><td><code>IntegrationMethod</code></td><td><code>ClenshawCurtis</code>, <code>Midpoint</code></td></tr>
-    <tr><td><code>LambdaType</code></td><td><code>ProtonPairCreation</code>, <code>NeutronPairCreation</code>, <code>ProtonToNeutronConversion</code>, <code>NeutronToProtonConversion</code></td></tr>
-  </table>
+    <h3>Enums</h3>
+    <table>
+      <tr>
+        <th>Enum</th>
+        <th>Values</th>
+      </tr>
+      <tr>
+        <td><code>ExcitonType</code></td>
+        <td><code>Proton</code>, <code>Neutron</code></td>
+      </tr>
+      <tr>
+        <td><code>ConversionType</code></td>
+        <td><code>ProtonToNeutron</code>, <code>NeutronToProton</code></td>
+      </tr>
+      <tr>
+        <td><code>MatrixElement</code></td>
+        <td><code>PiPi</code>, <code>NuNu</code>, <code>PiNu</code>, <code>NuPi</code></td>
+      </tr>
+      <tr>
+        <td><code>PreeqMode</code></td>
+        <td><code>Analytical</code>, <code>Numerical</code></td>
+      </tr>
+      <tr>
+        <td><code>IntegrationMethod</code></td>
+        <td><code>ClenshawCurtis</code>, <code>Midpoint</code></td>
+      </tr>
+      <tr>
+        <td><code>LambdaType</code></td>
+        <td><code>ProtonPairCreation</code>, <code>NeutronPairCreation</code>, <code>ProtonToNeutronConversion</code>,
+          <code>NeutronToProtonConversion</code></td>
+      </tr>
+    </table>
 
-  <h3>Functions</h3>
-  <table>
-    <tr><th>Signature</th><th>File:Line</th><th>Description</th></tr>
-    <tr><td><code>double M2(A<sub>p</sub>, A, E<sub>tot</sub>, n, C1, C2, C3, mode)</code></td><td>transition_rates.cpp:10</td><td>M² matrix element (Eq. 13.26)</td></tr>
-    <tr><td><code>double M2_element(type, A<sub>p</sub>, A, E<sub>tot</sub>, n, ratios, C1–C3, mode)</code></td><td>transition_rates.cpp:24</td><td>Channel-specific M² (Eq. 13.24)</td></tr>
-    <tr><td><code>double B(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>, g<sub>p</sub>, g<sub>n</sub>, type)</code></td><td>transition_rates.cpp:43</td><td>Conversion Pauli factor (Eq. 13.28)</td></tr>
-    <tr><td><code>double lambdaNewPairAnalytical(...)</code></td><td>transition_rates.cpp:62</td><td>Analytical pair creation (Eq. 13.27)</td></tr>
-    <tr><td><code>double lambdaNewPairNumerical(...)</code></td><td>transition_rates.cpp:117</td><td>Numerical pair creation (Eqs. 13.17–18)</td></tr>
-    <tr><td><code>double lambdaPairConversionAnalytical(...)</code></td><td>transition_rates.cpp:255</td><td>Analytical conversion (Eq. 13.27)</td></tr>
-    <tr><td><code>double lambdaPairConversionNumerical(...)</code></td><td>transition_rates.cpp:310</td><td>Numerical conversion (Eq. 13.19)</td></tr>
-    <tr><td><code>double lambdaRate(type, mode, Z, N, A<sub>p</sub>, state, E<sub>tot</sub>, U, V, ratios, C1–C3, method, bins, guards)</code></td><td>transition_rates.cpp:409</td><td>Dispatcher — selects analytical/numerical, handles n=1 locking</td></tr>
-  </table>
-</main>
-<footer>
-  <div class="container">exciton documentation</div>
-</footer>
+    <h3>Functions</h3>
+    <table>
+      <tr>
+        <th>Signature</th>
+        <th>File:Line</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><code>double M2(A<sub>p</sub>, A, E<sub>tot</sub>, n, C1, C2, C3, mode)</code></td>
+        <td>transition_rates.cpp:10</td>
+        <td>M² matrix element (Eq. 13.26)</td>
+      </tr>
+      <tr>
+        <td><code>double M2_element(type, A<sub>p</sub>, A, E<sub>tot</sub>, n, ratios, C1–C3, mode)</code></td>
+        <td>transition_rates.cpp:24</td>
+        <td>Channel-specific M² (Eq. 13.24)</td>
+      </tr>
+      <tr>
+        <td>
+          <code>double B(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>, g<sub>p</sub>, g<sub>n</sub>, type)</code>
+        </td>
+        <td>transition_rates.cpp:43</td>
+        <td>Conversion Pauli factor (Eq. 13.28)</td>
+      </tr>
+      <tr>
+        <td><code>double lambdaNewPairAnalytical(...)</code></td>
+        <td>transition_rates.cpp:62</td>
+        <td>Analytical pair creation (Eq. 13.27)</td>
+      </tr>
+      <tr>
+        <td><code>double lambdaNewPairNumerical(...)</code></td>
+        <td>transition_rates.cpp:117</td>
+        <td>Numerical pair creation (Eqs. 13.17–18)</td>
+      </tr>
+      <tr>
+        <td><code>double lambdaPairConversionAnalytical(...)</code></td>
+        <td>transition_rates.cpp:255</td>
+        <td>Analytical conversion (Eq. 13.27)</td>
+      </tr>
+      <tr>
+        <td><code>double lambdaPairConversionNumerical(...)</code></td>
+        <td>transition_rates.cpp:310</td>
+        <td>Numerical conversion (Eq. 13.19)</td>
+      </tr>
+      <tr>
+        <td>
+          <code>double lambdaRate(type, mode, Z, N, A<sub>p</sub>, state, E<sub>tot</sub>, U, V, ratios, C1–C3, method, bins, guards)</code>
+        </td>
+        <td>transition_rates.cpp:409</td>
+        <td>Dispatcher — selects analytical/numerical, handles n=1 locking</td>
+      </tr>
+    </table>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
 </body>
+
 </html>

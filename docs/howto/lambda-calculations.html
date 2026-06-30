@@ -1,118 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lambda Calculations — exciton</title>
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lambda Calculations — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="../index.html" class="brand">exciton</a>
-    <span class="nav-section">Tutorials</span>
-    <a href="../tutorials/getting-started.html">Getting Started</a>
-    <a href="../tutorials/running-calculations.html">Running Calculations</a>
-    <span class="nav-section">How-to</span>
-    <a href="../howto/omega-calculations.html">Omega</a>
-    <a href="../howto/lambda-calculations.html" class="active">Lambda</a>
-    <a href="../howto/validations.html">Validations</a>
-    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
-    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
-    <span class="nav-section">Status</span>
-    <a href="../status.html">Branch Status</a>
-    <span class="nav-section">Reference</span>
-    <a href="../reference/physics-formulas.html">Formulas</a>
-    <a href="../reference/parameters.html">Parameters</a>
-    <a href="../reference/api.html">API</a>
-    <a href="../reference/output-format.html">Output</a>
-    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
-    <span class="nav-section">Explanation</span>
-    <a href="../explanation/exciton-model.html">Exciton Model</a>
-    <a href="../explanation/omp-implementation.html">OMP</a>
-    <a href="../explanation/state-densities.html">State Densities</a>
-  </div>
-</nav>
-<main class="container">
-  <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../tutorials/running-calculations.html">Running Calculations</a> / <span>Lambda</span></div>
-  <h1>Lambda (Transition Rate) Calculations</h1>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html" class="active">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../tutorials/running-calculations.html">Running
+        Calculations</a> / <span>Lambda</span></div>
+    <h1>Lambda (Transition Rate) Calculations</h1>
 
-  <p>The lambda calculation evaluates the four internal transition and conversion rates for each exciton state. The implementation is in <code>src/transition_rates.cpp</code> and the main executable is <code>src/main_lambda.cpp</code>.</p>
+    <p>The lambda calculation evaluates the four internal transition and conversion rates for each exciton state. The
+      implementation is in <code>src/transition_rates.cpp</code> and the main executable is
+      <code>src/main_lambda.cpp</code>.</p>
 
-  <h2>The Four Rates</h2>
-  <table>
-    <tr><th>Symbol</th><th>Name</th><th>Type</th><th>Description</th></tr>
-    <tr><td>\(\lambda_{\pi^+}\)</td><td>lambdapiplus</td><td>Pair creation</td><td>Proton emission creates a new proton–hole pair</td></tr>
-    <tr><td>\(\lambda_{\nu^+}\)</td><td>lambdanuplus</td><td>Pair creation</td><td>Neutron emission creates a new neutron–hole pair</td></tr>
-    <tr><td>\(\lambda_{\pi\nu}\)</td><td>lambdapinu</td><td>Conversion</td><td>Proton converts to a neutron (p→ν)</td></tr>
-    <tr><td>\(\lambda_{\nu\pi}\)</td><td>lambdanupi</td><td>Conversion</td><td>Neutron converts to a proton (ν→π)</td></tr>
-  </table>
+    <h2>The Four Rates</h2>
+    <table>
+      <tr>
+        <th>Symbol</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>\(\lambda_{\pi^+}\)</td>
+        <td>lambdapiplus</td>
+        <td>Pair creation</td>
+        <td>Proton emission creates a new proton–hole pair</td>
+      </tr>
+      <tr>
+        <td>\(\lambda_{\nu^+}\)</td>
+        <td>lambdanuplus</td>
+        <td>Pair creation</td>
+        <td>Neutron emission creates a new neutron–hole pair</td>
+      </tr>
+      <tr>
+        <td>\(\lambda_{\pi\nu}\)</td>
+        <td>lambdapinu</td>
+        <td>Conversion</td>
+        <td>Proton converts to a neutron (p→ν)</td>
+      </tr>
+      <tr>
+        <td>\(\lambda_{\nu\pi}\)</td>
+        <td>lambdanupi</td>
+        <td>Conversion</td>
+        <td>Neutron converts to a proton (ν→π)</td>
+      </tr>
+    </table>
 
-  <h2>Calculation Mode</h2>
-  <p>The code supports two calculation modes, following TALYS:</p>
-  <ul>
-    <li><strong>Analytical</strong> (<code>--analytical</code>): Uses closed-form Eqs. 13.27 and 13.28 directly. Fast but less accurate for low n.</li>
-    <li><strong>Numerical</strong> (default): Integrates Eqs. 13.17–13.19 over intermediate excitation energy e using Clenshaw–Curtis adaptive quadrature or midpoint rule.</li>
-  </ul>
+    <h2>Calculation Mode</h2>
+    <p>The code supports two calculation modes, following TALYS:</p>
+    <ul>
+      <li><strong>Analytical</strong> (<code>--analytical</code>): Uses closed-form Eqs. 13.27 and 13.28 directly. Fast
+        but less accurate for low n.</li>
+      <li><strong>Numerical</strong> (default): Integrates Eqs. 13.17–13.19 over intermediate excitation energy e using
+        Clenshaw–Curtis adaptive quadrature or midpoint rule.</li>
+    </ul>
 
-  <p>When \(n=1\), the analytical formula is always used (the numerical integrand for n=1 has a particular form that maps to the analytical result). The 1.20 M² factor is cancelled in this case per TALYS convention (line 475 of <code>transition_rates.cpp</code>).</p>
+    <p>When \(n=1\), the analytical formula is always used (the numerical integrand for n=1 has a particular form that
+      maps to the analytical result). The 1.20 M² factor is cancelled in this case per TALYS convention (line 475 of
+      <code>transition_rates.cpp</code>).</p>
 
-  <h2>Analytical Formulas</h2>
-  <p>Pair creation (Eq. 13.27):</p>
-  \[
-  \lambda_{\pi^+}^{\text{an}}(p,h,E) = \frac{2\pi}{\hbar} \cdot \frac{g_\pi^2 (U - P_{n+1})^{n+1}}{2 n (n+1) (U-P_n)^{n-1}}
-  \cdot \bigl[ n_\pi g_\pi M_{\pi\pi}^2 + 2 n_\nu g_\nu M_{\pi\nu}^2 \bigr]
-  \cdot f_{\text{well}}(p+1,h+1,U,V)
-  \]
+    <h2>Analytical Formulas</h2>
+    <p>Pair creation (Eq. 13.27):</p>
+    \[
+    \lambda_{\pi^+}^{\text{an}}(p,h,E) = \frac{2\pi}{\hbar} \cdot \frac{g_\pi^2 (U - P_{n+1})^{n+1}}{2 n (n+1)
+    (U-P_n)^{n-1}}
+    \cdot \bigl[ n_\pi g_\pi M_{\pi\pi}^2 + 2 n_\nu g_\nu M_{\pi\nu}^2 \bigr]
+    \cdot f_{\text{well}}(p+1,h+1,U,V)
+    \]
 
-  <p>Conversion (Eq. 13.28):</p>
-  \[
-  \lambda_{\pi\nu}^{\text{an}}(p,h,E) = \frac{2\pi}{\hbar} \cdot M_{\pi\nu}^2 \cdot \frac{p_\pi h_\pi}{n} \cdot g_\nu^2
-  \cdot \frac{(U - B_{\pi\nu})^{n-1}}{(U - P_n)^{n-1}}
-  \cdot \left[ 2 (U - B_{\pi\nu}) + n |P_n - P_{n-1}^{\pi\nu}| \right]
-  \cdot f_{\text{well}}(p,h,U,V)
-  \]
+    <p>Conversion (Eq. 13.28):</p>
+    \[
+    \lambda_{\pi\nu}^{\text{an}}(p,h,E) = \frac{2\pi}{\hbar} \cdot M_{\pi\nu}^2 \cdot \frac{p_\pi h_\pi}{n} \cdot
+    g_\nu^2
+    \cdot \frac{(U - B_{\pi\nu})^{n-1}}{(U - P_n)^{n-1}}
+    \cdot \left[ 2 (U - B_{\pi\nu}) + n |P_n - P_{n-1}^{\pi\nu}| \right]
+    \cdot f_{\text{well}}(p,h,U,V)
+    \]
 
-  <p>where \(P_n\) is the Pauli correction for the current state and \(B\) is the conversion-specific Pauli correction (maximum of before and after configurations).</p>
+    <p>where \(P_n\) is the Pauli correction for the current state and \(B\) is the conversion-specific Pauli correction
+      (maximum of before and after configurations).</p>
 
-  <h2>Numerical Integration</h2>
-  <p>The numerical approach integrates over the intermediate excitation energy e of the created or converted pair (Eq. 13.17 for pair creation):</p>
-  \[
-  \lambda_{\pi^+}^{\text{num}}(p,h,E) = \frac{1}{\omega_i(U)} \sum_{\text{sub-channels}} \int_{L_1}^{L_2} de\,
-  \frac{2\pi}{\hbar} M_{\text{sub}}^2\,
-  \omega_t(e)\, g_{\text{factor}}\,
-  \omega_r(U-e)
-  \]
+    <h2>Numerical Integration</h2>
+    <p>The numerical approach integrates over the intermediate excitation energy e of the created or converted pair (Eq.
+      13.17 for pair creation):</p>
+    \[
+    \lambda_{\pi^+}^{\text{num}}(p,h,E) = \frac{1}{\omega_i(U)} \sum_{\text{sub-channels}} \int_{L_1}^{L_2} de\,
+    \frac{2\pi}{\hbar} M_{\text{sub}}^2\,
+    \omega_t(e)\, g_{\text{factor}}\,
+    \omega_r(U-e)
+    \]
 
-  <p>The four sub-channels for proton pair creation are:</p>
-  <ul>
-    <li><code>pip</code> (π particle, same-type): t=(2,1,0,0), r=(p<sub>π</sub>-1, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>), M²=M<sup>2</sup><sub>ππ</sub>, g<sub>factor</sub>=g<sub>π</sub></li>
-    <li><code>pih</code> (π hole, same-type): t=(1,2,0,0), r=(p<sub>π</sub>, h<sub>π</sub>-1, p<sub>ν</sub>, h<sub>ν</sub>)</li>
-    <li><code>nup</code> (ν particle, cross-type): t=(1,1,1,0), r=(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>-1, h<sub>ν</sub>), M²=M<sup>2</sup><sub>νπ</sub>, g<sub>factor</sub>=g<sub>ν</sub></li>
-    <li><code>nuh</code> (ν hole, cross-type): t=(1,1,0,1), r=(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>-1)</li>
-  </ul>
+    <p>The four sub-channels for proton pair creation are:</p>
+    <ul>
+      <li><code>pip</code> (π particle, same-type): t=(2,1,0,0), r=(p<sub>π</sub>-1, h<sub>π</sub>, p<sub>ν</sub>,
+        h<sub>ν</sub>), M²=M<sup>2</sup><sub>ππ</sub>, g<sub>factor</sub>=g<sub>π</sub></li>
+      <li><code>pih</code> (π hole, same-type): t=(1,2,0,0), r=(p<sub>π</sub>, h<sub>π</sub>-1, p<sub>ν</sub>,
+        h<sub>ν</sub>)</li>
+      <li><code>nup</code> (ν particle, cross-type): t=(1,1,1,0), r=(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>-1,
+        h<sub>ν</sub>), M²=M<sup>2</sup><sub>νπ</sub>, g<sub>factor</sub>=g<sub>ν</sub></li>
+      <li><code>nuh</code> (ν hole, cross-type): t=(1,1,0,1), r=(p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>,
+        h<sub>ν</sub>-1)</li>
+    </ul>
 
-  <h2>Integration Methods</h2>
-  <table>
-    <tr><th>Method</th><th>Default</th><th>Description</th></tr>
-    <tr><td>Clenshaw–Curtis</td><td>✅ (default)</td><td>Adaptive quadrature via MARLEY's <code>num_integrate()</code>. 50-point initial grid, automatically refined.</td></tr>
-    <tr><td>Midpoint</td><td>—</td><td>Fixed N-bin midpoint rule. Use with <code>--method midpoint --midbins N</code>.</td></tr>
-  </table>
+    <h2>Integration Methods</h2>
+    <table>
+      <tr>
+        <th>Method</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>Clenshaw–Curtis</td>
+        <td>✅ (default)</td>
+        <td>Adaptive quadrature via MARLEY's <code>num_integrate()</code>. 50-point initial grid, automatically refined.
+        </td>
+      </tr>
+      <tr>
+        <td>Midpoint</td>
+        <td>—</td>
+        <td>Fixed N-bin midpoint rule. Use with <code>--method midpoint --midbins N</code>.</td>
+      </tr>
+    </table>
 
-  <h2>Guard Bounds</h2>
-  <p>When guard bounds are enabled (default), integration limits are adjusted to enforce the Pauli principle:</p>
-  \[
-  L_1^{\text{guarded}} = \max(L_1,\; \text{guard}_{\text{created}}), \qquad
-  L_2^{\text{guarded}} = \min(L_2,\; U - \text{guard}_{\text{removed}})
-  \]
-  <p>where \(\text{guard} = \max(p,h)^2/g_\pi + \max(p_\nu,h_\nu)^2/g_\nu\).</p>
+    <h2>Guard Bounds</h2>
+    <p>When guard bounds are enabled (default), integration limits are adjusted to enforce the Pauli principle:</p>
+    \[
+    L_1^{\text{guarded}} = \max(L_1,\; \text{guard}_{\text{created}}), \qquad
+    L_2^{\text{guarded}} = \min(L_2,\; U - \text{guard}_{\text{removed}})
+    \]
+    <p>where \(\text{guard} = \max(p,h)^2/g_\pi + \max(p_\nu,h_\nu)^2/g_\nu\).</p>
 
-  <h2>Output (8-col YANDF-0.4)</h2>
-  <p>Columns: p<sub>π</sub> h<sub>π</sub> p<sub>ν</sub> h<sub>ν</sub> λ<sub>π+</sub> λ<sub>ν+</sub> λ<sub>πν</sub> λ<sub>νπ</sub> in units of s<sup>-1</sup>.</p>
-</main>
-<footer>
-  <div class="container">exciton documentation</div>
-</footer>
+    <h2>Output (8-col YANDF-0.4)</h2>
+    <p>Columns: p<sub>π</sub> h<sub>π</sub> p<sub>ν</sub> h<sub>ν</sub> λ<sub>π+</sub> λ<sub>ν+</sub> λ<sub>πν</sub>
+      λ<sub>νπ</sub> in units of s<sup>-1</sup>.</p>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
 </body>
+
 </html>

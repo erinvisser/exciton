@@ -1,106 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Validations — exciton</title>
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validations — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="../index.html" class="brand">exciton</a>
-    <span class="nav-section">Tutorials</span>
-    <a href="../tutorials/getting-started.html">Getting Started</a>
-    <a href="../tutorials/running-calculations.html">Running Calculations</a>
-    <span class="nav-section">How-to</span>
-    <a href="../howto/omega-calculations.html">Omega</a>
-    <a href="../howto/lambda-calculations.html">Lambda</a>
-    <a href="../howto/validations.html" class="active">Validations</a>
-    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
-    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
-    <span class="nav-section">Status</span>
-    <a href="../status.html">Branch Status</a>
-    <span class="nav-section">Reference</span>
-    <a href="../reference/physics-formulas.html">Formulas</a>
-    <a href="../reference/parameters.html">Parameters</a>
-    <a href="../reference/api.html">API</a>
-    <a href="../reference/output-format.html">Output</a>
-    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
-    <span class="nav-section">Explanation</span>
-    <a href="../explanation/exciton-model.html">Exciton Model</a>
-    <a href="../explanation/omp-implementation.html">OMP</a>
-    <a href="../explanation/state-densities.html">State Densities</a>
-  </div>
-</nav>
-<main class="container">
-  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Validations</span></div>
-  <h1>Validations</h1>
-  <p>This project validates against TALYS 1.96 output for the <sup>40</sup>Ar(n,x) system. Two Python comparison scripts are provided.</p>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html" class="active">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Validations</span></div>
+    <h1>Validations</h1>
+    <p>This project validates against TALYS 2.2 output for the <sup>40</sup>Ar(n,x) system. Two Python comparison
+      scripts are provided.</p>
 
-  <h2>1. State Density (Omega) Validation</h2>
-  <h3>Script: <code>compare_omega.py</code></h3>
-  <p>Parses two 13-column YANDF-0.4 files and compares all 300 (p<sub>π</sub>,h<sub>π</sub>,p<sub>ν</sub>,h<sub>ν</sub>) configurations.</p>
-  <div class="terminal">
-    <span class="prompt">$</span> <span class="cmd">python3 compare_omega.py exciton_omega.txt talys_omega.txt</span>
-  </div>
-  <table>
-    <tr><th>Test Case</th><th>Result</th><th>Max Error</th></tr>
-    <tr><td>Fixed V=38 MeV</td><td><span class="tag" style="background:#155724;">PASS</span></td><td>0.0085% relative (all 300 values)</td></tr>
-    <tr><td>Energy-dependent V</td><td><span class="tag" style="background:#721c24;">FAIL</span></td><td>Large deviations — not yet matched to TALYS</td></tr>
-  </table>
+    <h2>1. State Density (Omega) Validation</h2>
+    <h3>Script: <code>compare_omega.py</code></h3>
+    <p>Parses two 13-column YANDF-0.4 files and compares all 300
+      (p<sub>π</sub>,h<sub>π</sub>,p<sub>ν</sub>,h<sub>ν</sub>) configurations.</p>
+    <div class="terminal">
+      <span class="prompt">$</span> <span class="cmd">python3 compare_omega.py exciton_omega.txt talys_omega.txt</span>
+    </div>
+    <table>
+      <tr>
+        <th>Test Case</th>
+        <th>Result</th>
+        <th>Max Error</th>
+      </tr>
+      <tr>
+        <td>Fixed V=38 MeV</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+        <td>0.0085% relative (all 300 values)</td>
+      </tr>
+      <tr>
+        <td>Energy-dependent V</td>
+        <td><span class="tag" style="background:#721c24;">FAIL</span></td>
+        <td>Large deviations — not yet matched to TALYS</td>
+      </tr>
+    </table>
 
-  <h2>2. Spin Distribution Validation</h2>
-  <p>The spin distribution function <code>spinDistribution(J, A, n)</code> in <code>src/preeq_common.cpp</code> computes the fraction of states with total spin J for an n-exciton configuration. Validated for J=0..8 and n=1..12:</p>
-  <table>
-    <tr><th>Test Case</th><th>Result</th><th>Max Error</th></tr>
-    <tr><td>All 120 (J,n) pairs</td><td><span class="tag" style="background:#155724;">PASS</span></td><td>0.0095% relative</td></tr>
-  </table>
+    <h2>2. Spin Distribution Validation</h2>
+    <p>The spin distribution function <code>spinDistribution(J, A, n)</code> in <code>src/preeq_common.cpp</code>
+      computes the fraction of states with total spin J for an n-exciton configuration. Validated for J=0..8 and
+      n=1..12:</p>
+    <table>
+      <tr>
+        <th>Test Case</th>
+        <th>Result</th>
+        <th>Max Error</th>
+      </tr>
+      <tr>
+        <td>All 120 (J,n) pairs</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+        <td>0.0095% relative</td>
+      </tr>
+    </table>
 
-  <h2>3. Transition Rate (Lambda) Validation</h2>
-  <h3>Script: <code>compare_lambda.py</code></h3>
-  <p>Parses two 8-column YANDF-0.4 files and compares all 84 exciton states (k=0..5).</p>
-  <div class="terminal">
-    <span class="prompt">$</span> <span class="cmd">python3 compare_lambda.py exciton_lambda.txt talys_lambda.txt</span>
-  </div>
+    <h2>3. Transition Rate (Lambda) Validation</h2>
+    <h3>Script: <code>compare_lambda.py</code></h3>
+    <p>Parses two 8-column YANDF-0.4 files and compares all 84 exciton states (k=0..5).</p>
+    <div class="terminal">
+      <span class="prompt">$</span> <span class="cmd">python3 compare_lambda.py exciton_lambda.txt
+        talys_lambda.txt</span>
+    </div>
 
-  <h3>Matrix-Squared Kernel (preeqmode=1)</h3>
-  <table>
-    <tr><th>Test Case</th><th>Result</th><th>Max Error</th><th>Notes</th></tr>
-    <tr><td>λ analytical</td><td><span class="tag" style="background:#155724;">PASS</span></td><td>0.0004%</td><td>All 84 values match; furthest outlier &lt;0.001%</td></tr>
-    <tr><td>λ numerical (guarded CC)</td><td><span class="tag" style="background:#b57200;">PARTIAL</span></td><td>13.44%</td><td>81/84 &lt; 1%; 3 outliers identified above</td></tr>
-  </table>
+    <h3>Matrix-Squared Kernel (preeqmode=1)</h3>
+    <table>
+      <tr>
+        <th>Test Case</th>
+        <th>Result</th>
+        <th>Max Error</th>
+        <th>Notes</th>
+      </tr>
+      <tr>
+        <td>λ analytical</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+        <td>0.0004%</td>
+        <td>All 84 values match; furthest outlier &lt;0.001%</td>
+      </tr>
+      <tr>
+        <td>λ numerical (guarded CC)</td>
+        <td><span class="tag" style="background:#b57200;">PARTIAL</span></td>
+        <td>13.44%</td>
+        <td>81/84 &lt; 1%; 3 outliers identified above</td>
+      </tr>
+    </table>
 
-  <h3>Outlier Details (Numerical M²)</h3>
-  <table>
-    <tr><th>State (p<sub>π</sub>,h<sub>π</sub>,p<sub>ν</sub>,h<sub>ν</sub>)</th><th>n</th><th>Channel</th><th>Error</th><th>Suspected Cause</th></tr>
-    <tr><td>(5,5,1,0)</td><td>11</td><td>\(\lambda_{\nu}^+\)</td><td>13.4%</td><td>Deep Pauli regime; guard bounds sensitivity</td></tr>
-    <tr><td>(1,1,1,0)</td><td>3</td><td>\(\lambda_{\pi\nu}\)</td><td>2.0%</td><td>Conversion channel near threshold</td></tr>
-    <tr><td>(0,0,2,1)</td><td>3</td><td>\(\lambda_{\nu\pi}\)</td><td>1.8%</td><td>Conversion channel near threshold</td></tr>
-  </table>
+    <h3>Outlier Details (Numerical M²)</h3>
+    <table>
+      <tr>
+        <th>State (p<sub>π</sub>,h<sub>π</sub>,p<sub>ν</sub>,h<sub>ν</sub>)</th>
+        <th>n</th>
+        <th>Channel</th>
+        <th>Error</th>
+        <th>Suspected Cause</th>
+      </tr>
+      <tr>
+        <td>(5,5,1,0)</td>
+        <td>11</td>
+        <td>\(\lambda_{\nu}^+\)</td>
+        <td>13.4%</td>
+        <td>Deep Pauli regime; guard bounds sensitivity</td>
+      </tr>
+      <tr>
+        <td>(1,1,1,0)</td>
+        <td>3</td>
+        <td>\(\lambda_{\pi\nu}\)</td>
+        <td>2.0%</td>
+        <td>Conversion channel near threshold</td>
+      </tr>
+      <tr>
+        <td>(0,0,2,1)</td>
+        <td>3</td>
+        <td>\(\lambda_{\nu\pi}\)</td>
+        <td>1.8%</td>
+        <td>Conversion channel near threshold</td>
+      </tr>
+    </table>
 
-  <h3>OMP Kernel (preeqmode=3, OMP branch only)</h3>
-  <table>
-    <tr><th>Validation</th><th>Result</th></tr>
-    <tr><td>KD03 coefficients</td><td><span class="tag" style="background:#155724;">PASS</span> (exact match)</td></tr>
-    <tr><td>Well depths (Vv, Wv, Wd, Vso, Wso)</td><td><span class="tag" style="background:#155724;">PASS</span> (all energies)</td></tr>
-    <tr><td>Radial potential U(r)</td><td><span class="tag" style="background:#155724;">PASS</span> (0.1–15 fm)</td></tr>
-    <tr><td>MARLEY Q-values</td><td><span class="tag" style="background:#155724;">PASS</span></td></tr>
-    <tr><td>λ transition rates</td><td><span class="tag" style="background:#721c24;">FAIL</span> (30–100% error)</td></tr>
-  </table>
+    <h3>OMP Kernel (preeqmode=3, OMP branch only)</h3>
+    <table>
+      <tr>
+        <th>Validation</th>
+        <th>Result</th>
+      </tr>
+      <tr>
+        <td>KD03 coefficients</td>
+        <td><span class="tag" style="background:#155724;">PASS</span> (exact match)</td>
+      </tr>
+      <tr>
+        <td>Well depths (Vv, Wv, Wd, Vso, Wso)</td>
+        <td><span class="tag" style="background:#155724;">PASS</span> (all energies)</td>
+      </tr>
+      <tr>
+        <td>Radial potential U(r)</td>
+        <td><span class="tag" style="background:#155724;">PASS</span> (0.1–15 fm)</td>
+      </tr>
+      <tr>
+        <td>MARLEY Q-values</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+      </tr>
+      <tr>
+        <td>λ transition rates</td>
+        <td><span class="tag" style="background:#721c24;">FAIL</span> (30–100% error)</td>
+      </tr>
+    </table>
 
-  <h2>4. Running the Full Validation Suite</h2>
-  <div class="terminal">
-    <span class="prompt">$</span> <span class="cmd"># Omega (state densities)<br>./executables/omega &gt; omega_exciton.txt<br>python3 compare_omega.py omega_exciton.txt path/to/talys_omega.txt</span><br><br>
-    <span class="prompt">$</span> <span class="cmd"># Lambda analytical<br>./executables/lambda --analytical &gt; lambda_analytical.txt<br>python3 compare_lambda.py lambda_analytical.txt path/to/talys_analytical.txt</span><br><br>
-    <span class="prompt">$</span> <span class="cmd"># Lambda numerical (guarded Clenshaw-Curtis)<br>./executables/lambda &gt; lambda_numerical.txt<br>python3 compare_lambda.py lambda_numerical.txt path/to/talys_numerical.txt</span>
-  </div>
+    <h2>4. Running the Full Validation Suite</h2>
+    <div class="terminal">
+      <span class="prompt">$</span> <span class="cmd"># Omega (state densities)<br>./executables/omega &gt;
+        omega_exciton.txt<br>python3 compare_omega.py omega_exciton.txt path/to/talys_omega.txt</span><br><br>
+      <span class="prompt">$</span> <span class="cmd"># Lambda analytical<br>./executables/lambda --analytical &gt;
+        lambda_analytical.txt<br>python3 compare_lambda.py lambda_analytical.txt
+        path/to/talys_analytical.txt</span><br><br>
+      <span class="prompt">$</span> <span class="cmd"># Lambda numerical (guarded
+        Clenshaw-Curtis)<br>./executables/lambda &gt; lambda_numerical.txt<br>python3 compare_lambda.py
+        lambda_numerical.txt path/to/talys_numerical.txt</span>
+    </div>
 
-  <p>See the <a href="../status.html">Branch Status</a> page for the full validation matrix across all branches.</p>
-</main>
-<footer>
-  <div class="container">exciton documentation</div>
-</footer>
+    <p>See the <a href="../status.html">Branch Status</a> page for the full validation matrix across all branches.</p>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
 </body>
+
 </html>

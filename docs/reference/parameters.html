@@ -1,105 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parameters — exciton</title>
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parameters — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="../index.html" class="brand">exciton</a>
-    <span class="nav-section">Tutorials</span>
-    <a href="../tutorials/getting-started.html">Getting Started</a>
-    <a href="../tutorials/running-calculations.html">Running Calculations</a>
-    <span class="nav-section">How-to</span>
-    <a href="../howto/omega-calculations.html">Omega</a>
-    <a href="../howto/lambda-calculations.html">Lambda</a>
-    <a href="../howto/validations.html">Validations</a>
-    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
-    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
-    <span class="nav-section">Status</span>
-    <a href="../status.html">Branch Status</a>
-    <span class="nav-section">Reference</span>
-    <a href="../reference/physics-formulas.html">Formulas</a>
-    <a href="../reference/parameters.html" class="active">Parameters</a>
-    <a href="../reference/api.html">API</a>
-    <a href="../reference/output-format.html">Output</a>
-    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
-    <span class="nav-section">Explanation</span>
-    <a href="../explanation/exciton-model.html">Exciton Model</a>
-    <a href="../explanation/omp-implementation.html">OMP</a>
-    <a href="../explanation/state-densities.html">State Densities</a>
-  </div>
-</nav>
-<main class="container">
-  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Parameters</span></div>
-  <h1>Parameters</h1>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html" class="active">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Parameters</span></div>
+    <h1>Parameters</h1>
 
-  <h2>Physical Constants</h2>
-  <p>Defined in <code>include/preeq_common.hh</code>:</p>
-  <table>
-    <tr><th>Symbol</th><th>Value</th><th>Units</th></tr>
-    <tr><td>\(\pi\)</td><td>3.14159265358979323846</td><td>—</td></tr>
-    <tr><td>\(\hbar\)</td><td>6.582119569 × 10<sup>-22</sup></td><td>MeV·s</td></tr>
-  </table>
+    <h2>Physical Constants</h2>
+    <p>Defined in <code>include/preeq_common.hh</code>:</p>
+    <table>
+      <tr>
+        <th>Symbol</th>
+        <th>Value</th>
+        <th>Units</th>
+      </tr>
+      <tr>
+        <td>\(\pi\)</td>
+        <td>3.14159265358979323846</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>\(\hbar\)</td>
+        <td>6.582119569 × 10<sup>-22</sup></td>
+        <td>MeV·s</td>
+      </tr>
+    </table>
 
-  <h2>System Parameters</h2>
-  <p>Hard-coded in <code>src/main_lambda.cpp</code> and <code>src/main_omega.cpp</code>:</p>
-  <table>
-    <tr><th>Parameter</th><th>Symbol</th><th>Value</th><th>Description</th></tr>
-    <tr><td>Target Z</td><td>Z</td><td>18</td><td>Argon atomic number</td></tr>
-    <tr><td>Compound N</td><td>N</td><td>23</td><td>Compound neutron number (target N=22 + projectile)</td></tr>
-    <tr><td>Projectile A</td><td>A<sub>p</sub></td><td>1</td><td>Neutron mass number</td></tr>
-    <tr><td>Target A</td><td>A<sub>target</sub></td><td>40</td><td>Target mass number (for pairing)</td></tr>
-    <tr><td>Compound excitation</td><td>E<sub>comp</sub></td><td>25.60156</td><td>MeV</td></tr>
-    <tr><td>Fermi well depth</td><td>V</td><td>38.0</td><td>MeV</td></tr>
-  </table>
+    <h2>System Parameters</h2>
+    <p>Hard-coded in <code>src/main_lambda.cpp</code> and <code>src/main_omega.cpp</code>:</p>
+    <table>
+      <tr>
+        <th>Parameter</th>
+        <th>Symbol</th>
+        <th>Value</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>Target Z</td>
+        <td>Z</td>
+        <td>18</td>
+        <td>Argon atomic number</td>
+      </tr>
+      <tr>
+        <td>Compound N</td>
+        <td>N</td>
+        <td>23</td>
+        <td>Compound neutron number (target N=22 + projectile)</td>
+      </tr>
+      <tr>
+        <td>Projectile A</td>
+        <td>A<sub>p</sub></td>
+        <td>1</td>
+        <td>Neutron mass number</td>
+      </tr>
+      <tr>
+        <td>Target A</td>
+        <td>A<sub>target</sub></td>
+        <td>40</td>
+        <td>Target mass number (for pairing)</td>
+      </tr>
+      <tr>
+        <td>Compound excitation</td>
+        <td>E<sub>comp</sub></td>
+        <td>25.60156</td>
+        <td>MeV</td>
+      </tr>
+      <tr>
+        <td>Fermi well depth</td>
+        <td>V</td>
+        <td>38.0</td>
+        <td>MeV</td>
+      </tr>
+    </table>
 
-  <h2>Tunable Coefficients</h2>
-  <p>Default values in <code>main_lambda.cpp:45-51</code>:</p>
-  <table>
-    <tr><th>Coefficient</th><th>Symbol</th><th>Default</th><th>Range</th><th>Description</th></tr>
-    <tr><td>M² constant</td><td>C<sub>1</sub></td><td>1.0</td><td>0.5–2.0</td><td>Overall scaling of M² (Eq. 13.26)</td></tr>
-    <tr><td>M² energy shift</td><td>C<sub>2</sub></td><td>1.0</td><td>0.5–1.5</td><td>Adjusts 7.48 constant term</td></tr>
-    <tr><td>M² denominator</td><td>C<sub>3</sub></td><td>1.0</td><td>0.5–1.5</td><td>Adjusts 10.7 constant in denominator</td></tr>
-    <tr><td>νν/ππ ratio</td><td>R<sub>νν</sub></td><td>1.5</td><td>0.5–3.0</td><td>Neutron–neutron same-type ratio</td></tr>
-    <tr><td>νπ ratio</td><td>R<sub>νπ</sub></td><td>1.0</td><td>0.5–2.0</td><td>Neutron–proton cross-type ratio</td></tr>
-    <tr><td>ππ ratio</td><td>R<sub>ππ</sub></td><td>1.0</td><td>0.5–2.0</td><td>Proton–proton same-type ratio</td></tr>
-    <tr><td>πν ratio</td><td>R<sub>πν</sub></td><td>1.0</td><td>0.5–2.0</td><td>Proton–neutron cross-type ratio</td></tr>
-    <tr><td>Pairing χ</td><td>χ</td><td>1</td><td>0, ±1</td><td>Pairing phase for N–Z parity</td></tr>
-    <tr><td>OMP constant</td><td>C<sub>OMP</sub></td><td>0.55</td><td>—</td><td>Wompfac normalization constant (OMP branch)</td></tr>
-  </table>
+    <h2>Tunable Coefficients</h2>
+    <p>Default values in <code>main_lambda.cpp:45-51</code>:</p>
+    <table>
+      <tr>
+        <th>Coefficient</th>
+        <th>Symbol</th>
+        <th>Default</th>
+        <th>Range</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>M² constant</td>
+        <td>C<sub>1</sub></td>
+        <td>1.0</td>
+        <td>0.5–2.0</td>
+        <td>Overall scaling of M² (Eq. 13.26)</td>
+      </tr>
+      <tr>
+        <td>M² energy shift</td>
+        <td>C<sub>2</sub></td>
+        <td>1.0</td>
+        <td>0.5–1.5</td>
+        <td>Adjusts 7.48 constant term</td>
+      </tr>
+      <tr>
+        <td>M² denominator</td>
+        <td>C<sub>3</sub></td>
+        <td>1.0</td>
+        <td>0.5–1.5</td>
+        <td>Adjusts 10.7 constant in denominator</td>
+      </tr>
+      <tr>
+        <td>νν/ππ ratio</td>
+        <td>R<sub>νν</sub></td>
+        <td>1.5</td>
+        <td>0.5–3.0</td>
+        <td>Neutron–neutron same-type ratio</td>
+      </tr>
+      <tr>
+        <td>νπ ratio</td>
+        <td>R<sub>νπ</sub></td>
+        <td>1.0</td>
+        <td>0.5–2.0</td>
+        <td>Neutron–proton cross-type ratio</td>
+      </tr>
+      <tr>
+        <td>ππ ratio</td>
+        <td>R<sub>ππ</sub></td>
+        <td>1.0</td>
+        <td>0.5–2.0</td>
+        <td>Proton–proton same-type ratio</td>
+      </tr>
+      <tr>
+        <td>πν ratio</td>
+        <td>R<sub>πν</sub></td>
+        <td>1.0</td>
+        <td>0.5–2.0</td>
+        <td>Proton–neutron cross-type ratio</td>
+      </tr>
+      <tr>
+        <td>Pairing χ</td>
+        <td>χ</td>
+        <td>1</td>
+        <td>0, ±1</td>
+        <td>Pairing phase for N–Z parity</td>
+      </tr>
+      <tr>
+        <td>OMP constant</td>
+        <td>C<sub>OMP</sub></td>
+        <td>0.55</td>
+        <td>—</td>
+        <td>Wompfac normalization constant (OMP branch)</td>
+      </tr>
+    </table>
 
-  <h2>Single-Particle Densities</h2>
-  <p>Computed from Ericson's formula:</p>
-  <table>
-    <tr><th>Density</th><th>Formula</th><th>Ar40 Value</th></tr>
-    <tr><td>g<sub>π</sub></td><td>Z/15</td><td>1.2 MeV<sup>-1</sup></td></tr>
-    <tr><td>g<sub>ν</sub></td><td>N/15</td><td>1.5333 MeV<sup>-1</sup> (compound) / 1.4667 MeV<sup>-1</sup> (target)</td></tr>
-  </table>
+    <h2>Single-Particle Densities</h2>
+    <p>Computed from Ericson's formula:</p>
+    <table>
+      <tr>
+        <th>Density</th>
+        <th>Formula</th>
+        <th>Ar40 Value</th>
+      </tr>
+      <tr>
+        <td>g<sub>π</sub></td>
+        <td>Z/15</td>
+        <td>1.2 MeV<sup>-1</sup></td>
+      </tr>
+      <tr>
+        <td>g<sub>ν</sub></td>
+        <td>N/15</td>
+        <td>1.5333 MeV<sup>-1</sup> (compound) / 1.4667 MeV<sup>-1</sup> (target)</td>
+      </tr>
+    </table>
 
-  <h2>Integration Parameters</h2>
-  <table>
-    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
-    <tr><td>Integration method</td><td>Clenshaw–Curtis</td><td>Adaptive quadrature via MARLEY integrator</td></tr>
-    <tr><td>Midpoint bins</td><td>50</td><td>Number of fixed bins for midpoint method</td></tr>
-    <tr><td>Guard bounds</td><td>On</td><td>Pauli-prescribed limits enforced</td></tr>
-    <tr><td>Radial bins (OMP)</td><td>50</td><td>Bins for volume-averaged W(r) at dr=0.4 fm</td></tr>
-  </table>
+    <h2>Integration Parameters</h2>
+    <table>
+      <tr>
+        <th>Parameter</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td>Integration method</td>
+        <td>Clenshaw–Curtis</td>
+        <td>Adaptive quadrature via MARLEY integrator</td>
+      </tr>
+      <tr>
+        <td>Midpoint bins</td>
+        <td>50</td>
+        <td>Number of fixed bins for midpoint method</td>
+      </tr>
+      <tr>
+        <td>Guard bounds</td>
+        <td>On</td>
+        <td>Pauli-prescribed limits enforced</td>
+      </tr>
+      <tr>
+        <td>Radial bins (OMP)</td>
+        <td>50</td>
+        <td>Bins for volume-averaged W(r) at dr=0.4 fm</td>
+      </tr>
+    </table>
 
-  <h2>Pairing Energy</h2>
-  <table>
-    <tr><th>Property</th><th>Target <sup>40</sup>Ar</th><th>Compound <sup>41</sup>Ar</th></tr>
-    <tr><td>Mass A</td><td>40</td><td>41</td></tr>
-    <tr><td>N−Z parity</td><td>Even–even (χ=1)</td><td>Even–odd (χ=-1)</td></tr>
-    <tr><td>Δ</td><td>12/√40 = 1.897 MeV</td><td>−12/√41 = −1.874 MeV</td></tr>
-  </table>
-</main>
-<footer>
-  <div class="container">exciton documentation</div>
-</footer>
+    <h2>Pairing Energy</h2>
+    <table>
+      <tr>
+        <th>Property</th>
+        <th>Target <sup>40</sup>Ar</th>
+        <th>Compound <sup>41</sup>Ar</th>
+      </tr>
+      <tr>
+        <td>Mass A</td>
+        <td>40</td>
+        <td>41</td>
+      </tr>
+      <tr>
+        <td>N−Z parity</td>
+        <td>Even–even (χ=1)</td>
+        <td>Even–odd (χ=-1)</td>
+      </tr>
+      <tr>
+        <td>Δ</td>
+        <td>12/√40 = 1.897 MeV</td>
+        <td>−12/√41 = −1.874 MeV</td>
+      </tr>
+    </table>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
 </body>
+
 </html>

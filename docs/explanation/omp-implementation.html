@@ -1,116 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OMP Implementation — exciton</title>
-<link rel="stylesheet" href="../css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OMP Implementation — exciton</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
+
 <body>
-<nav>
-  <div class="container">
-    <a href="../index.html" class="brand">exciton</a>
-    <span class="nav-section">Tutorials</span>
-    <a href="../tutorials/getting-started.html">Getting Started</a>
-    <a href="../tutorials/running-calculations.html">Running Calculations</a>
-    <span class="nav-section">How-to</span>
-    <a href="../howto/omega-calculations.html">Omega</a>
-    <a href="../howto/lambda-calculations.html">Lambda</a>
-    <a href="../howto/validations.html">Validations</a>
-    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
-    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
-    <span class="nav-section">Status</span>
-    <a href="../status.html">Branch Status</a>
-    <span class="nav-section">Reference</span>
-    <a href="../reference/physics-formulas.html">Formulas</a>
-    <a href="../reference/parameters.html">Parameters</a>
-    <a href="../reference/api.html">API</a>
-    <a href="../reference/output-format.html">Output</a>
-    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
-    <span class="nav-section">Explanation</span>
-    <a href="../explanation/exciton-model.html">Exciton Model</a>
-    <a href="../explanation/omp-implementation.html" class="active">OMP</a>
-    <a href="../explanation/state-densities.html">State Densities</a>
-  </div>
-</nav>
-<main class="container">
-  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>OMP Implementation</span></div>
-  <h1>Optical Model Potential Implementation</h1>
+  <nav>
+    <div class="container">
+      <a href="../index.html" class="brand">exciton</a>
+      <span class="nav-section">Tutorials</span>
+      <a href="../tutorials/getting-started.html">Getting Started</a>
+      <a href="../tutorials/running-calculations.html">Running Calculations</a>
+      <span class="nav-section">How-to</span>
+      <a href="../howto/omega-calculations.html">Omega</a>
+      <a href="../howto/lambda-calculations.html">Lambda</a>
+      <a href="../howto/validations.html">Validations</a>
+      <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+      <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+      <span class="nav-section">Status</span>
+      <a href="../status.html">Branch Status</a>
+      <span class="nav-section">Reference</span>
+      <a href="../reference/physics-formulas.html">Formulas</a>
+      <a href="../reference/parameters.html">Parameters</a>
+      <a href="../reference/api.html">API</a>
+      <a href="../reference/output-format.html">Output</a>
+      <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+      <span class="nav-section">Explanation</span>
+      <a href="../explanation/exciton-model.html">Exciton Model</a>
+      <a href="../explanation/omp-implementation.html" class="active">OMP</a>
+      <a href="../explanation/state-densities.html">State Densities</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="breadcrumb"><a href="../index.html">Home</a> / <span>OMP Implementation</span></div>
+    <h1>Optical Model Potential Implementation</h1>
 
-  <div class="box">
-    <strong>Purpose:</strong> Replace the constant M² matrix element with a collision probability derived from the Koning–Delaroche (KD03) global optical model. This page is a summary; the <a href="../omp_implementation.html">full deep-dive</a> covers the complete data flow, formulas, and code map.
-  </div>
+    <div class="box">
+      <strong>Purpose:</strong> Replace the constant M² matrix element with a collision probability derived from the
+      Koning–Delaroche (KD03) global optical model. This page is a summary; the <a
+        href="../omp_implementation.html">full deep-dive</a> covers the complete data flow, formulas, and code map.
+    </div>
 
-  <h2>Overview</h2>
-  <p>The OMP implementation resides on the <code>OMP</code> branch and implements TALYS <code>preeqmode=3</code>. The flow is:</p>
-  <ol>
-    <li>CLI flag <code>--kernel optical-model</code> selects the OMP collision kernel</li>
-    <li><code>lambdaRate()</code> dispatches to the OMP integrand branches</li>
-    <li>For each energy bin e in the numerical integration:
-      <ol type="a">
-        <li>Compute compound nucleus (Z<sub>comp</sub>, A<sub>comp</sub>) = (Z+Z<sub>proj</sub>, A+A<sub>p</sub>)</li>
-        <li>Load separation energies from MARLEY MassTable</li>
-        <li>Compute e<sub>kin</sub> = e − S<sub>p/n</sub>(Z<sub>comp</sub>, N<sub>comp</sub>)</li>
-        <li>Instantiate <code>KoningDelarocheOpticalModel</code> with (Z<sub>comp</sub>, A<sub>comp</sub>)</li>
-        <li>Call <code>setIncidentEnergyAndFragment(e_kin, collider_pdg)</code> with two_s=0 (central potential only)</li>
-        <li>Call <code>wvolRadialIntegral()</code> for volume-averaged ⟨W⟩</li>
-        <li>Collision rate = (2/ℏ) · wompfac · ⟨W⟩</li>
-        <li>Multiply by state densities ω<sub>t</sub> · ω<sub>r</sub></li>
-      </ol>
-    </li>
-  </ol>
+    <h2>Overview</h2>
+    <p>The OMP implementation resides on the <code>OMP</code> branch and implements TALYS <code>preeqmode=3</code>. The
+      flow is:</p>
+    <ol>
+      <li>CLI flag <code>--kernel optical-model</code> selects the OMP collision kernel</li>
+      <li><code>lambdaRate()</code> dispatches to the OMP integrand branches</li>
+      <li>For each energy bin e in the numerical integration:
+        <ol type="a">
+          <li>Compute compound nucleus (Z<sub>comp</sub>, A<sub>comp</sub>) = (Z+Z<sub>proj</sub>, A+A<sub>p</sub>)</li>
+          <li>Load separation energies from MARLEY MassTable</li>
+          <li>Compute e<sub>kin</sub> = e − S<sub>p/n</sub>(Z<sub>comp</sub>, N<sub>comp</sub>)</li>
+          <li>Instantiate <code>KoningDelarocheOpticalModel</code> with (Z<sub>comp</sub>, A<sub>comp</sub>)</li>
+          <li>Call <code>setIncidentEnergyAndFragment(e_kin, collider_pdg)</code> with two_s=0 (central potential only)
+          </li>
+          <li>Call <code>wvolRadialIntegral()</code> for volume-averaged ⟨W⟩</li>
+          <li>Collision rate = (2/ℏ) · wompfac · ⟨W⟩</li>
+          <li>Multiply by state densities ω<sub>t</sub> · ω<sub>r</sub></li>
+        </ol>
+      </li>
+    </ol>
 
-  <h2>Key Components</h2>
+    <h2>Key Components</h2>
 
-  <h3>wompfac</h3>
-  <p>TALYS weighting factors bridging the M² and OMP normalizations. Three values are computed:</p>
-  <ul>
-    <li><code>wompfac_same</code> — used for same-type pair creation (ππ, νν)</li>
-    <li><code>wompfac_cross</code> — used for cross-type pair creation (πν, νπ)</li>
-    <li><code>wompfac_conv</code> — used for conversion channels (π↔ν)</li>
-  </ul>
-  <p>The OMP constant C<sub>OMP</sub> = 0.55 is from TALYS <code>matrix.f90</code>. At default parameters (M²<sub>c</sub> = 1.0, R<sub>πν</sub> = 1.0): wompfac<sub>same</sub> = 0.1833, wompfac<sub>cross</sub> = 0.3667, wompfac<sub>conv</sub> = 0.275.</p>
+    <h3>wompfac</h3>
+    <p>TALYS weighting factors bridging the M² and OMP normalizations. Three values are computed:</p>
+    <ul>
+      <li><code>wompfac_same</code> — used for same-type pair creation (ππ, νν)</li>
+      <li><code>wompfac_cross</code> — used for cross-type pair creation (πν, νπ)</li>
+      <li><code>wompfac_conv</code> — used for conversion channels (π↔ν)</li>
+    </ul>
+    <p>The OMP constant C<sub>OMP</sub> = 0.55 is from TALYS <code>matrix.f90</code>. At default parameters
+      (M²<sub>c</sub> = 1.0, R<sub>πν</sub> = 1.0): wompfac<sub>same</sub> = 0.1833, wompfac<sub>cross</sub> = 0.3667,
+      wompfac<sub>conv</sub> = 0.275.</p>
 
-  <h3>Koning–Delaroche Optical Model</h3>
-  <p>MARLEY's <code>KoningDelarocheOpticalModel</code> provides the imaginary potential parameters Wv, Wd, Rv, av, Rd, ad as functions of incident nucleon energy. All KD03 parameters, well depths, and radial potentials U(r) have been validated against TALYS output.</p>
+    <h3>Koning–Delaroche Optical Model</h3>
+    <p>MARLEY's <code>KoningDelarocheOpticalModel</code> provides the imaginary potential parameters Wv, Wd, Rv, av, Rd,
+      ad as functions of incident nucleon energy. All KD03 parameters, well depths, and radial potentials U(r) have been
+      validated against TALYS output.</p>
 
-  <h3>Volume-Averaged ⟨W⟩</h3>
-  <p>Eq. 13.30 with a 50-bin midpoint rule (dr = 0.4 fm), matching TALYS <code>bonetti.f90</code>. The radial profile is:</p>
-  \[
-  W(r) = W_v f_v(r) - 4 a_d W_d \frac{d}{dr} f_s(r)
-  \]
-  <p>where f<sub>v</sub> and f<sub>s</sub> are Woods–Saxon form factors.</p>
+    <h3>Volume-Averaged ⟨W⟩</h3>
+    <p>Eq. 13.30 with a 50-bin midpoint rule (dr = 0.4 fm), matching TALYS <code>bonetti.f90</code>. The radial profile
+      is:</p>
+    \[
+    W(r) = W_v f_v(r) - 4 a_d W_d \frac{d}{dr} f_s(r)
+    \]
+    <p>where f<sub>v</sub> and f<sub>s</sub> are Woods–Saxon form factors.</p>
 
-  <h3>MARLEY MassTable</h3>
-  <p>Separation energies S<sub>p</sub>, S<sub>n</sub> come from the MARLEY MassTable singleton, using AME experimental masses with Koning liquid-drop fallback. The reference nucleus is the compound nucleus.</p>
+    <h3>MARLEY MassTable</h3>
+    <p>Separation energies S<sub>p</sub>, S<sub>n</sub> come from the MARLEY MassTable singleton, using AME experimental
+      masses with Koning liquid-drop fallback. The reference nucleus is the compound nucleus.</p>
 
-  <h2>Validation Status</h2>
-  <table>
-    <tr><th>Component</th><th>Status</th></tr>
-    <tr><td>KD03 coefficients</td><td><span class="tag" style="background:#155724;">PASS</span></td></tr>
-    <tr><td>Well depths (energy-dependent)</td><td><span class="tag" style="background:#155724;">PASS</span></td></tr>
-    <tr><td>Radial potential U(r)</td><td><span class="tag" style="background:#155724;">PASS</span></td></tr>
-    <tr><td>MARLEY Q-values</td><td><span class="tag" style="background:#155724;">PASS</span></td></tr>
-    <tr><td>λ transition rates (OMP kernel)</td><td><span class="tag" style="background:#721c24;">FAIL</span></td></tr>
-  </table>
+    <h2>Validation Status</h2>
+    <table>
+      <tr>
+        <th>Component</th>
+        <th>Status</th>
+      </tr>
+      <tr>
+        <td>KD03 coefficients</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+      </tr>
+      <tr>
+        <td>Well depths (energy-dependent)</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+      </tr>
+      <tr>
+        <td>Radial potential U(r)</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+      </tr>
+      <tr>
+        <td>MARLEY Q-values</td>
+        <td><span class="tag" style="background:#155724;">PASS</span></td>
+      </tr>
+      <tr>
+        <td>λ transition rates (OMP kernel)</td>
+        <td><span class="tag" style="background:#721c24;">FAIL</span></td>
+      </tr>
+    </table>
 
-  <div class="box warn">
-    <strong>Root cause not yet identified.</strong> Despite all KD parameters and potentials matching TALYS exactly, the transition rates disagree by 30–100%. See the <a href="../status.html">Branch Status</a> page for detailed hypothesized causes (compound-target confusion, wompfac formula, separation energy sign, hole-channel density ratio, KD model statefulness).
-  </div>
+    <div class="box warn">
+      <strong>Root cause not yet identified.</strong> Despite all KD parameters and potentials matching TALYS exactly,
+      the transition rates disagree by 30–100%. See the <a href="../status.html">Branch Status</a> page for detailed
+      hypothesized causes (compound-target confusion, wompfac formula, separation energy sign, hole-channel density
+      ratio, KD model statefulness).
+    </div>
 
-  <h2>Code Map</h2>
-  <p>For a complete line-by-line code map, see the <a href="../omp_implementation.html">detailed OMP implementation page</a>. Key files:</p>
-  <table>
-    <tr><th>File</th><th>Content</th></tr>
-    <tr><td><code>transition_rates.cpp</code></td><td><code>wvolRadialIntegral()</code>, OMP integrand branches, wompfac formulas</td></tr>
-    <tr><td><code>transition_rates.hh</code></td><td><code>CollisionKernel</code> enum, Z<sub>proj</sub> parameter</td></tr>
-    <tr><td><code>main_lambda.cpp</code></td><td><code>--kernel</code> CLI flag, OMP header output</td></tr>
-    <tr><td><code>KoningDelarocheOpticalModel.{hh,cc}</code></td><td>KD03 constructor, <code>calculate_om_parameters()</code>, <code>setIncidentEnergyAndFragment()</code></td></tr>
-  </table>
-</main>
-<footer>
-  <div class="container">exciton documentation</div>
-</footer>
+    <h2>Code Map</h2>
+    <p>For a complete line-by-line code map, see the <a href="../omp_implementation.html">detailed OMP implementation
+        page</a>. Key files:</p>
+    <table>
+      <tr>
+        <th>File</th>
+        <th>Content</th>
+      </tr>
+      <tr>
+        <td><code>transition_rates.cpp</code></td>
+        <td><code>wvolRadialIntegral()</code>, OMP integrand branches, wompfac formulas</td>
+      </tr>
+      <tr>
+        <td><code>transition_rates.hh</code></td>
+        <td><code>CollisionKernel</code> enum, Z<sub>proj</sub> parameter</td>
+      </tr>
+      <tr>
+        <td><code>main_lambda.cpp</code></td>
+        <td><code>--kernel</code> CLI flag, OMP header output</td>
+      </tr>
+      <tr>
+        <td><code>KoningDelarocheOpticalModel.{hh,cc}</code></td>
+        <td>KD03 constructor, <code>calculate_om_parameters()</code>, <code>setIncidentEnergyAndFragment()</code></td>
+      </tr>
+    </table>
+  </main>
+  <footer>
+    <div class="container">exciton documentation</div>
+  </footer>
 </body>
+
 </html>
