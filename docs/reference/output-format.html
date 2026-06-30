@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Output Format — exciton</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="../status.html">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html" class="active">Output</a>
+    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Output Format</span></div>
+  <h1>Output Format</h1>
+  <p>Both executables produce output in the YANDF-0.4 (Yet Another Nuclear Data Format) metadata header followed by formatted data tables.</p>
+
+  <h2>Metadata Header</h2>
+  <p>Lines starting with <code>#</code> contain metadata. Example from <code>lambda</code>:</p>
+  <div class="terminal">
+    <span class="output">#   title: Ar40(n,x) two-component exciton model<br>#   source: exciton (C++), numerical mode, clenshaw-curtis, guarded integration, matrix-element kernel<br>#   user: Erin Visser<br>#   date: 2026-06-16<br>#   format: YANDF-0.4<br># target:<br>#   Z: 18<br>#   A: 40<br>#   nuclide: Ar40<br># parameters:<br>#   E-incident [MeV]:  2.000000E+01<br>#   E-compound [MeV]:  25.60156<br>#   Fermi well depth [MeV]:  38.0<br>#   ...<br>#   columns: 8<br>#   entries: 84</span>
+  </div>
+
+  <h2>Lambda (Transition Rate) — 8-Column Format</h2>
+  <p>Two header lines (with <code>##</code>) precede the data:</p>
+  <div class="terminal">
+    <span class="output">##     p(p)           h(p)           p(n)           h(n)       lambdapiplus   lambdanuplus    lambdapinu     lambdanupi<br>##      []             []             []             []          [sec^-1]       [sec^-1]       [sec^-1]       [sec^-1]</span>
+  </div>
+
+  <table>
+    <tr><th>Col</th><th>Name</th><th>Width</th><th>Units</th><th>Description</th></tr>
+    <tr><td>1</td><td>p(p)</td><td>14</td><td>—</td><td>Proton particle number p<sub>π</sub></td></tr>
+    <tr><td>2</td><td>h(p)</td><td>14</td><td>—</td><td>Proton hole number h<sub>π</sub></td></tr>
+    <tr><td>3</td><td>p(n)</td><td>14</td><td>—</td><td>Neutron particle number p<sub>ν</sub></td></tr>
+    <tr><td>4</td><td>h(n)</td><td>14</td><td>—</td><td>Neutron hole number h<sub>ν</sub></td></tr>
+    <tr><td>5</td><td>lambdapiplus</td><td>15</td><td>s<sup>-1</sup></td><td>Proton pair creation rate \(\lambda_{\pi^+}\)</td></tr>
+    <tr><td>6</td><td>lambdanuplus</td><td>15</td><td>s<sup>-1</sup></td><td>Neutron pair creation rate \(\lambda_{\nu^+}\)</td></tr>
+    <tr><td>7</td><td>lambdapinu</td><td>15</td><td>s<sup>-1</sup></td><td>Proton→neutron conversion \(\lambda_{\pi\nu}\)</td></tr>
+    <tr><td>8</td><td>lambdanupi</td><td>15</td><td>s<sup>-1</sup></td><td>Neutron→proton conversion \(\lambda_{\nu\pi}\)</td></tr>
+  </table>
+
+  <h3>Sample Lambda Output</h3>
+  <div class="terminal">
+    <span class="output">             0             0             1             0    2.567310E+03    1.467402E+04    3.938975E+03    1.873780E+04<br>             0             0             2             1    2.212407E+06    1.293851E+07    3.402873E+06    1.552375E+07<br>             1             0             1             1    1.499257E+07    8.642365E+07    2.100682E+07    8.247020E+07<br>...</span>
+  </div>
+
+  <h2>Omega (State Density) — 13-Column Format</h2>
+  <div class="terminal">
+    <span class="output">##     p(p)           h(p)           p(n)           h(n)             n           E_x             U        pairing       P_ph         n_crit           g_p           g_n       density<br>##      []             []             []             []             []         [MeV]          [MeV]        [MeV]          []             []        [MeV^-1]      [MeV^-1]      [MeV^-1]</span>
+  </div>
+
+  <table>
+    <tr><th>Col</th><th>Name</th><th>Width</th><th>Description</th></tr>
+    <tr><td>1–4</td><td>p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub></td><td>14</td><td>Exciton configuration</td></tr>
+    <tr><td>5</td><td>n</td><td>14</td><td>Total exciton number</td></tr>
+    <tr><td>6</td><td>E<sub>x</sub></td><td>15</td><td>Excitation energy [MeV]</td></tr>
+    <tr><td>7</td><td>U</td><td>15</td><td>Available energy after pairing [MeV]</td></tr>
+    <tr><td>8</td><td>pairing</td><td>12</td><td>Pairing energy Δ [MeV]</td></tr>
+    <tr><td>9</td><td>P<sub>ph</sub></td><td>12</td><td>Pairing correction factor</td></tr>
+    <tr><td>10</td><td>n<sub>crit</sub></td><td>12</td><td>Critical exciton number</td></tr>
+    <tr><td>11</td><td>g<sub>p</sub></td><td>14</td><td>Proton single-particle density [MeV<sup>-1</sup>]</td></tr>
+    <tr><td>12</td><td>g<sub>n</sub></td><td>14</td><td>Neutron single-particle density [MeV<sup>-1</sup>]</td></tr>
+    <tr><td>13</td><td>density</td><td>15</td><td>ω(p,h,E) [MeV<sup>-1</sup>]</td></tr>
+  </table>
+
+  <h2>Numerical Format</h2>
+  <p>All floating-point values are printed using:</p>
+  <div class="terminal">
+    <span class="output">std::cout &lt;&lt; std::scientific &lt;&lt; std::uppercase;<br>std::cout.precision(6);</span>
+  </div>
+  <p>Format: <code> ±X.XXXXXXE±XX</code> (scientific notation, 6 decimal places, uppercase E).</p>
+
+  <h2>OMP Kernel Header (OMP branch)</h2>
+  <p>When using <code>--kernel optical-model</code>, additional metadata lines appear:</p>
+  <div class="terminal">
+    <span class="output">#   OMP constant C_omp:  0.55<br>#   M2 constant (C1):    1.000000E+00<br>#   Rpinu:               1.000000E+00<br>#   Wompfac(same-type):  1.833333E-01<br>#   Wompfac(cross-type): 3.666667E-01<br>#   Wompfac(conversion): 2.750000E-01</span>
+  </div>
+
+  <h2>Comparison Scripts</h2>
+  <p>The Python scripts expect the same YANDF-0.4 format from both exciton and TALYS:</p>
+  <ul>
+    <li><code>compare_omega.py</code> — parses 13-column format, computes relative error per entry</li>
+    <li><code>compare_lambda.py</code> — parses 8-column format, computes relative error per entry</li>
+  </ul>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

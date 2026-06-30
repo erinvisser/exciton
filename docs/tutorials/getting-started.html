@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getting Started — exciton</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html" class="active">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="../status.html">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Getting Started</span></div>
+  <h1>Getting Started</h1>
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>C++17 compiler (GCC 9+, Clang 10+)</li>
+    <li><a href="https://marley.okreylos.physics.ucsb.edu">MARLEY</a> library (model-dependent; see branch requirements below)</li>
+    <li>GSL (GNU Scientific Library)</li>
+    <li>ROOT (required by MARLEY build)</li>
+    <li>Python 3 for validation scripts (<code>compare_omega.py</code>, <code>compare_lambda.py</code>)</li>
+  </ul>
+
+  <h2>Building</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">cd</span> /path/to/exciton<br>
+    <span class="prompt">$</span> <span class="cmd">make</span>
+  </div>
+  <p>The Makefile compiles two executables:</p>
+  <table>
+    <tr><th>Executable</th><th>Source</th><th>Purpose</th></tr>
+    <tr><td><code>executables/omega</code></td><td><code>src/main_omega.cpp</code></td><td>Compute particle–hole state densities \(\omega(p,h,E)\)</td></tr>
+    <tr><td><code>executables/lambda</code></td><td><code>src/main_lambda.cpp</code></td><td>Compute internal transition and conversion rates \(\lambda\)</td></tr>
+  </table>
+
+  <h2>MARLEY Dependency</h2>
+  <p>The code uses MARLEY for integration and (on the OMP branch) optical model potentials. Set the <code>MARLEY</code> environment variable to the marley-private directory:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">export</span> MARLEY=/path/to/marley-private<br>
+    <span class="prompt">$</span> <span class="cmd">make</span> run
+  </div>
+  <p>The <code>make run</code> target sets <code>MARLEY=$(abspath ../marley-private)</code> automatically.</p>
+
+  <h2>Branch Overview</h2>
+  <p>This project has four git branches; the documentation site covers all of them:</p>
+  <table>
+    <tr><th>Branch</th><th>Kernel</th><th>TALYS Mode</th><th>Validation</th></tr>
+    <tr><td><code>MatrixSquared</code></td><td>Constant M² matrix element</td><td>preeqmode=1</td><td>✅ Validated (3/84 numerical outliers)</td></tr>
+    <tr><td><code>OMPfromScratch</code></td><td>OMP kernel rebuilt from scratch</td><td>preeqmode=3</td><td>❌ OMP rates fail</td></tr>
+    <tr><td><code>OMP</code></td><td>Koning–Delaroche optical model</td><td>preeqmode=3</td><td>⚠️ KD params pass; rates fail</td></tr>
+    <tr><td><code>main</code></td><td>Historic (superseded)</td><td>—</td><td>❌ Stale</td></tr>
+  </table>
+  <p>See the full <a href="../status.html">Branch Status</a> page for details.</p>
+
+  <h2>Running Your First Calculation</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">make</span><br>
+    <span class="prompt">$</span> <span class="cmd">./executables/lambda</span><br>
+    <span class="output">#   title: Ar40(n,x) two-component exciton model<br>#   source: exciton (C++), numerical mode, clenshaw-curtis, guarded integration, matrix-element kernel<br>...<br>             0             0             1             0    2.567310E+03    1.467402E+04    3.938975E+03    1.873780E+04</span>
+  </div>
+  <p>This produces 84 rows of transition rates in YANDF-0.4 format (8-column). See the <a href="../reference/output-format.html">Output Format</a> page for column definitions.</p>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

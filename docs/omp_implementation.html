@@ -4,64 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Optical Model Potential — Implementation in exciton</title>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-<style>
-  :root {
-    --bg: #fafafa;
-    --fg: #1a1a2e;
-    --accent: #0f4c81;
-    --accent-light: #e8f0fe;
-    --code-bg: #f5f5f5;
-    --border: #d0d0d0;
-    --warn: #fff3cd;
-    --err: #f8d7da;
-    --ok: #d4edda;
-  }
-  *, *::before, *::after { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 2rem;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--fg);
-    line-height: 1.7;
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  h1 { font-size: 2rem; border-bottom: 3px solid var(--accent); padding-bottom: 0.3rem; }
-  h2 { font-size: 1.4rem; color: var(--accent); margin-top: 2.5rem; }
-  h3 { font-size: 1.15rem; margin-top: 1.8rem; }
-  a { color: var(--accent); }
-  code { background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.9em; }
-  pre {
-    background: #1e1e2e; color: #cdd6f4;
-    padding: 1rem; border-radius: 6px; overflow-x: auto;
-    font-size: 0.85rem; line-height: 1.5;
-  }
-  pre .kw { color: #cba6f7; }
-  pre .tp { color: #89b4fa; }
-  pre .fn { color: #a6e3a1; }
-  pre .cm { color: #6c7086; font-style: italic; }
-  pre .nu { color: #fab387; }
-  pre .op { color: #89dceb; }
-  pre .sc { color: #f9e2af; }
-  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-  th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
-  th { background: var(--accent-light); }
-  .box { border-left: 4px solid var(--accent); background: var(--accent-light); padding: 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
-  .box.warn { border-left-color: #856404; background: var(--warn); }
-  .box.err { border-left-color: #721c24; background: var(--err); }
-  .box.ok { border-left-color: #155724; background: var(--ok); }
-  .filepath { font-family: monospace; color: #555; font-size: 0.85rem; }
-  .tag { display: inline-block; background: var(--accent); color: #fff; padding: 0.15em 0.6em; border-radius: 3px; font-size: 0.75rem; font-weight: 600; }
-  .tag.me { background: #2d6a4f; }
-  .tag.kd { background: #5a189a; }
-  .tag.code { background: #3a86ff; }
-  figure { margin: 1.5rem 0; text-align: center; }
-  figcaption { font-size: 0.85rem; color: #555; margin-top: 0.3rem; }
-  svg text { font-family: system-ui; }
-</style>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
 <body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="tutorials/getting-started.html">Getting Started</a>
+    <a href="tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="howto/omega-calculations.html">Omega</a>
+    <a href="howto/lambda-calculations.html">Lambda</a>
+    <a href="howto/validations.html">Validations</a>
+    <a href="howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="status.html">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="reference/physics-formulas.html">Formulas</a>
+    <a href="reference/parameters.html">Parameters</a>
+    <a href="reference/api.html">API</a>
+    <a href="reference/output-format.html">Output</a>
+    <a href="reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="explanation/exciton-model.html">Exciton Model</a>
+    <a href="explanation/omp-implementation.html">OMP</a>
+    <a href="explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
 
 <h1>Optical Model Potential in the Exciton Model</h1>
 <p class="filepath">/workspace/exciton/docs/omp_implementation.html &mdash; companion to <code>transition_rates.cpp</code>, <code>KoningDelarocheOpticalModel.{hh,cc}</code>, and <code>main_lambda.cpp</code></p>
@@ -684,5 +657,9 @@ R_{\text{hole}} &=
   <li id="ref-koning2008">A. J. Koning, S. Hilaire, and M. C. Duijvestijn, <em>Global and local level density models</em>, Nucl. Data Sheets <strong>113</strong> (2012) 1722. <a href="https://doi.org/10.1016/j.nds.2012.06.002">doi:10.1016/j.nds.2012.06.002</a>. See also <code>mass_table.js</code> in the MARLEY distribution.</li>
 </ol>
 
+</main>
+<footer>
+  <div class="container">exciton documentation &mdash; OMP implementation deep-dive</div>
+</footer>
 </body>
 </html>

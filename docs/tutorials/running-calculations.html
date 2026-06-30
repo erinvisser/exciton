@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running Calculations — exciton</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html" class="active">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="../status.html">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>Running Calculations</span></div>
+  <h1>Running Calculations</h1>
+
+  <h2>Omega (State Density) Calculations</h2>
+  <p>The <code>executables/omega</code> binary computes particle–hole state densities for all (p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>) configurations of the two-component exciton model.</p>
+
+  <h3>Command</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/omega</span>
+  </div>
+  <p>Outputs a 13-column table in YANDF-0.4 format (see <a href="../reference/output-format.html">output format</a>). The code enumerates all (p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub>) with k=(p+h)/2 from 0 to 5 (300 states).</p>
+
+  <h3>Flags</h3>
+  <table>
+    <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+    <tr><td>(none)</td><td>—</td><td>Runs with hard-coded parameters for Ar40(n,x)</td></tr>
+  </table>
+
+  <div class="box">
+    Note: The omega executable uses fixed parameters (Z=18, N=23, V=38.0 MeV, E<sub>comp</sub>=25.60156 MeV) matching the standard Ar40(n,x) system. These are compiled into <code>main_omega.cpp</code>.
+  </div>
+
+  <h2>Lambda (Transition Rate) Calculations</h2>
+  <p>The <code>executables/lambda</code> binary computes the four internal transition rates \(\lambda_{\pi^+}, \lambda_{\nu^+}, \lambda_{\pi\nu}, \lambda_{\nu\pi}\) for each exciton state.</p>
+
+  <h3>Command</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/lambda</span>
+  </div>
+  <p>Outputs an 8-column table (4 state columns + 4 rate columns) for all 84 exciton states.</p>
+
+  <h3>Flags</h3>
+  <table>
+    <tr><th>Flag</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>--analytical</code></td><td>numerical</td><td>Use closed-form analytical expressions (Eq. 13.27) instead of numerical integration</td></tr>
+    <tr><td><code>--no-guards</code></td><td>guarded</td><td>Disable Pauli-prescribed guard bounds on integration limits</td></tr>
+    <tr><td><code>--method midpoint</code></td><td>clenshaw-curtis</td><td>Use midpoint rule with fixed bins instead of adaptive Clenshaw–Curtis quadrature</td></tr>
+    <tr><td><code>--midbins N</code></td><td>50</td><td>Number of midpoint bins (only with <code>--method midpoint</code>)</td></tr>
+  </table>
+
+  <h3>Example: Analytical Mode</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/lambda --analytical</span>
+  </div>
+
+  <h3>Example: Midpoint with 20 bins</h3>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/lambda --method midpoint --midbins 20</span>
+  </div>
+
+  <h2>OMP Kernel (OMP branch only)</h2>
+  <p>On the <code>OMP</code> branch, the optical model kernel can be selected at runtime:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/lambda --kernel optical-model</span>
+  </div>
+  <p>When using the OMP kernel, <code>--analytical</code> is overridden to numerical mode. The header output includes the wompfac values. See the <a href="../explanation/omp-implementation.html">OMP implementation</a> page for details.</p>
+
+  <h2>Validation Scripts</h2>
+  <p>Two Python comparison scripts parse TALYS and exciton output:</p>
+  <table>
+    <tr><th>Script</th><th>Format</th><th>Columns</th></tr>
+    <tr><td><code>compare_omega.py</code></td><td>YANDF-0.4 (13-col)</td><td>Compares all 300 state densities</td></tr>
+    <tr><td><code>compare_lambda.py</code></td><td>YANDF-0.4 (8-col)</td><td>Compares all 84 transition rates</td></tr>
+  </table>
+  <p>See the <a href="../howto/validations.html">Validations how-to</a> for detailed usage.</p>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Densities — exciton</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+    <a href="../howto/validations.html">Validations</a>
+    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="../status.html">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html" class="active">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <span>State Densities</span></div>
+  <h1>Particle–Hole State Densities</h1>
+
+  <div class="box">
+    <strong>Role:</strong> The particle–hole state density \(\omega(p,h,E)\) counts the number of ways to distribute excitation energy E among n excitons. It is the statistical weight that enters every transition rate formula as a density-of-final-states factor.
+  </div>
+
+  <h2>1. Two-Component Formula</h2>
+  <p>The two-component Williams formula (Eq. 13.4) for the state density of configuration \(|p_\pi, h_\pi, p_\nu, h_\nu\rangle\) at excitation energy E<sub>x</sub> is:</p>
+
+  \[
+  \omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x) = 
+  \frac{g_\pi^{p_\pi + h_\pi} \, g_\nu^{p_\nu + h_\nu}}
+       {p_\pi! \, h_\pi! \, p_\nu! \, h_\nu! \, (n-1)!}
+  \; U^{n-1}
+  \; f_{\text{Pauli}}(p_\pi, h_\pi, p_\nu, h_\nu)
+  \; f_{\text{well}}(p, h, U, V)
+  \; f_{\text{pairing}}(E_x, n, n_{\text{crit}})
+  \; f_{\text{parity}}
+  \]
+
+  <p>The implementation is in <code>src/state_density.cpp:17</code>:</p>
+  <div class="terminal">
+    <span class="tp">double</span> <span class="fn">particleHoleStateDensity</span>(<br>
+    &nbsp;&nbsp;<span class="tp">int</span> p_pi, <span class="tp">int</span> h_pi, <span class="tp">int</span> p_nu, <span class="tp">int</span> h_nu,<br>
+    &nbsp;&nbsp;<span class="tp">double</span> E_x, <span class="tp">int</span> Z, <span class="tp">int</span> N, <span class="tp">int</span> chi,<br>
+    &nbsp;&nbsp;<span class="tp">double</span> V, <span class="tp">double</span> n_crit,<br>
+    &nbsp;&nbsp;<span class="tp">bool</span> applyPairing = <span class="kw">true</span>,<br>
+    &nbsp;&nbsp;<span class="tp">double</span> parityFactor = <span class="nu">1.0</span>);
+  </div>
+
+  <h2>2. The Factorial Denominator</h2>
+  <p>The denominator \(p_\pi! \, h_\pi! \, p_\nu! \, h_\nu! \, (n-1)!\) accounts for the indistinguishability of particles and holes within each isospin group, and for the fact that the first exciton is "pinned" (the incident nucleon). The factorial is computed iteratively in <code>factorial()</code>.</p>
+
+  <h2>3. Single-Particle Densities</h2>
+  <p>Ericson's formula gives the single-particle state density at the Fermi surface:</p>
+  \[
+  g_\pi = \frac{Z}{15}, \qquad g_\nu = \frac{N}{15}
+  \]
+  <p>These values are in MeV<sup>-1</sup>. For <sup>41</sup>Ar (compound): g<sub>π</sub> = 1.2, g<sub>ν</sub> = 1.5333. The product \(g_\pi^{p_\pi + h_\pi} g_\nu^{p_\nu + h_\nu}\) multiplies the single-particle densities for each exciton in the configuration.</p>
+
+  <h2>4. Pauli Correction</h2>
+  <p>The Pauli correction (Eq. 13.9) reduces the available phase space by accounting for the fact that particles and holes must occupy distinct single-particle states:</p>
+  \[
+  P(p_\pi, h_\pi, p_\nu, h_\nu) = \frac{1}{4} \sum_{i,j} \frac{a_{ij}}{g_{ij}}
+  \]
+  <p>The full expression involves four pair terms (ππ, νν, πν, νπ) weighted by their respective single-particle densities. The correction is implemented in <code>pauliCorrection()</code> in <code>src/preeq_common.cpp</code>.</p>
+
+  <h2>5. Finite Well Correction</h2>
+  <p>The finite well depth correction (Eq. 13.16) accounts for the fact that the nuclear potential well is not infinitely deep — states near the continuum have reduced density:</p>
+  \[
+  f_{\text{well}}(p, h, U, V) = 1 - \left(\frac{U}{U+V}\right)^{p+h}
+  \]
+  <p>where V is the Fermi well depth (default 38 MeV). For deep configurations (large n) or high excitation (U ∼ V), this correction becomes significant.</p>
+
+  <h2>6. Pairing Correction</h2>
+  <p>Pairing is handled through the back-shifted pairing model (Eqs. 13.10–13.13):</p>
+  <ul>
+    <li>Pairing energy: \(\Delta = \chi \cdot 12 / \sqrt{A}\) (χ = +1 for even–even, −1 for even–odd)</li>
+    <li>Critical exciton number: \(n_{\text{crit}} = 2 \sqrt{g_\pi g_\nu / (g_\pi + g_\nu)} \, \Delta\)</li>
+    <li>For n ≥ n<sub>crit</sub>: P<sub>ph</sub> = 1 (pairing no longer affects the state density)</li>
+    <li>For n < n<sub>crit</sub>: P<sub>ph</sub> = exp[−(n<sub>crit</sub>−n)/(n<sub>crit</sub>−1) · Δ/U]</li>
+  </ul>
+  <p>The available energy after pairing is U = E<sub>x</sub> · P<sub>ph</sub>.</p>
+
+  <h2>7. State Density in the Rate Integrand</h2>
+  <p>The state density appears three times in the numerical rate integrand:</p>
+  <ul>
+    <li><strong>Initial state</strong> ω<sub>i</sub>(U) — appears in the denominator (normalization)</li>
+    <li><strong>Transition state</strong> ω<sub>t</sub>(e) — density of the intermediate (created) pair at energy e</li>
+    <li><strong>Residual state</strong> ω<sub>r</sub>(U−e) — density of the residual (removed) configuration at energy U−e</li>
+  </ul>
+  <p>For conversion, three state densities appear: ω<sub>c</sub>(e) (created), ω<sub>a</sub>(e) (annihilated), ω<sub>r</sub>(U−e) (residual).</p>
+
+  <h2>8. Spin Distribution</h2>
+  <p>The spin-dependence of the state density is factorized:</p>
+  \[
+  \omega(p,h,E,J) = \omega(p,h,E) \cdot R_n(J)
+  \]
+  <p>where R<sub>n</sub>(J) is the spin distribution function:</p>
+  \[
+  R_n(J) = \frac{2J+1}{2\sqrt{2\pi\sigma_n^2}} \exp\!\left(-\frac{(J+\frac12)^2}{2\sigma_n^2}\right), \quad
+  \sigma_n^2 = 0.28 \, n \, A^{2/3}
+  \]
+  <p>The spin distribution is validated against TALYS (0.0095% max error for J=0..8, n=1..12).</p>
+
+  <h2>9. Validation</h2>
+  <table>
+    <tr><th>Test</th><th>Result</th><th>Details</th></tr>
+    <tr><td>ω(p,h,E) with fixed V=38</td><td><span class="tag" style="background:#155724;">PASS</span></td><td>0.0085% max relative error, all 300 states</td></tr>
+    <tr><td>Spin distributions</td><td><span class="tag" style="background:#155724;">PASS</span></td><td>0.0095% max relative error, all 120 (J,n) pairs</td></tr>
+    <tr><td>Energy-dependent V</td><td><span class="tag" style="background:#721c24;">FAIL</span></td><td>Not yet matched to TALYS</td></tr>
+  </table>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Branch Status — exciton</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="tutorials/getting-started.html">Getting Started</a>
+    <a href="tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="howto/omega-calculations.html">Omega</a>
+    <a href="howto/lambda-calculations.html">Lambda</a>
+    <a href="howto/validations.html">Validations</a>
+    <a href="howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="status.html" class="active">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="reference/physics-formulas.html">Formulas</a>
+    <a href="reference/parameters.html">Parameters</a>
+    <a href="reference/api.html">API</a>
+    <a href="reference/output-format.html">Output</a>
+    <a href="reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="explanation/exciton-model.html">Exciton Model</a>
+    <a href="explanation/omp-implementation.html">OMP</a>
+    <a href="explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="index.html">Home</a> / <span>Branch Status</span></div>
+  <h1>Branch Status &amp; TALYS Replication</h1>
+  <p>
+    The exciton project has four branches, each representing a different
+    stage of development toward replicating TALYS pre-equilibrium calculations.
+    This page documents what each branch does, how it interfaces with MARLEY,
+    what has been validated, and what remains unresolved.
+  </p>
+
+  <!-- ================================================================= -->
+  <h2>1. Branch Overview</h2>
+
+  <table>
+    <tr>
+      <th>Branch</th>
+      <th>Purpose</th>
+      <th>TALYS Mode</th>
+      <th>MARLEY Usage</th>
+      <th>Validation</th>
+    </tr>
+    <tr>
+      <td><code>MatrixSquared</code></td>
+      <td>Pure M² constant matrix-element kernel</td>
+      <td><code>preeqmode=1</code></td>
+      <td><code>Integrator</code> only</td>
+      <td>✅ <strong>Validated</strong></td>
+    </tr>
+    <tr>
+      <td><code>OMPfromScratch</code></td>
+      <td>OMP collision kernel built from scratch</td>
+      <td><code>preeqmode=3</code></td>
+      <td>KD model + MassTable + Integrator</td>
+      <td>❌ <strong>OMP rates fail</strong></td>
+    </tr>
+    <tr>
+      <td><code>OMP</code></td>
+      <td>Optical model potential collision kernel</td>
+      <td><code>preeqmode=3</code></td>
+      <td>KD model + MassTable + Integrator</td>
+      <td>⚠️ OMP rates fail (30&ndash;100%); KD03/well-depths/radial-potential pass</td>
+    </tr>
+    <tr>
+      <td><code>main</code></td>
+      <td>Historic initial branch (superseded)</td>
+      <td>&mdash;</td>
+      <td>None</td>
+      <td>❌ Stale</td>
+    </tr>
+  </table>
+
+  <!-- ================================================================= -->
+  <h2>2. Git History &amp; Branch Relationships</h2>
+
+  <figure>
+    <svg viewBox="0 0 1100 660" width="100%" style="max-width:1100px">
+      <defs>
+        <marker id="arrow-grey2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#888"/>
+        </marker>
+        <style>
+          .node { fill: #0f4c81; }
+          .node2 { fill: #2d6a4f; }
+          .node3 { fill: #5a189a; }
+          .node4 { fill: #b57200; }
+          .edge { stroke: #888; stroke-width:1.5; fill:none; }
+          .edge2 { stroke: #2d6a4f; stroke-width:2; fill:none; stroke-dasharray:5,3; }
+          .lb3 { font-size:11px; fill:#333; }
+          .lb4 { font-size:12px; font-weight:bold; }
+        </style>
+      </defs>
+
+      <!-- ===== main branch ===== -->
+      <text x="20" y="40" class="lb4" fill="#b57200">main</text>
+      <circle cx="120" cy="40" r="6" class="node4"/>
+      <text x="136" y="44" class="lb3">fa96798 creating repo</text>
+
+      <!-- ===== MatrixSquared branch (left column) ===== -->
+      <line x1="126" y1="40" x2="180" y2="110" class="edge"/>
+      <text x="20" y="130" class="lb4" fill="#0f4c81">MatrixSquared</text>
+      <circle cx="200" cy="130" r="6" class="node"/>
+      <text x="216" y="134" class="lb3">854f5ed Stripped OMP → simple matrix squared</text>
+      <circle cx="200" cy="200" r="6" class="node"/>
+      <text x="216" y="204" class="lb3">bc398cc / 1469e4f / 01d95bd</text>
+      <circle cx="200" cy="270" r="6" class="node"/>
+      <text x="216" y="274" class="lb3">ca68fdf fixing n=1 1.20 factor handling</text>
+      <circle cx="200" cy="340" r="6" class="node2"/>
+      <text x="216" y="344" class="lb3" font-weight="bold">96b898f MatrixSquared VALIDATED</text>
+
+      <!-- ===== OMP (original) branch (right column) ===== -->
+      <line x1="126" y1="40" x2="800" y2="110" class="edge"/>
+      <text x="770" y="130" class="lb4" fill="#5a189a">OMP (original)</text>
+      <circle cx="850" cy="130" r="6" class="node3"/>
+      <text x="866" y="134" class="lb3">583b51f KD03 diagnostics</text>
+      <circle cx="850" cy="200" r="6" class="node3"/>
+      <text x="866" y="204" class="lb3">8e1b3af Well depths VALIDATED</text>
+      <circle cx="850" cy="270" r="6" class="node3"/>
+      <text x="866" y="274" class="lb3">be09be8 Radial potential VALIDATED</text>
+      <circle cx="850" cy="340" r="6" class="node3"/>
+      <text x="866" y="344" class="lb3">4ca7691 TALYS OMP comparison</text>
+      <circle cx="850" cy="410" r="6" class="node3"/>
+      <text x="866" y="414" class="lb3">96e565b rates, OMP params validated</text>
+      <circle cx="850" cy="480" r="6" class="node3"/>
+      <text x="866" y="484" class="lb3">compound vs target confusion</text>
+      <circle cx="850" cy="550" r="6" class="node3"/>
+      <text x="866" y="554" class="lb3">fixing ratio typos, Rpinu fix</text>
+
+      <!-- ===== OMPfromScratch branch (middle column) ===== -->
+      <line x1="206" y1="130" x2="440" y2="420" class="edge2" marker-end="url(#arrow-grey2)"/>
+      <text x="380" y="440" class="lb4" fill="#2d6a4f">OMPfromScratch</text>
+      <circle cx="490" cy="510" r="6" class="node2" fill="#2d6a4f"/>
+      <text x="506" y="514" class="lb3">950b977 TALYS mimic, no MARLEY tools</text>
+      <circle cx="490" cy="590" r="6" class="node2" fill="#2d6a4f"/>
+      <text x="506" y="594" class="lb3">refinements: guards, n=1 analytical, clamping</text>
+      <circle cx="490" cy="670" r="6" class="node2" fill="#2d6a4f"/>
+      <text x="506" y="674" class="lb3">3f3b90d all omegas VALIDATED</text>
+    </svg>
+    <figcaption>
+      Branch genealogy. MatrixSquared was created by stripping OMP features
+      from the early codebase, then validated for preeqmode=1. OMP was developed
+      independently for preeqmode=3 but never succeeded for transition rates.
+      OMPfromScratch was forked from MatrixSquared and rebuilt the OMP kernel
+      incrementally with guard/Pauli refinements, but the transition rates
+      still fail at the same level as the original OMP branch.
+    </figcaption>
+  </figure>
+
+  <!-- ================================================================= -->
+  <h2>3. MatrixSquared — The Validated Reference (preeqmode=1)</h2>
+
+  <h3>3.1 Purpose &amp; Structure</h3>
+  <p>
+    The <code>MatrixSquared</code> branch implements TALYS pre-equilibrium mode 1
+    (<code>preeqmode=1</code>), which uses a constant matrix-element approximation
+    (Kalbach-Cline parametrization) for the residual two-body interaction.
+    It was created by commit <code>854f5ed</code> ("Stripped OMP features, returning
+    to simple matrix squared state") and preserved as a clean, minimal implementation.
+  </p>
+
+  <div class="box ok">
+    <strong>Design principle:</strong> Include <em>only</em> the code required to
+    accurately replicate TALYS preeqmode=1. No OMP infrastructure, no
+    <code>CollisionKernel</code> enum, no wompfac, no MassTable lookups beyond
+    what the integrator needs internally.
+  </div>
+
+  <h3>3.2 MARLEY Dependencies</h3>
+  <p>Minimal — the <strong>only</strong> MARLEY header used is:</p>
+  <div class="terminal">
+    <span class="comment">// transition_rates.cpp</span><br>
+    <span class="output">#include "marley/Integrator.hh"</span>
+  </div>
+  <p>
+    The <code>marley::Integrator</code> provides the Clenshaw-Curtis adaptive
+    quadrature for the numerical integration over intermediate excitation energy.
+    The Makefile still links all MARLEY <code>.cc</code> files (except
+    <code>marley.cc</code> and <code>marsum.cc</code>), but none of the OMP or
+    MassTable routines are ever called.
+  </p>
+
+  <h3>3.3 Key Implementation Details</h3>
+  <table>
+    <tr><th>Component</th><th>Implementation</th><th>TALYS Reference</th></tr>
+    <tr>
+      <td>M² formula (Eq. 13.26)</td>
+      <td><code>M2()</code> in <code>transition_rates.cpp:34</code></td>
+      <td><code>M^2 = C1 * A_p/A^3 * [7.48*C2 + 4.62e5/(10.7*C3 + E_tot/(n*A_p))^3]</code></td>
+    </tr>
+    <tr>
+      <td>Channel ratios</td>
+      <td><code>M2_element()</code> in <code>transition_rates.cpp:48</code></td>
+      <td>R<sub>νν</sub>=1.5, R<sub>νπ</sub>=1.0, R<sub>ππ</sub>=1.0, R<sub>πν</sub>=1.0</td>
+    </tr>
+    <tr>
+      <td>1.20 factor</td>
+      <td>Applied in <code>M2()</code> for analytical mode; cancelled for n=1 numerical</td>
+      <td>TALYS applies 1.20 only for <code>preeqmode=1</code>; the code locks n=1 to analytical formula then undoes the factor</td>
+    </tr>
+    <tr>
+      <td>State densities ω</td>
+      <td><code>particleHoleStateDensity()</code> in <code>state_density.cpp:17</code></td>
+      <td>Eq. 13.4 with g<sub>p</sub>=Z/15, g<sub>n</sub>=N/15, Pauli correction, finite well, pairing</td>
+    </tr>
+    <tr>
+      <td>Analytical rates</td>
+      <td><code>lambdaNewPairAnalytical()</code> + <code>lambdaPairConversionAnalytical()</code></td>
+      <td>Eq. 13.27, closed-form with finite well and Pauli corrections</td>
+    </tr>
+    <tr>
+      <td>Numerical rates</td>
+      <td><code>lambdaNewPairNumerical()</code> + <code>lambdaPairConversionNumerical()</code></td>
+      <td>Eqs. 13.18 &amp; 13.19, integrand ω<sub>t</sub> · ω<sub>r</sub> weighted by M²</td>
+    </tr>
+  </table>
+
+  <h3>3.4 Validation Status</h3>
+
+  <table>
+    <tr><th>Test</th><th>Status</th><th>Max Error</th><th>Notes</th></tr>
+    <tr>
+      <td>ω(p,h,E) state densities, V=38 fixed</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>0.0085% relative</td>
+      <td>11/300 values show 1e<sup>-6</sup>-level absolute noise near zero; all relative values within tolerance</td>
+    </tr>
+    <tr>
+      <td>Spin distributions (J=0..8, n=1..12)</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>0.0095% relative</td>
+      <td>All 120 values match</td>
+    </tr>
+    <tr>
+      <td>λ analytical (preeqmode=1 analytical)</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>0.0004%</td>
+      <td>All 84 values match; the furthest outlier is still &lt;0.001%</td>
+    </tr>
+    <tr>
+      <td>λ numerical (preeqmode=1 numerical)</td>
+      <td><span class="tag" style="background:#b57200;">PARTIAL</span></td>
+      <td>13.44%</td>
+      <td>81/84 values &lt; 1%; 3 outliers: (5,5,1,0) λν⁺ at 13.4%, (1,1,1,0) λπν at 2.0%, (0,0,2,1) λνπ at 1.8%</td>
+    </tr>
+  </table>
+
+  <div class="box">
+    <strong>Outlier analysis:</strong> The three failing channels all involve
+    high-exciton states (n &ge; 5) or conversion processes where the
+    analytical-lock for n=1 may interact incorrectly with the 1.20 factor
+    cancellation. The (5,5,1,0) state has n = 11, deep in the regime where the
+    Pauli corrections and guard bounds are most sensitive.
+  </div>
+
+  <!-- ================================================================= -->
+  <h2>4. OMPfromScratch — OMP Kernel Rebuilt (preeqmode=3)</h2>
+
+  <h3>4.1 Purpose &amp; Structure</h3>
+  <p>
+    The <code>OMPfromScratch</code> branch implements the same OMP collision
+    kernel as <code>OMP</code> (preeqmode=3) but was rebuilt from the validated
+    <code>MatrixSquared</code> codebase. Instead of grafting OMP code onto the
+    early development branch, it forks from the clean M² reference and adds the
+    OMP infrastructure incrementally:
+  </p>
+  <ul>
+    <li><strong>KD model integration</strong> — <code>KoningDelarocheOpticalModel</code> instantiation, <code>setIncidentEnergyAndFragment()</code>, <code>wvolRadialIntegral()</code></li>
+    <li><strong>Wompfac formulas</strong> — same-type, cross-type, and conversion wompfac from TALYS <code>matrix.f90</code></li>
+    <li><strong>MassTable separation energies</strong> — S<sub>p</sub>, S<sub>n</sub> via MARLEY <code>MassTable</code> singleton</li>
+    <li><strong>Guard bounds on conversion integrals</strong> — Pauli-prescribed minimum energies enforced for both created and annihilated configurations</li>
+    <li><strong>Pauli correction edge cases</strong> — proper handling of j=4 density parameter and conversion guards</li>
+    <li><strong>n=1 analytical locking</strong> — forces analytical formula for n=1 states even in numerical mode</li>
+    <li><strong>Midpoint bin separation</strong> — different bin counts for creation vs conversion terms</li>
+  </ul>
+
+  <h3>4.2 Differences from the OMP Branch</h3>
+  <table>
+    <tr><th>Aspect</th><th>OMP (original)</th><th>OMPfromScratch</th></tr>
+    <tr>
+      <td>Base code</td>
+      <td>Early development branch (pre-MatrixSquared)</td>
+      <td>MatrixSquared (validated M² reference)</td>
+    </tr>
+    <tr>
+      <td>Guard bounds</td>
+      <td>Basic guards</td>
+      <td>Enhanced guards including hole-density ratios</td>
+    </tr>
+    <tr>
+      <td>Pauli correction in conversion</td>
+      <td>Simplified B() function</td>
+      <td>Full conditional checks per sub-channel</td>
+    </tr>
+    <tr>
+      <td>Validation</td>
+      <td>Same failures as OMPfromScratch</td>
+      <td>Same failures as OMP</td>
+    </tr>
+  </table>
+
+  <div class="box err">
+    <strong>Validation status: NOT VALIDATED.</strong> Despite being built on the
+    validated M² kernel infrastructure, the OMP transition rates on
+    <code>OMPfromScratch</code> exhibit the same 30&ndash;100% relative errors as
+    the <code>OMP</code> branch. The OMP parameters (KD03, well depths, radial
+    potential) are confirmed correct — the error is in the rate integrand or
+    wompfac step, which is common to both branches. See Section 5 for the
+    detailed root-cause hypotheses.
+  </div>
+
+  <!-- ================================================================= -->
+  <h2>5. OMP Branch &amp; OMPfromScratch — The Unvalidated Path (preeqmode=3)</h2>
+
+  <h3>5.1 What Was Added</h3>
+  <p>
+    The <code>OMP</code> branch attempted to replace the constant M² matrix
+    element with a collision probability derived from the Koning-Delaroche (KD03)
+    global optical model potential, implementing TALYS <code>preeqmode=3</code>.
+  </p>
+
+  <table>
+    <tr><th>Feature</th><th>Files</th><th>Description</th></tr>
+    <tr>
+      <td><code>CollisionKernel</code> enum</td>
+      <td><code>transition_rates.hh</code></td>
+      <td><code>MatrixElement</code> / <code>OpticalModel</code> selector</td>
+    </tr>
+    <tr>
+      <td><code>--kernel</code> CLI flag</td>
+      <td><code>main_lambda.cpp</code></td>
+      <td><code>optical-model</code> or <code>matrix-element</code></td>
+    </tr>
+    <tr>
+      <td><code>wvolRadialIntegral()</code></td>
+      <td><code>transition_rates.cpp</code></td>
+      <td>50-bin midpoint volume average of W(r), matched to TALYS <code>bonetti.f90</code></td>
+    </tr>
+    <tr>
+      <td>Wompfac formulas</td>
+      <td><code>transition_rates.cpp</code></td>
+      <td>same-type, cross-type, conversion scaling derived from M² normalization</td>
+    </tr>
+    <tr>
+      <td><code>KoningDelarocheOpticalModel</code></td>
+      <td><code>transition_rates.cpp</code> + MARLEY</td>
+      <td>Full KD03 parameterization for Wv, Wd, Rv, av, Rd, ad</td>
+    </tr>
+    <tr>
+      <td><code>MassTable</code> separation energies</td>
+      <td><code>transition_rates.cpp</code> + MARLEY</td>
+      <td>S<sub>p</sub>, S<sub>n</sub> for kinematical energy shift</td>
+    </tr>
+    <tr>
+      <td>Three validation modes</td>
+      <td><code>main_lambda.cpp</code></td>
+      <td><code>kd03</code>, <code>well_depths</code>, <code>radial_potential</code></td>
+    </tr>
+  </table>
+
+  <h3>5.2 MARLEY Dependencies</h3>
+  <table>
+    <tr><th>MARLEY Component</th><th>MatrixSquared</th><th>OMP &amp; OMPfromScratch</th></tr>
+    <tr><td><code>marley::Integrator</code></td><td>✅ Clenshaw-Curtis integration</td><td>✅ Same + OMP integrand</td></tr>
+    <tr><td><code>marley::KoningDelarocheOpticalModel</code></td><td>❌ Not used</td><td>✅ Wv, Wd, Rv, av, Rd, ad at each energy</td></tr>
+    <tr><td><code>marley::MassTable</code></td><td>❌ Not used</td><td>✅ Separation energies + Q-values</td></tr>
+  </table>
+
+  <h3>5.3 What Works (Validated on both OMP and OMPfromScratch)</h3>
+
+  <table>
+    <tr><th>Validation</th><th>Status</th><th>Evidence</th></tr>
+    <tr>
+      <td>KD03 optical model coefficients</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>v1&ndash;v4, w1&ndash;w2, d1&ndash;d3, geometry parameters printed in TALYS <code>flagomponly</code> format match TALYS output exactly</td>
+    </tr>
+    <tr>
+      <td>Well depths (Vv, Wv, Wd, Vso, Wso)</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>Energy-dependent values from &minus;8 to 20 MeV, for both neutrons and protons, match TALYS</td>
+    </tr>
+    <tr>
+      <td>Radial potential U(r)</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>Re(U) and Im(U) from 0.1 to 15.0 fm match TALYS (spin-orbit sign convention resolved in commit <code>7627166</code>)</td>
+    </tr>
+    <tr>
+      <td>MARLEY Q-values</td>
+      <td><span class="tag" style="background:#155724;">PASS</span></td>
+      <td>(n,&gamma;), (n,p), (n,d), (n,t), (n,<sup>3</sup>He), (n,&alpha;) all computed from AME + liquid-drop</td>
+    </tr>
+    <tr>
+      <td>OMP transition rates</td>
+      <td><span class="tag" style="background:#721c24;">FAIL</span></td>
+      <td style="background:#f8d7da;">30&ndash;100% relative error against TALYS across all 84 states. Systematic failure, not isolated outliers.</td>
+    </tr>
+  </table>
+
+  <h3>5.4 Hypothesized Root Causes (common to both OMP and OMPfromScratch)</h3>
+
+  <p>
+    The OMP transition rate validation has never succeeded. After the KD03
+    parameters, well depths, and radial potential were all verified against
+    TALYS, the rates themselves still disagreed by 30&ndash;100%. The git
+    history reveals a trail of attempted fixes:
+  </p>
+
+  <div class="box warn">
+    <strong>Issue 1 — Compound vs target nucleus (evidence: 4 reverting commits):</strong>
+    <ul>
+      <li><code>4b20de8</code> "separation energy for mother, not daughter"</li>
+      <li><code>1d654b6</code> "tweaking where i call target vs compound nucleus details"</li>
+      <li><code>01f42c7</code> "changing kd_omp to compound nuc" → reverted by</li>
+      <li><code>8cce1f1</code> "back to target..." → then</li>
+      <li><code>fa714e2</code> "nevermind talys omp does use target"</li>
+    </ul>
+    The KD model was instantiated with different (Z,A) pairs across commits.
+    TALYS uses the <strong>target</strong> nucleus for the OMP evaluation, but
+    the compound nucleus is the correct choice for the separation energy
+    calculation. This confusion likely meant that different parts of the code
+    used inconsistent reference nuclei.
+  </div>
+
+  <div class="box warn">
+    <strong>Issue 2 — R-ratio in wompfac (evidence: commit 447cca0):</strong>
+    Commit <code>447cca0</code> is titled "Rpinu fix". The wompfac formulas
+    (same-type, cross-type, conversion) depend on the ratio
+    R<sub>πν</sub>/R<sub>ππ</sub>. If this ratio is applied incorrectly,
+    the relative strengths of same-type vs cross-type pair creation would be
+    wrong. The TALYS <code>matrix.f90</code> source may handle the sub-channel
+    bookkeeping differently than the implementation.
+  </div>
+
+  <div class="box warn">
+    <strong>Issue 3 — Separation energy sign/definition:</strong>
+    The kinetic energy of the colliding nucleon in the integrand is:
+    \[
+    e_{\text{kin}} = e - S_{p/n}(Z_{\text{comp}}, N_{\text{comp}})
+    \]
+    where <code>Z_comp</code> and <code>N_comp</code> are the compound
+    nucleus after emission. The MARLEY <code>MassTable</code> provides
+    separation energies via <code>get_fragment_separation_energy()</code>,
+    which may return a different sign or reference convention than TALYS
+    expects. Commit <code>65c3870</code> adjusted "separation energy for
+    mother, not daughter."
+  </div>
+
+  <div class="box warn">
+    <strong>Issue 4 — Hole-channel density ratio:</strong>
+    In the OMP integrand, hole-type sub-channels multiply the collision rate
+    by &#969;<sub>hole</sub>/&#969;<sub>particle</sub>. The exact formula from
+    TALYS <code>bonetti.f90</code> may differ from what was implemented.
+    Commit <code>dc5f9e4</code> "updating wvolradialintegral to more closely
+    match bonetti.f90" suggests the radial integral itself was revised, but
+    the density ratio handling may not have been fully corrected.
+  </div>
+
+  <div class="box warn">
+    <strong>Issue 5 — Single KD instance per integration call:</strong>
+    The code creates one KD model instance per integration call and updates
+    it at each energy point. TALYS may handle the internal state of the KD
+    model differently (e.g., resetting intermediate cache values). This would
+    produce systematic offsets rather than random errors.
+  </div>
+
+  <div class="box err">
+    <strong>Cumulative effect:</strong> Issues 1&ndash;5 compound. Even if each
+    individually contributes a 10&ndash;30% error, their combination could
+    easily produce the observed 30&ndash;100% discrepancies. A systematic
+    audit of the integrand — step-by-step comparison with TALYS output at
+    each intermediate value — would be needed to isolate the dominant cause.
+  </div>
+
+  <!-- ================================================================= -->
+  <h2>6. Comprehensive Validation Matrix</h2>
+
+  <table>
+    <tr>
+      <th style="min-width:240px;">Component</th>
+      <th>MatrixSquared</th>
+      <th>OMPfromScratch</th>
+      <th>OMP</th>
+    </tr>
+    <tr>
+      <td>ω(p,h,E) state densities (fixed V)</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+    </tr>
+    <tr>
+      <td>ω(p,h,E) with energy-dependent V</td>
+      <td><span class="tag" style="background:#721c24;">❌</span></td>
+      <td><span class="tag" style="background:#721c24;">❌</span></td>
+      <td><span class="tag" style="background:#721c24;">❌</span></td>
+    </tr>
+    <tr>
+      <td>Spin distributions</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+    </tr>
+    <tr>
+      <td>λ analytical (M² kernel)</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>λ numerical, M² kernel (overall)</td>
+      <td><span class="tag" style="background:#b57200;">⚠️ 3/84</span></td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>λ numerical, M² kernel (81/84 &lt; 1%)</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>KD03 OMP coefficients</td>
+      <td>N/A</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+    </tr>
+    <tr>
+      <td>Well depths</td>
+      <td>N/A</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+    </tr>
+    <tr>
+      <td>Radial potential U(r)</td>
+      <td>N/A</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+    </tr>
+    <tr>
+      <td>MARLEY Q-values</td>
+      <td>N/A</td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+      <td><span class="tag" style="background:#155724;">✅</span></td>
+    </tr>
+    <tr>
+      <td>λ OMP kernel (all states)</td>
+      <td>N/A</td>
+      <td><span class="tag" style="background:#721c24;">❌ 30&ndash;100%</span></td>
+      <td><span class="tag" style="background:#721c24;">❌ 30&ndash;100%</span></td>
+    </tr>
+    <tr>
+      <td>Pairing energy (target vs compound)</td>
+      <td><span class="tag" style="background:#b57200;">⚠️</span></td>
+      <td><span class="tag" style="background:#b57200;">⚠️</span></td>
+      <td><span class="tag" style="background:#b57200;">⚠️</span></td>
+    </tr>
+    <tr>
+      <td>Other targets/projectiles</td>
+      <td><span class="tag" style="background:#721c24;">❌</span></td>
+      <td><span class="tag" style="background:#721c24;">❌</span></td>
+      <td><span class="tag" style="background:#721c24;">❌</span></td>
+    </tr>
+  </table>
+
+  <!-- ================================================================= -->
+  <h2>7. Open Questions for OMP Rates</h2>
+
+  <ol>
+    <li>
+      <strong>What is the exact TALYS <code>bonetti.f90</code> integrand?</strong>
+      — A direct line-by-line comparison of the OMP integrand with the TALYS
+      source would resolve whether the integrand structure, density ratios,
+      and bounds handling are correct.
+    </li>
+    <li>
+      <strong>Is the KD model stateful between calls?</strong>
+      — If MARLEY's <code>KoningDelarocheOpticalModel</code> caches intermediate
+      results, calling <code>setIncidentEnergyAndFragment()</code> repeatedly
+      may not recompute the parameters correctly. A fresh instance per energy
+      point would eliminate this concern.
+    </li>
+    <li>
+      <strong>What is the correct reference nucleus for separation energies?</strong>
+      — The back-and-forth in commits between target and compound suggests this
+      was never definitively resolved. TALYS's own convention needs to be
+      verified against the MARLEY MassTable API.
+    </li>
+    <li>
+      <strong>Does the wompfac formula match TALYS <code>matrix.f90</code>?</strong>
+      — The constant C<sub>OMP</sub> = 0.55 may be a tunable parameter in TALYS
+      that depends on the version. The exact formula for combining the wompfac
+      with the OMP collision probability should be verified.
+    </li>
+    <li>
+      <strong>Is the hole-channel density ratio correct?</strong>
+      — The ratio &#969;<sub>hole</sub>/&#969;<sub>particle</sub> may need
+      to be evaluated at the same energy e, or at different energies, depending
+      on the TALYS implementation.
+    </li>
+    <li>
+      <strong>What integration method does TALYS use for OMP?</strong>
+      — If TALYS uses a different radial grid (different dr, different number
+      of bins, or adaptive quadrature) for the volume-averaged W(r), this could
+      contribute systematic differences.
+    </li>
+  </ol>
+
+  <div class="box warn">
+    <strong>Recommended approach for debugging OMP rates:</strong>
+    Rather than comparing only the final 84 transition rates, instrument
+    the code to print <em>all</em> intermediate values (Wv, Wd, &lang;W&rang;,
+    wompfac, each integrand term, each sub-integral) and compare these
+    individually against TALYS output. This isolates which part of the
+    calculation chain first diverges.
+  </div>
+
+  <!-- ================================================================= -->
+  <h2>8. Summary</h2>
+
+  <table>
+    <tr><th>Branch</th><th>TALYS Mode</th><th>Current State</th><th>Recommendation</th></tr>
+    <tr>
+      <td><code>MatrixSquared</code></td>
+      <td><code>preeqmode=1</code></td>
+      <td>Validated (3/84 numerical outliers)</td>
+      <td>Use as the reference implementation for M² kernel. The 3 outliers need investigation but the core physics is correct.</td>
+    </tr>
+    <tr>
+      <td><code>OMPfromScratch</code></td>
+      <td><code>preeqmode=3</code></td>
+      <td>OMP infrastructure complete but rates fail</td>
+      <td>Same root cause as OMP branch — the KD parameters are correct but the rate integrand or wompfac step introduces 30&ndash;100% errors. Contains the latest guard and Pauli refinements.</td>
+    </tr>
+    <tr>
+      <td><code>OMP</code></td>
+      <td><code>preeqmode=3</code></td>
+      <td>OMP infrastructure complete but rates fail</td>
+      <td>Requires instrumented debugging against TALYS internals. The KD03/well-depth/radial-potential validations confirm the OMP parameters are correct — the error is in how they are used in the rate integrand.</td>
+    </tr>
+  </table>
+
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>

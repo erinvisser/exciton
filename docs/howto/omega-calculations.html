@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Omega Calculations — exciton</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<nav>
+  <div class="container">
+    <a href="../index.html" class="brand">exciton</a>
+    <span class="nav-section">Tutorials</span>
+    <a href="../tutorials/getting-started.html">Getting Started</a>
+    <a href="../tutorials/running-calculations.html">Running Calculations</a>
+    <span class="nav-section">How-to</span>
+    <a href="../howto/omega-calculations.html" class="active">Omega</a>
+    <a href="../howto/lambda-calculations.html">Lambda</a>
+<a href="../howto/validations.html">Validations</a>
+    <a href="../howto/talys-omp-diagnostics.html">TALYS OMP Diag</a>
+    <a href="../howto/exciton-diagnostics.html">Exciton Diag</a>
+    <span class="nav-section">Status</span>
+    <a href="../status.html">Branch Status</a>
+    <span class="nav-section">Reference</span>
+    <a href="../reference/physics-formulas.html">Formulas</a>
+    <a href="../reference/parameters.html">Parameters</a>
+    <a href="../reference/api.html">API</a>
+    <a href="../reference/output-format.html">Output</a>
+    <a href="../reference/marley-kd-diagnostics.html">MARLEY KD</a>
+    <span class="nav-section">Explanation</span>
+    <a href="../explanation/exciton-model.html">Exciton Model</a>
+    <a href="../explanation/omp-implementation.html">OMP</a>
+    <a href="../explanation/state-densities.html">State Densities</a>
+  </div>
+</nav>
+<main class="container">
+  <div class="breadcrumb"><a href="../index.html">Home</a> / <a href="../tutorials/running-calculations.html">Running Calculations</a> / <span>Omega</span></div>
+  <h1>Omega (State Density) Calculations</h1>
+
+  <p>The omega calculation evaluates the two-component particle–hole state density \(\omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x, Z, N)\) as defined in Eq. 13.4 of the TALYS manual. The implementation is in <code>src/state_density.cpp</code> and the main executable is <code>src/main_omega.cpp</code>.</p>
+
+  <h2>Implementation</h2>
+  <p>The state density is computed by <code>particleHoleStateDensity()</code> in <code>src/state_density.cpp:17</code>. The formula is:</p>
+
+  \[
+  \omega(p_\pi, h_\pi, p_\nu, h_\nu, E_x, Z, N) = \frac{g_\pi^{p_\pi + h_\pi} g_\nu^{p_\nu + h_\nu}}{p_\pi! h_\pi! p_\nu! h_\nu! (n-1)!} \cdot E_x^{n-1} \cdot f_{\text{Pauli}} \cdot f_{\text{well}} \cdot f_{\text{pairing}} \cdot f_{\text{parity}}
+  \]
+
+  <p>where:</p>
+  <ul>
+    <li>\(g_\pi = Z/15\), \(g_\nu = N/15\) — single-particle densities</li>
+    <li>\(n = p_\pi + h_\pi + p_\nu + h_\nu\) — total exciton number</li>
+    <li>\(f_{\text{Pauli}}\) — Pauli correction factor (<code>pauliCorrection()</code> in <code>src/preeq_common.cpp</code>)</li>
+    <li>\(f_{\text{well}}\) — finite well depth correction (<code>finiteWell()</code>)</li>
+    <li>\(f_{\text{pairing}}\) — pairing correction (<code>fuPairingCorrection()</code>)</li>
+    <li>\(f_{\text{parity}}\) — parity factor (default 1.0)</li>
+  </ul>
+
+  <h2>Running the Calculation</h2>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/omega</span>
+  </div>
+  <p>This enumerates all configurations with \(k = (p+h)/2\) from 0 to 5, producing 300 rows of output. The 13 columns are:</p>
+
+  <table>
+    <tr><th>#</th><th>Column</th><th>Description</th></tr>
+    <tr><td>1–4</td><td>p<sub>π</sub>, h<sub>π</sub>, p<sub>ν</sub>, h<sub>ν</sub></td><td>Exciton state numbers</td></tr>
+    <tr><td>5</td><td>n</td><td>Total exciton number (\(p_\pi + h_\pi + p_\nu + h_\nu\))</td></tr>
+    <tr><td>6</td><td>E<sub>x</sub></td><td>Excitation energy [MeV]</td></tr>
+    <tr><td>7</td><td>U</td><td>Available energy after pairing [MeV]</td></tr>
+    <tr><td>8</td><td>Δ</td><td>Pairing energy [MeV]</td></tr>
+    <tr><td>9</td><td>P<sub>ph</sub></td><td>Pairing correction factor</td></tr>
+    <tr><td>10</td><td>n<sub>crit</sub></td><td>Critical exciton number</td></tr>
+    <tr><td>11</td><td>g<sub>π</sub></td><td>Proton single-particle density [MeV<sup>-1</sup>]</td></tr>
+    <tr><td>12</td><td>g<sub>ν</sub></td><td>Neutron single-particle density [MeV<sup>-1</sup>]</td></tr>
+    <tr><td>13</td><td>ω</td><td>Particle–hole state density [MeV<sup>-1</sup>]</td></tr>
+  </table>
+
+  <h2>Validation</h2>
+  <p>The omega calculation can be validated against TALYS output:</p>
+  <div class="terminal">
+    <span class="prompt">$</span> <span class="cmd">./executables/omega &gt; omega_exciton.txt</span><br>
+    <span class="prompt">$</span> <span class="cmd">python3 compare_omega.py omega_exciton.txt talys_omega.txt</span>
+  </div>
+  <p>The comparison script parses both 13-column YANDF-0.4 files and prints relative errors for each entry. See the <a href="../howto/validations.html">Validations</a> page for detailed results.</p>
+
+  <h2>Fixed V vs. Energy-Dependent V</h2>
+  <p>Two modes are tested in <code>main_omega.cpp</code>:</p>
+  <ul>
+    <li><strong>Fixed V = 38 MeV</strong> — uses constant well depth. This is the validated mode (max error 0.0085% against TALYS).</li>
+    <li><strong>Energy-dependent V</strong> — uses <code>potentialWellDepth()</code> which decreases with excitation. This mode is <strong>not yet validated</strong> against TALYS.</li>
+  </ul>
+</main>
+<footer>
+  <div class="container">exciton documentation</div>
+</footer>
+</body>
+</html>
