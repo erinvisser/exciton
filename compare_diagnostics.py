@@ -109,7 +109,11 @@ def parse_talys_line(line: str) -> Optional[Dict[str, Any]]:
     d["wvol"] = _float(line, "wvol")
     d["Weff"] = _float(line, "Weff")
     d["lamcol"] = _float(line, "lamcol")
+    d["densh"] = _float(line, "densh")
+    d["densp"] = _float(line, "densp")
     d["ratio"] = _float(line, "ratio")  # may be None for particle terms
+    d["omega_a"] = _float(line, "omega_a")
+    d["omega_r"] = _float(line, "omega_r")
     # j is present in lambdanuplus/lambdapiplus, not in lambdanupi/lambdapinu
     d["j"] = _int(line, "j")
     return d
@@ -147,6 +151,11 @@ def parse_exciton_line(line: str) -> Optional[Dict[str, Any]]:
     d["wvol"] = _float(line, "wvol")
     d["Weff"] = _float(line, "Weff")
     d["lambda_col"] = _float(line, "lambda_col")
+    d["densh"] = _float(line, "densh")
+    d["densp"] = _float(line, "densp")
+    d["ratio"] = _float(line, "ratio")
+    d["omega_a"] = _float(line, "omega_a")
+    d["omega_r"] = _float(line, "omega_r")
     # optional fields
     d["Z_res"] = _int(line, "Z_res")
     d["A_res"] = _int(line, "A_res")
@@ -236,8 +245,12 @@ _PARAM_ROWS = [
     ("nen", "nen", "nen", "d"),
     ("wvol [MeV]", "wvol", "wvol", ".6e"),
     ("Weff [MeV]", "Weff", "Weff", ".6e"),
+    ("densh [MeV^-1]", "densh", "densh", ".6e"),
+    ("densp [MeV^-1]", "densp", "densp", ".6e"),
+    ("ratio (hole term)", "ratio", "ratio", ".6f"),
+    ("omega_a [MeV^-1]", "omega_a", "omega_a", ".6e"),
+    ("omega_r [MeV^-1]", "omega_r", "omega_r", ".6e"),
     ("collision rate [1/s]", "lamcol", "lambda_col", ".6e"),
-    ("ratio (hole term)", "ratio", None, ".6f"),
 ]
 
 
@@ -283,10 +296,19 @@ def generate_table(
     lines.append(header)
     lines.append("#  " + "-" * (col_source + col_param + 3 * col_val + 12))
 
+    func = talys_entry["function"]
     max_rel = 0.0
     for label, t_key, e_key, fmt in _PARAM_ROWS:
         t_val = talys_entry.get(t_key)
         e_val = exciton_entry.get(e_key) if e_key else None
+        # Conversion functions: Exciton's lambda_col includes ratio,
+        # TALYS's lamcol does not. Normalize to show integrand rate.
+        if label == "collision rate [1/s]" and func in (
+            "lambdanupi", "lambdapinu"
+        ):
+            t_ratio = talys_entry.get("ratio")
+            if t_val is not None and t_ratio is not None:
+                t_val = t_val * t_ratio
         if t_val is None and e_val is None:
             continue
 
@@ -450,9 +472,13 @@ def main() -> None:
     out_lines.append("#  e_kin [MeV]                 Asymptotic kinetic energy fed to OMP")
     out_lines.append("#  nen                         Radial quadrature index")
     out_lines.append("#  wvol [MeV]                  Volume-integrated imaginary OMP strength")
-    out_lines.append("#  Weff [MeV]                  Effective squared matrix element |M|^2")
-    out_lines.append("#  collision rate [1/s]        Final transition rate lambda")
-    out_lines.append("#  ratio (hole term)           Density-of-states ratio for hole terms")
+    out_lines.append("#  Weff [MeV]                  Effective imaginary well depth (Wompfac * wvol)")
+    out_lines.append("#  densh [MeV^-1]              Particle-hole state density of the created pair (hole term)")
+    out_lines.append("#  densp [MeV^-1]              Particle-hole state density of the final state (particle term)")
+    out_lines.append("#  ratio (hole term)           densh / densp, capped at 1 if densp <= 1")
+    out_lines.append("#  omega_a [MeV^-1]            State density of created pair at uu")
+    out_lines.append("#  omega_r [MeV^-1]            State density of residual at U-uu")
+    out_lines.append("#  collision rate [1/s]        Collision rate at integrand level = 2*Weff/hbar * ratio")
     out_lines.append("# " + "-" * 41)
     out_lines.append("#  |Diff| = absolute difference between TALYS and Exciton")
     out_lines.append("#  Rel%   = |Diff| / max(|TALYS|,|Exciton|) * 100")

@@ -521,22 +521,23 @@ static double lambdaPairConversionOMP(ConversionType conversion,
     // TALYS density ratio
     // densh = phdens2 of the created pair at uu
     // densp = phdens2 of (1,0,1,1) for pinu or (1,1,1,0) for nupi at uu
+    double densh = 0.0, densp = 0.0, ratio = 1.0;
     if (conversion == ConversionType::ProtonToNeutron)
     {
-      double densh = particleHoleStateDensity(
+      densh = particleHoleStateDensity(
           0, 0, 1, 1, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-      double densp = particleHoleStateDensity(
+      densp = particleHoleStateDensity(
           1, 0, 1, 1, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-      double ratio = (densp > 1.) ? densh / densp : 1.;
+      ratio = (densp > 1.) ? densh / densp : 1.;
       lambda_col *= ratio;
     }
     else
     {
-      double densh = particleHoleStateDensity(
+      densh = particleHoleStateDensity(
           1, 1, 0, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-      double densp = particleHoleStateDensity(
+      densp = particleHoleStateDensity(
           1, 1, 1, 0, uu, Z_comp, N_comp, 0, V, 0.0, false, 1.0);
-      double ratio = (densp > 1.) ? densh / densp : 1.;
+      ratio = (densp > 1.) ? densh / densp : 1.;
       lambda_col *= ratio;
     }
 
@@ -565,6 +566,9 @@ static double lambdaPairConversionOMP(ConversionType conversion,
                 << " uu=" << uu
                 << " eopt=" << eopt << " nen=" << nen
                 << " wvol=" << wv << " Weff=" << Weff
+                << " densh=" << densh
+                << " densp=" << densp
+                << " ratio=" << ratio
                 << " lambda_col=" << lambda_col
                 << " omega_a=" << omega_a
                 << " omega_r=" << omega_r
