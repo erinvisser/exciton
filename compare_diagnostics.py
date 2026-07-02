@@ -189,8 +189,23 @@ def _match_key_exciton(entry: Dict[str, Any]) -> Tuple:
     return (func, st, k, j)
 
 
+def _dedup(entries: List[Dict], source: str) -> List[Dict]:
+    """Remove duplicate entries with the same match key, keeping the first."""
+    seen: set = set()
+    out: List[Dict] = []
+    for e in entries:
+        key = _match_key_talys(e) if source == "TALYS" else _match_key_exciton(e)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(e)
+    return out
+
+
 def match_entries(talys: List[Dict], exciton: List[Dict]) -> List[Tuple[Dict, Dict]]:
-    """Return matched (talys_entry, exciton_entry) pairs."""
+    """Return matched (talys_entry, exciton_entry) pairs, deduped."""
+    talys = _dedup(talys, "TALYS")
+    exciton = _dedup(exciton, "Exciton")
     # Index exciton entries by match key
     ex_index: Dict[Tuple, Dict] = {}
     for e in exciton:
