@@ -32,6 +32,8 @@ from typing import Any, Dict, List, Optional, Tuple
 DEFAULT_STATES: List[Tuple[int, int, int, int]] = [
     (0, 0, 1, 0),  # 0010  initial
     (0, 0, 2, 1),  # 0021  pure-neutron 3-exciton
+    (0, 0, 4, 3),  # 0043  pure-neutron 7-exciton (ProtonToNeutron)
+    (0, 0, 5, 4),  # 0054  pure-neutron 9-exciton (ProtonToNeutron)
     (1, 1, 0, 0),  # 1100  pure-proton 2-exciton
     (1, 1, 2, 1),  # 1121  mixed 5-exciton
     (2, 2, 1, 0),  # 2210  mixed 5-exciton no neutron holes
